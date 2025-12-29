@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
 
 interface ProductCardProps {
   id: string;
@@ -9,6 +10,7 @@ interface ProductCardProps {
   categoria: string;
   mediaAvaliacoes?: number | null;
   totalAvaliacoes?: number;
+  index?: number;
 }
 
 export default function ProductCard({
@@ -17,7 +19,29 @@ export default function ProductCard({
   preco,
   preco_promocional,
   imagem_url,
+  index = 0,
 }: ProductCardProps) {
+  const [isVisible, setIsVisible] = useState(false);
+  const cardRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.1, rootMargin: '50px' }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
   };
@@ -25,7 +49,17 @@ export default function ProductCard({
   const hasDiscount = preco_promocional && preco_promocional < preco;
 
   return (
-    <Link to={`/produto/${id}`} className="group block">
+    <Link 
+      ref={cardRef}
+      to={`/produto/${id}`} 
+      className="group block"
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
+        transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)`,
+        transitionDelay: `${index * 100}ms`,
+      }}
+    >
       {/* Image Container - 4:5 aspect ratio */}
       <div className="relative aspect-[4/5] overflow-hidden bg-muted mb-5">
         <img
