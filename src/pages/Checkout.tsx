@@ -474,6 +474,42 @@ export default function Checkout() {
 
       const whatsappUrl = `https://wa.me/5511999999999?text=${mensagem}`;
 
+      // Send confirmation email (don't await to not block the user)
+      supabase.functions.invoke('send-order-email', {
+        body: {
+          numeroPedido,
+          clienteNome: dadosPessoais.nome,
+          clienteEmail: dadosPessoais.email,
+          clienteWhatsapp: dadosPessoais.whatsapp,
+          endereco: {
+            rua: endereco.rua,
+            numero: endereco.numero,
+            complemento: endereco.complemento,
+            bairro: endereco.bairro,
+            cidade: endereco.cidade,
+            estado: endereco.estado,
+            cep: endereco.cep,
+          },
+          itens: items.map(item => ({
+            nome: item.nome,
+            variacao: item.variacao,
+            quantidade: item.quantidade,
+            preco: item.preco_promocional ?? item.preco,
+          })),
+          subtotal,
+          desconto: desconto || undefined,
+          cupom: cupomAplicado?.codigo || undefined,
+          frete,
+          total,
+        },
+      }).then(({ error }) => {
+        if (error) {
+          console.error('Error sending order email:', error);
+        } else {
+          console.log('Order confirmation email sent');
+        }
+      });
+
       clearCart();
       
       // Navigate to confirmation with order data
