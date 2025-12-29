@@ -141,8 +141,9 @@ export default function Privacidade() {
                     entre em contato conosco:
                   </p>
                   <div className="card-elegant p-6">
-                    <p><strong>Email:</strong> privacidade@elathosemijoias.com.br</p>
-                    <p className="mt-2"><strong>WhatsApp:</strong> (11) 99999-9999</p>
+                    <p><strong>Email:</strong> elathosemijoias@gmail.com</p>
+                    <p className="mt-2"><strong>WhatsApp:</strong> (19) 99822-9202</p>
+                    <p className="mt-2"><strong>Instagram:</strong> @elathosemijoias</p>
                     <p className="mt-2"><strong>Horário:</strong> Segunda a Sexta, 9h às 18h</p>
                   </div>
                 </div>

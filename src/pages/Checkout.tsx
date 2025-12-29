@@ -98,7 +98,7 @@ export default function Checkout() {
 
   const subtotal = getSubtotal();
   const desconto = cupomAplicado?.desconto || 0;
-  const frete = subtotal >= 299 ? 0 : (FRETE_REGIOES[endereco.estado] || 0);
+  const frete = subtotal > 299 ? 0 : (FRETE_REGIOES[endereco.estado] || 0);
   const total = Math.max(0, subtotal - desconto + frete);
 
   useEffect(() => {

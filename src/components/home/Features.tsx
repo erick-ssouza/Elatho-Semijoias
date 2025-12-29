@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 const features = [
   'Garantia 1 ano',
   'Frete grátis +R$299',
-  'Parcelamos 3x',
+  'Até 10x no cartão',
   'Atendimento exclusivo',
 ];
 
