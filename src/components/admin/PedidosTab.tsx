@@ -252,15 +252,22 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
               {selectedPedido.endereco && (
                 <div>
                   <h4 className="font-medium mb-2">Endereço de Entrega</h4>
-                  <p>
-                    {selectedPedido.endereco.logradouro}, {selectedPedido.endereco.numero}
-                    {selectedPedido.endereco.complemento && ` - ${selectedPedido.endereco.complemento}`}
-                  </p>
-                  <p>{selectedPedido.endereco.bairro}</p>
-                  <p>
-                    {selectedPedido.endereco.cidade} - {selectedPedido.endereco.estado}
-                  </p>
-                  <p>CEP: {selectedPedido.endereco.cep}</p>
+                  {(() => {
+                    const endereco = selectedPedido.endereco as Record<string, string>;
+                    return (
+                      <>
+                        <p>
+                          {endereco.logradouro}, {endereco.numero}
+                          {endereco.complemento && ` - ${endereco.complemento}`}
+                        </p>
+                        <p>{endereco.bairro}</p>
+                        <p>
+                          {endereco.cidade} - {endereco.estado}
+                        </p>
+                        <p>CEP: {endereco.cep}</p>
+                      </>
+                    );
+                  })()}
                 </div>
               )}
 
