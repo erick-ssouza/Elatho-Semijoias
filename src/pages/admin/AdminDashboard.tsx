@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, LogOut, Package, ShoppingCart, Users, MessageSquare, Star, TrendingUp, Ticket, ThumbsUp } from "lucide-react";
+import { Loader2, LogOut, Package, ShoppingCart, Users, MessageSquare, Star, TrendingUp, Ticket, ThumbsUp, Mail } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from "recharts";
 import { format, subDays, subWeeks, subMonths, startOfDay, startOfWeek, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -17,6 +17,7 @@ import DepoimentosTab from "@/components/admin/DepoimentosTab";
 import MensagensTab from "@/components/admin/MensagensTab";
 import CuponsTab from "@/components/admin/CuponsTab";
 import AvaliacoesTab from "@/components/admin/AvaliacoesTab";
+import NewsletterTab from "@/components/admin/NewsletterTab";
 
 interface Metrics {
   totalPedidos: number;
@@ -415,7 +416,7 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="pedidos" className="space-y-4">
-          <TabsList className="grid grid-cols-7 w-full max-w-4xl">
+          <TabsList className="grid grid-cols-8 w-full max-w-5xl">
             <TabsTrigger value="pedidos" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
               <span className="hidden sm:inline">Pedidos</span>
@@ -444,6 +445,10 @@ const AdminDashboard = () => {
               <MessageSquare className="w-4 h-4" />
               <span className="hidden sm:inline">Mensagens</span>
             </TabsTrigger>
+            <TabsTrigger value="newsletter" className="flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              <span className="hidden sm:inline">Newsletter</span>
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pedidos">
@@ -466,6 +471,9 @@ const AdminDashboard = () => {
           </TabsContent>
           <TabsContent value="mensagens">
             <MensagensTab onUpdate={fetchMetrics} />
+          </TabsContent>
+          <TabsContent value="newsletter">
+            <NewsletterTab />
           </TabsContent>
         </Tabs>
       </main>
