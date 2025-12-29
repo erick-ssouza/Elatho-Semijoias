@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import { Instagram, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   const [isVisible, setIsVisible] = useState(false);
@@ -24,24 +25,44 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer ref={footerRef} className="bg-background-secondary py-16 md:py-24 overflow-hidden">
-      <div className="container px-6 lg:px-12">
-        {/* Logo */}
+    <footer 
+      ref={footerRef} 
+      className="relative overflow-hidden"
+      style={{ backgroundColor: '#1A1A1A' }}
+    >
+      {/* Golden top line */}
+      <div 
+        className="absolute top-0 left-0 right-0 h-[1px]"
+        style={{ backgroundColor: '#D4AF37' }}
+      />
+
+      <div className="container px-6 lg:px-12 pt-16 pb-10">
+        {/* Logo & Tagline */}
         <div 
-          className="text-center mb-16"
+          className="text-center mb-14"
           style={{
             opacity: isVisible ? 1 : 0,
             transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
             transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <Link to="/" className="font-display text-3xl md:text-4xl text-foreground">
+          <Link 
+            to="/" 
+            className="font-display text-4xl md:text-[36px]"
+            style={{ color: '#FFFFFF' }}
+          >
             Elatho
           </Link>
+          <p 
+            className="font-display italic text-sm mt-2"
+            style={{ color: '#999999' }}
+          >
+            Elegância que você merece
+          </p>
         </div>
 
         {/* Links Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-12 md:gap-16 max-w-3xl mx-auto mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-12 md:gap-16 max-w-3xl mx-auto mb-14">
           {/* Shop */}
           <div
             style={{
@@ -51,25 +72,25 @@ export default function Footer() {
               transitionDelay: '100ms',
             }}
           >
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
+            <h3 
+              className="text-[11px] uppercase tracking-[0.15em] mb-6"
+              style={{ color: '#D4AF37', letterSpacing: '2px' }}
+            >
               Shop
             </h3>
             <nav className="flex flex-col gap-3">
-              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
-                Todos os produtos
-              </Link>
-              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
-                Anéis
-              </Link>
-              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
-                Brincos
-              </Link>
-              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
-                Colares
-              </Link>
-              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
-                Pulseiras
-              </Link>
+              {['Todos os produtos', 'Anéis', 'Brincos', 'Colares', 'Pulseiras'].map((item) => (
+                <Link 
+                  key={item}
+                  to="/#produtos" 
+                  className="text-sm transition-colors duration-300"
+                  style={{ color: '#CCCCCC' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  {item}
+                </Link>
+              ))}
             </nav>
           </div>
 
@@ -82,22 +103,30 @@ export default function Footer() {
               transitionDelay: '200ms',
             }}
           >
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
+            <h3 
+              className="text-[11px] uppercase mb-6"
+              style={{ color: '#D4AF37', letterSpacing: '2px' }}
+            >
               Ajuda
             </h3>
             <nav className="flex flex-col gap-3">
-              <Link to="/faq" className="text-sm text-foreground hover:underline underline-offset-4">
-                FAQ
-              </Link>
-              <Link to="/trocas" className="text-sm text-foreground hover:underline underline-offset-4">
-                Trocas e Devoluções
-              </Link>
-              <Link to="/cuidados" className="text-sm text-foreground hover:underline underline-offset-4">
-                Cuidados
-              </Link>
-              <Link to="/privacidade" className="text-sm text-foreground hover:underline underline-offset-4">
-                Privacidade
-              </Link>
+              {[
+                { label: 'FAQ', to: '/faq' },
+                { label: 'Trocas e Devoluções', to: '/trocas' },
+                { label: 'Cuidados', to: '/cuidados' },
+                { label: 'Privacidade', to: '/privacidade' },
+              ].map((item) => (
+                <Link 
+                  key={item.label}
+                  to={item.to} 
+                  className="text-sm transition-colors duration-300"
+                  style={{ color: '#CCCCCC' }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
+                >
+                  {item.label}
+                </Link>
+              ))}
             </nav>
           </div>
 
@@ -111,15 +140,21 @@ export default function Footer() {
               transitionDelay: '300ms',
             }}
           >
-            <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
+            <h3 
+              className="text-[11px] uppercase mb-6"
+              style={{ color: '#D4AF37', letterSpacing: '2px' }}
+            >
               Contato
             </h3>
-            <nav className="flex flex-col gap-3">
+            <nav className="flex flex-col gap-3 mb-6">
               <a
                 href="https://wa.me/5519998229202"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-foreground hover:underline underline-offset-4"
+                className="text-sm transition-colors duration-300"
+                style={{ color: '#CCCCCC' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
               >
                 WhatsApp
               </a>
@@ -127,33 +162,74 @@ export default function Footer() {
                 href="https://instagram.com/elathosemijoias"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-foreground hover:underline underline-offset-4"
+                className="text-sm transition-colors duration-300"
+                style={{ color: '#CCCCCC' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
               >
                 Instagram
               </a>
               <a
                 href="mailto:elathosemijoias@gmail.com"
-                className="text-sm text-foreground hover:underline underline-offset-4"
+                className="text-sm transition-colors duration-300"
+                style={{ color: '#CCCCCC' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
               >
                 Email
               </a>
             </nav>
+
+            {/* Social Icons */}
+            <div className="flex gap-4">
+              <a
+                href="https://instagram.com/elathosemijoias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors duration-300"
+                style={{ color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+              >
+                <Instagram className="w-5 h-5" />
+              </a>
+              <a
+                href="https://wa.me/5519998229202"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors duration-300"
+                style={{ color: '#FFFFFF' }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#D4AF37'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#FFFFFF'}
+              >
+                <MessageCircle className="w-5 h-5" />
+              </a>
+            </div>
           </div>
         </div>
 
-        {/* Payment methods - text only */}
+        {/* Payment methods */}
         <div 
-          className="text-center mb-12"
+          className="text-center mb-8"
           style={{
             opacity: isVisible ? 1 : 0,
             transition: 'opacity 0.6s ease-out',
             transitionDelay: '400ms',
           }}
         >
-          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+          <p 
+            className="text-[11px] uppercase tracking-[0.15em]"
+            style={{ color: '#666666' }}
+          >
             Pix · Visa · Mastercard · Elo
           </p>
         </div>
+
+        {/* Separator line */}
+        <div 
+          className="h-[1px] max-w-xl mx-auto mb-8"
+          style={{ backgroundColor: '#333333' }}
+        />
 
         {/* Copyright */}
         <div 
@@ -164,7 +240,10 @@ export default function Footer() {
             transitionDelay: '500ms',
           }}
         >
-          <p className="text-[11px] text-muted-foreground">
+          <p 
+            className="text-[11px]"
+            style={{ color: '#666666' }}
+          >
             © 2025 Elatho Semijoias. Todos os direitos reservados.
           </p>
         </div>
