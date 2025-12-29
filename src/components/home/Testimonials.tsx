@@ -14,6 +14,7 @@ export default function Testimonials() {
   const [depoimentos, setDepoimentos] = useState<Depoimento[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
     const fetchDepoimentos = async () => {
@@ -32,12 +33,21 @@ export default function Testimonials() {
     fetchDepoimentos();
   }, []);
 
+  const changeSlide = (newIndex: number) => {
+    if (isTransitioning) return;
+    setIsTransitioning(true);
+    setTimeout(() => {
+      setCurrentIndex(newIndex);
+      setIsTransitioning(false);
+    }, 300);
+  };
+
   const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % depoimentos.length);
+    changeSlide((currentIndex + 1) % depoimentos.length);
   };
 
   const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + depoimentos.length) % depoimentos.length);
+    changeSlide((currentIndex - 1 + depoimentos.length) % depoimentos.length);
   };
 
   if (loading || depoimentos.length === 0) {
@@ -65,21 +75,27 @@ export default function Testimonials() {
             "
           </span>
 
-          {/* Testimonial text */}
-          <blockquote 
-            className="font-display text-xl md:text-2xl lg:text-3xl font-normal italic leading-relaxed -mt-8 mb-8"
-            style={{ color: '#1A1A1A' }}
+          {/* Testimonial content with transition */}
+          <div 
+            className="transition-opacity duration-300 ease-in-out"
+            style={{ opacity: isTransitioning ? 0 : 1 }}
           >
-            {currentDepoimento.texto}
-          </blockquote>
+            {/* Testimonial text */}
+            <blockquote 
+              className="font-display text-xl md:text-2xl lg:text-3xl font-normal italic leading-relaxed -mt-8 mb-8"
+              style={{ color: '#1A1A1A' }}
+            >
+              {currentDepoimento.texto}
+            </blockquote>
 
-          {/* Author */}
-          <p 
-            className="text-xs uppercase tracking-[0.2em]"
-            style={{ color: '#666666' }}
-          >
-            — {currentDepoimento.cliente_nome}
-          </p>
+            {/* Author */}
+            <p 
+              className="text-xs uppercase tracking-[0.2em]"
+              style={{ color: '#666666' }}
+            >
+              — {currentDepoimento.cliente_nome}
+            </p>
+          </div>
 
           {/* Navigation */}
           {depoimentos.length > 1 && (
@@ -95,7 +111,7 @@ export default function Testimonials() {
                 {depoimentos.map((_, i) => (
                   <button
                     key={i}
-                    onClick={() => setCurrentIndex(i)}
+                    onClick={() => changeSlide(i)}
                     className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                       i === currentIndex
                         ? 'bg-foreground'
