@@ -237,6 +237,7 @@ export type Database = {
           cliente_email: string | null
           cliente_nome: string
           cliente_whatsapp: string | null
+          codigo_rastreio: string | null
           created_at: string
           endereco: Json | null
           frete: number
@@ -252,6 +253,7 @@ export type Database = {
           cliente_email?: string | null
           cliente_nome: string
           cliente_whatsapp?: string | null
+          codigo_rastreio?: string | null
           created_at?: string
           endereco?: Json | null
           frete?: number
@@ -267,6 +269,7 @@ export type Database = {
           cliente_email?: string | null
           cliente_nome?: string
           cliente_whatsapp?: string | null
+          codigo_rastreio?: string | null
           created_at?: string
           endereco?: Json | null
           frete?: number
