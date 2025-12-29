@@ -6,7 +6,6 @@ import Categories from '@/components/home/Categories';
 import ProductGrid from '@/components/home/ProductGrid';
 import Testimonials from '@/components/home/Testimonials';
 import Features from '@/components/home/Features';
-import Newsletter from '@/components/home/Newsletter';
 
 const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('todos');
@@ -23,7 +22,6 @@ const Index = () => {
         <ProductGrid selectedCategory={selectedCategory} />
         <Testimonials />
         <Features />
-        <Newsletter />
       </main>
       <Footer />
     </div>

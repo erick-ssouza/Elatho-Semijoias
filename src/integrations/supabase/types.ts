@@ -231,27 +231,6 @@ export type Database = {
         }
         Relationships: []
       }
-      newsletter_inscricoes: {
-        Row: {
-          ativo: boolean | null
-          created_at: string
-          email: string
-          id: string
-        }
-        Insert: {
-          ativo?: boolean | null
-          created_at?: string
-          email: string
-          id?: string
-        }
-        Update: {
-          ativo?: boolean | null
-          created_at?: string
-          email?: string
-          id?: string
-        }
-        Relationships: []
-      }
       pedidos: {
         Row: {
           cliente_cpf: string | null
