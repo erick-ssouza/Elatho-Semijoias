@@ -7,6 +7,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
+import ScrollToTopButton from "@/components/layout/ScrollToTopButton";
 import Index from "./pages/Index";
 import Produto from "./pages/Produto";
 import Checkout from "./pages/Checkout";
@@ -56,6 +57,7 @@ const App = () => (
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <WhatsAppButton />
+              <ScrollToTopButton />
             </BackgroundLayout>
           </BrowserRouter>
         </TooltipProvider>
