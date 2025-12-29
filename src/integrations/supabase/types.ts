@@ -172,6 +172,35 @@ export type Database = {
         }
         Relationships: []
       }
+      favoritos: {
+        Row: {
+          created_at: string
+          id: string
+          produto_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          produto_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          produto_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "favoritos_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mensagens: {
         Row: {
           assunto: string
