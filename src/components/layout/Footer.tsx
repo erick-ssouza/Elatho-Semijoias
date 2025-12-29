@@ -57,20 +57,20 @@ export default function Footer() {
             </h3>
             <div className="flex flex-col gap-3">
               <a
-                href="https://wa.me/5511999999999"
+                href="https://wa.me/5519998229202"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-background/70 hover:text-primary transition-colors"
               >
                 <Phone className="h-4 w-4" />
-                (11) 99999-9999
+                (19) 99822-9202
               </a>
               <a
-                href="mailto:contato@elathosemijoias.com.br"
+                href="mailto:elathosemijoias@gmail.com"
                 className="flex items-center gap-2 text-background/70 hover:text-primary transition-colors"
               >
                 <Mail className="h-4 w-4" />
-                contato@elathosemijoias.com.br
+                elathosemijoias@gmail.com
               </a>
               <a
                 href="https://instagram.com/elathosemijoias"

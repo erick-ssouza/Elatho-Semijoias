@@ -472,7 +472,7 @@ export default function Checkout() {
 
       const mensagem = `*NOVO PEDIDO - ELATHO SEMIJOIAS*%0A%0A📦 *Pedido:* ${numeroPedido}%0A%0A👤 *Cliente:* ${dadosPessoais.nome}%0A📱 *WhatsApp:* ${dadosPessoais.whatsapp}%0A📧 *Email:* ${dadosPessoais.email}%0A%0A📍 *Endereço:*%0A${enderecoTexto}%0A%0A🛒 *Itens:*%0A${itensTexto}${cupomTexto}%0A%0A📦 Frete: R$ ${formatPrice(frete)}%0A💰 *Total: R$ ${formatPrice(total)}*%0A%0AAguardo instruções para pagamento! 💛`;
 
-      const whatsappUrl = `https://wa.me/5511999999999?text=${mensagem}`;
+      const whatsappUrl = `https://wa.me/5519998229202?text=${mensagem}`;
 
       // Send confirmation email (don't await to not block the user)
       supabase.functions.invoke('send-order-email', {
