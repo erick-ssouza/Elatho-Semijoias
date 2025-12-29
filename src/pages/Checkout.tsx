@@ -384,7 +384,7 @@ export default function Checkout() {
     return `ELA-${date}-${random}`;
   };
 
-  const handleFinalizarPedido = async () => {
+  const handleFinalizarPedido = async (metodoPagamento: 'pix' | 'whatsapp') => {
     if (!aceitouTermos) {
       toast({
         title: 'Aceite os termos',
@@ -436,7 +436,6 @@ export default function Checkout() {
 
       // Update coupon usage if applied
       if (cupomAplicado) {
-        // Get current usage and increment
         const { data: currentCupom } = await supabase
           .from('cupons')
           .select('uso_atual')
@@ -452,7 +451,7 @@ export default function Checkout() {
       }
 
       // Salvar cliente
-      const { error: clienteError } = await supabase
+      await supabase
         .from('clientes')
         .upsert({
           nome: dadosPessoais.nome,
@@ -461,20 +460,7 @@ export default function Checkout() {
           cpf: dadosPessoais.cpf,
         }, { onConflict: 'email' });
 
-      // Gerar mensagem do WhatsApp
-      const itensTexto = items
-        .map(item => `- ${item.quantidade}x ${item.nome} (${item.variacao}) - R$ ${formatPrice((item.preco_promocional ?? item.preco) * item.quantidade)}`)
-        .join('%0A');
-
-      const enderecoTexto = `${endereco.rua}, ${endereco.numero}${endereco.complemento ? `, ${endereco.complemento}` : ''}%0A${endereco.bairro} - ${endereco.cidade}/${endereco.estado}%0ACEP: ${endereco.cep}`;
-
-      const cupomTexto = cupomAplicado ? `%0A🎫 *Cupom:* ${cupomAplicado.codigo} (-R$ ${formatPrice(desconto)})` : '';
-
-      const mensagem = `*NOVO PEDIDO - ELATHO SEMIJOIAS*%0A%0A📦 *Pedido:* ${numeroPedido}%0A%0A👤 *Cliente:* ${dadosPessoais.nome}%0A📱 *WhatsApp:* ${dadosPessoais.whatsapp}%0A📧 *Email:* ${dadosPessoais.email}%0A%0A📍 *Endereço:*%0A${enderecoTexto}%0A%0A🛒 *Itens:*%0A${itensTexto}${cupomTexto}%0A%0A📦 Frete: R$ ${formatPrice(frete)}%0A💰 *Total: R$ ${formatPrice(total)}*%0A%0AAguardo instruções para pagamento! 💛`;
-
-      const whatsappUrl = `https://wa.me/5519998229202?text=${mensagem}`;
-
-      // Send confirmation email (don't await to not block the user)
+      // Send confirmation email
       supabase.functions.invoke('send-order-email', {
         body: {
           numeroPedido,
@@ -502,29 +488,67 @@ export default function Checkout() {
           frete,
           total,
         },
-      }).then(({ error }) => {
-        if (error) {
-          console.error('Error sending order email:', error);
-        } else {
-          console.log('Order confirmation email sent');
-        }
       });
 
-      clearCart();
-      
-      // Navigate to confirmation with order data
-      navigate('/pedido-confirmado', { 
-        state: { 
-          numeroPedido, 
-          whatsappUrl,
-          total,
-        } 
-      });
+      if (metodoPagamento === 'pix') {
+        // Create PIX payment via Mercado Pago
+        const { data: pixData, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
+          body: {
+            numeroPedido,
+            clienteNome: dadosPessoais.nome,
+            clienteEmail: dadosPessoais.email,
+            clienteCpf: dadosPessoais.cpf,
+            total,
+            descricao: `Pedido ${numeroPedido} - Elatho Semijoias`,
+          },
+        });
+
+        if (pixError || !pixData?.success) {
+          throw new Error(pixData?.details || 'Erro ao gerar PIX');
+        }
+
+        clearCart();
+        
+        navigate('/pagamento-pix', { 
+          state: { 
+            numeroPedido,
+            paymentId: pixData.paymentId,
+            qrCode: pixData.qrCode,
+            qrCodeBase64: pixData.qrCodeBase64,
+            total,
+            expirationDate: pixData.expirationDate,
+          } 
+        });
+      } else {
+        // WhatsApp flow
+        const itensTexto = items
+          .map(item => `- ${item.quantidade}x ${item.nome} (${item.variacao}) - R$ ${formatPrice((item.preco_promocional ?? item.preco) * item.quantidade)}`)
+          .join('%0A');
+
+        const enderecoTexto = `${endereco.rua}, ${endereco.numero}${endereco.complemento ? `, ${endereco.complemento}` : ''}%0A${endereco.bairro} - ${endereco.cidade}/${endereco.estado}%0ACEP: ${endereco.cep}`;
+
+        const cupomTexto = cupomAplicado ? `%0A🎫 *Cupom:* ${cupomAplicado.codigo} (-R$ ${formatPrice(desconto)})` : '';
+
+        const mensagem = `*NOVO PEDIDO - ELATHO SEMIJOIAS*%0A%0A📦 *Pedido:* ${numeroPedido}%0A%0A👤 *Cliente:* ${dadosPessoais.nome}%0A📱 *WhatsApp:* ${dadosPessoais.whatsapp}%0A📧 *Email:* ${dadosPessoais.email}%0A%0A📍 *Endereço:*%0A${enderecoTexto}%0A%0A🛒 *Itens:*%0A${itensTexto}${cupomTexto}%0A%0A📦 Frete: R$ ${formatPrice(frete)}%0A💰 *Total: R$ ${formatPrice(total)}*%0A%0AAguardo instruções para pagamento! 💛`;
+
+        const whatsappUrl = `https://wa.me/5519998229202?text=${mensagem}`;
+
+        clearCart();
+        
+        navigate('/pedido-confirmado', { 
+          state: { 
+            numeroPedido, 
+            whatsappUrl,
+            total,
+          } 
+        });
+      }
 
     } catch (error) {
+      console.error('Error:', error);
       toast({
         title: 'Erro ao finalizar pedido',
-        description: 'Tente novamente mais tarde.',
+        description: error instanceof Error ? error.message : 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
@@ -825,11 +849,11 @@ export default function Checkout() {
 
                     {/* Pagamento */}
                     <div className="p-4 rounded-xl bg-champagne/30 border border-primary/20">
-                      <h3 className="font-medium text-primary mb-2">💳 Forma de Pagamento</h3>
-                      <p className="text-sm text-muted-foreground">
-                        O pagamento será realizado via PIX ou Link de Pagamento. 
-                        Após finalizar o pedido, você será direcionado ao WhatsApp para receber as instruções.
-                      </p>
+                      <h3 className="font-medium text-primary mb-3">💳 Formas de Pagamento</h3>
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        <p><strong>PIX:</strong> Pagamento instantâneo com QR Code</p>
+                        <p><strong>Cartão:</strong> Parcelamos em até 3x sem juros via WhatsApp</p>
+                      </div>
                     </div>
 
                     {/* Termos */}
@@ -854,33 +878,62 @@ export default function Checkout() {
                 )}
 
                 {/* Navigation buttons */}
-                <div className="flex justify-between mt-8 pt-6 border-t border-border">
-                  {step > 1 ? (
-                    <Button variant="outline" onClick={handleBack} className="gap-2">
-                      <ChevronLeft className="h-4 w-4" />
-                      Voltar
-                    </Button>
-                  ) : (
-                    <div />
-                  )}
-                  
+                <div className="flex flex-col gap-4 mt-8 pt-6 border-t border-border">
                   {step < 3 ? (
-                    <Button onClick={handleNext} className="btn-gold gap-2">
-                      Continuar
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={handleFinalizarPedido} 
-                      className="btn-gold gap-2"
-                      disabled={loading || !aceitouTermos}
-                    >
-                      {loading ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                    <div className="flex justify-between">
+                      {step > 1 ? (
+                        <Button variant="outline" onClick={handleBack} className="gap-2">
+                          <ChevronLeft className="h-4 w-4" />
+                          Voltar
+                        </Button>
                       ) : (
-                        'Finalizar Pedido'
+                        <div />
                       )}
-                    </Button>
+                      <Button onClick={handleNext} className="btn-gold gap-2">
+                        Continuar
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid sm:grid-cols-2 gap-3">
+                        <Button 
+                          onClick={() => handleFinalizarPedido('pix')} 
+                          className="btn-gold gap-2"
+                          disabled={loading || !aceitouTermos}
+                        >
+                          {loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <CreditCard className="h-4 w-4" />
+                              Pagar com PIX
+                            </>
+                          )}
+                        </Button>
+                        <Button 
+                          onClick={() => handleFinalizarPedido('whatsapp')} 
+                          variant="outline"
+                          className="gap-2 border-green-500 text-green-600 hover:bg-green-50"
+                          disabled={loading || !aceitouTermos}
+                        >
+                          {loading ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <>
+                              <ChevronRight className="h-4 w-4" />
+                              Pagar via WhatsApp
+                            </>
+                          )}
+                        </Button>
+                      </div>
+                      <div className="flex justify-start">
+                        <Button variant="outline" onClick={handleBack} className="gap-2">
+                          <ChevronLeft className="h-4 w-4" />
+                          Voltar
+                        </Button>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>

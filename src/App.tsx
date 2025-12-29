@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Produto from "./pages/Produto";
 import Checkout from "./pages/Checkout";
 import PedidoConfirmado from "./pages/PedidoConfirmado";
+import PagamentoPix from "./pages/PagamentoPix";
 import Sobre from "./pages/Sobre";
 import FAQ from "./pages/FAQ";
 import Trocas from "./pages/Trocas";
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/produto/:id" element={<Produto />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
+              <Route path="/pagamento-pix" element={<PagamentoPix />} />
               <Route path="/sobre" element={<Sobre />} />
               <Route path="/faq" element={<FAQ />} />
               <Route path="/trocas" element={<Trocas />} />
