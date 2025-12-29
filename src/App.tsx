@@ -14,6 +14,8 @@ import Trocas from "./pages/Trocas";
 import Privacidade from "./pages/Privacidade";
 import Cuidados from "./pages/Cuidados";
 import Contato from "./pages/Contato";
+import AdminLogin from "./pages/admin/AdminLogin";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -36,6 +38,8 @@ const App = () => (
             <Route path="/privacidade" element={<Privacidade />} />
             <Route path="/cuidados" element={<Cuidados />} />
             <Route path="/contato" element={<Contato />} />
+            <Route path="/painel-elatho-2025" element={<AdminLogin />} />
+            <Route path="/painel-elatho-2025/dashboard" element={<AdminDashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
