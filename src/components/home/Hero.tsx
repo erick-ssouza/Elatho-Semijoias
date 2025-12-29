@@ -1,6 +1,25 @@
 import { ArrowDown } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
 
 export default function Hero() {
+  const [scrollY, setScrollY] = useState(0);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        // Only apply parallax when hero is visible
+        if (rect.bottom > 0) {
+          setScrollY(window.scrollY);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const scrollToProducts = () => {
     const element = document.getElementById('produtos');
     if (element) {
@@ -9,12 +28,13 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image - Gold and Silver Jewelry */}
+    <section ref={sectionRef} className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image - Gold and Silver Jewelry with Parallax */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
         style={{
           backgroundImage: 'url(https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=2070&auto=format&fit=crop)',
+          transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
         }}
       >
         {/* Gradient overlay - darker at top for text readability */}
