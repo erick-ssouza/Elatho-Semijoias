@@ -59,6 +59,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cupons: {
+        Row: {
+          ativo: boolean | null
+          codigo: string
+          created_at: string
+          id: string
+          tipo: string
+          uso_atual: number | null
+          uso_maximo: number | null
+          validade: string | null
+          valor: number
+          valor_minimo: number | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          codigo: string
+          created_at?: string
+          id?: string
+          tipo: string
+          uso_atual?: number | null
+          uso_maximo?: number | null
+          validade?: string | null
+          valor: number
+          valor_minimo?: number | null
+        }
+        Update: {
+          ativo?: boolean | null
+          codigo?: string
+          created_at?: string
+          id?: string
+          tipo?: string
+          uso_atual?: number | null
+          uso_maximo?: number | null
+          validade?: string | null
+          valor?: number
+          valor_minimo?: number | null
+        }
+        Relationships: []
+      }
       depoimentos: {
         Row: {
           aprovado: boolean | null

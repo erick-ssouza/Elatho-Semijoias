@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Check, User, MapPin, CreditCard, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check, User, MapPin, CreditCard, Loader2, Ticket, X } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import type { Json } from '@/integrations/supabase/types';
@@ -48,6 +48,13 @@ interface DadosPessoais {
   cpf: string;
 }
 
+interface CupomAplicado {
+  codigo: string;
+  tipo: string;
+  valor: number;
+  desconto: number;
+}
+
 const FRETE_REGIOES: Record<string, number> = {
   SP: 15.90, RJ: 15.90, MG: 15.90, ES: 15.90, // Sudeste
   PR: 19.90, SC: 19.90, RS: 19.90, // Sul
@@ -62,6 +69,11 @@ export default function Checkout() {
   const [cepLoading, setCepLoading] = useState(false);
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Cupom states
+  const [cupomCodigo, setCupomCodigo] = useState('');
+  const [cupomLoading, setCupomLoading] = useState(false);
+  const [cupomAplicado, setCupomAplicado] = useState<CupomAplicado | null>(null);
   
   const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
     nome: '',
@@ -85,8 +97,9 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
+  const desconto = cupomAplicado?.desconto || 0;
   const frete = subtotal >= 299 ? 0 : (FRETE_REGIOES[endereco.estado] || 0);
-  const total = subtotal + frete;
+  const total = Math.max(0, subtotal - desconto + frete);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -267,6 +280,103 @@ export default function Checkout() {
     }
   };
 
+  const aplicarCupom = async () => {
+    if (!cupomCodigo.trim()) {
+      toast({
+        title: 'Digite um código',
+        description: 'Insira o código do cupom.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCupomLoading(true);
+    try {
+      const { data: cupom, error } = await supabase
+        .from('cupons')
+        .select('*')
+        .eq('codigo', cupomCodigo.toUpperCase().trim())
+        .eq('ativo', true)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!cupom) {
+        toast({
+          title: 'Cupom inválido',
+          description: 'Este cupom não existe ou está inativo.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Check expiration
+      if (cupom.validade && new Date(cupom.validade) < new Date()) {
+        toast({
+          title: 'Cupom expirado',
+          description: 'Este cupom já expirou.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Check usage limit
+      if (cupom.uso_maximo && cupom.uso_atual >= cupom.uso_maximo) {
+        toast({
+          title: 'Cupom esgotado',
+          description: 'Este cupom atingiu o limite de uso.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Check minimum value
+      if (cupom.valor_minimo && subtotal < Number(cupom.valor_minimo)) {
+        toast({
+          title: 'Valor mínimo não atingido',
+          description: `Este cupom requer um pedido mínimo de R$ ${Number(cupom.valor_minimo).toFixed(2).replace('.', ',')}.`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      // Calculate discount
+      let descontoCalculado = 0;
+      if (cupom.tipo === 'percentual') {
+        descontoCalculado = subtotal * (Number(cupom.valor) / 100);
+      } else {
+        descontoCalculado = Math.min(Number(cupom.valor), subtotal);
+      }
+
+      setCupomAplicado({
+        codigo: cupom.codigo,
+        tipo: cupom.tipo,
+        valor: Number(cupom.valor),
+        desconto: descontoCalculado,
+      });
+
+      toast({
+        title: 'Cupom aplicado!',
+        description: `Desconto de R$ ${descontoCalculado.toFixed(2).replace('.', ',')} aplicado.`,
+      });
+
+      setCupomCodigo('');
+    } catch (error) {
+      toast({
+        title: 'Erro ao aplicar cupom',
+        description: 'Tente novamente.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCupomLoading(false);
+    }
+  };
+
+  const removerCupom = () => {
+    setCupomAplicado(null);
+    toast({ title: 'Cupom removido' });
+  };
+
   const generateOrderNumber = () => {
     const now = new Date();
     const date = now.toISOString().split('T')[0].replace(/-/g, '');
@@ -324,6 +434,23 @@ export default function Checkout() {
 
       if (pedidoError) throw pedidoError;
 
+      // Update coupon usage if applied
+      if (cupomAplicado) {
+        // Get current usage and increment
+        const { data: currentCupom } = await supabase
+          .from('cupons')
+          .select('uso_atual')
+          .eq('codigo', cupomAplicado.codigo)
+          .maybeSingle();
+        
+        if (currentCupom) {
+          await supabase
+            .from('cupons')
+            .update({ uso_atual: (currentCupom.uso_atual || 0) + 1 })
+            .eq('codigo', cupomAplicado.codigo);
+        }
+      }
+
       // Salvar cliente
       const { error: clienteError } = await supabase
         .from('clientes')
@@ -341,7 +468,9 @@ export default function Checkout() {
 
       const enderecoTexto = `${endereco.rua}, ${endereco.numero}${endereco.complemento ? `, ${endereco.complemento}` : ''}%0A${endereco.bairro} - ${endereco.cidade}/${endereco.estado}%0ACEP: ${endereco.cep}`;
 
-      const mensagem = `*NOVO PEDIDO - ELATHO SEMIJOIAS*%0A%0A📦 *Pedido:* ${numeroPedido}%0A%0A👤 *Cliente:* ${dadosPessoais.nome}%0A📱 *WhatsApp:* ${dadosPessoais.whatsapp}%0A📧 *Email:* ${dadosPessoais.email}%0A%0A📍 *Endereço:*%0A${enderecoTexto}%0A%0A🛒 *Itens:*%0A${itensTexto}%0A%0A📦 Frete: R$ ${formatPrice(frete)}%0A💰 *Total: R$ ${formatPrice(total)}*%0A%0AAguardo instruções para pagamento! 💛`;
+      const cupomTexto = cupomAplicado ? `%0A🎫 *Cupom:* ${cupomAplicado.codigo} (-R$ ${formatPrice(desconto)})` : '';
+
+      const mensagem = `*NOVO PEDIDO - ELATHO SEMIJOIAS*%0A%0A📦 *Pedido:* ${numeroPedido}%0A%0A👤 *Cliente:* ${dadosPessoais.nome}%0A📱 *WhatsApp:* ${dadosPessoais.whatsapp}%0A📧 *Email:* ${dadosPessoais.email}%0A%0A📍 *Endereço:*%0A${enderecoTexto}%0A%0A🛒 *Itens:*%0A${itensTexto}${cupomTexto}%0A%0A📦 Frete: R$ ${formatPrice(frete)}%0A💰 *Total: R$ ${formatPrice(total)}*%0A%0AAguardo instruções para pagamento! 💛`;
 
       const whatsappUrl = `https://wa.me/5511999999999?text=${mensagem}`;
 
@@ -747,11 +876,54 @@ export default function Checkout() {
                   ))}
                 </div>
 
+                {/* Cupom input */}
+                <div className="border-t border-border pt-4 mb-4">
+                  <Label htmlFor="cupom" className="text-sm font-medium mb-2 block">Cupom de desconto</Label>
+                  {cupomAplicado ? (
+                    <div className="flex items-center justify-between p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Ticket className="w-4 h-4 text-green-600" />
+                        <span className="text-sm font-medium text-green-700">{cupomAplicado.codigo}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-green-600">-R$ {formatPrice(desconto)}</span>
+                        <button onClick={removerCupom} className="text-red-500 hover:text-red-700">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        id="cupom"
+                        value={cupomCodigo}
+                        onChange={(e) => setCupomCodigo(e.target.value.toUpperCase())}
+                        placeholder="CÓDIGO"
+                        className="flex-1 uppercase"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={aplicarCupom}
+                        disabled={cupomLoading}
+                      >
+                        {cupomLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Aplicar'}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+
                 <div className="border-t border-border pt-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Subtotal</span>
                     <span>R$ {formatPrice(subtotal)}</span>
                   </div>
+                  {cupomAplicado && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Desconto ({cupomAplicado.codigo})</span>
+                      <span>-R$ {formatPrice(desconto)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Frete</span>
                     <span className={frete === 0 ? 'text-green-600 font-medium' : ''}>
