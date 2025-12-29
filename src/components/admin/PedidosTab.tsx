@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, Trash2, Phone, Download, FileText } from "lucide-react";
+import { Loader2, Eye, Trash2, Phone, Download, FileText, Package } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
@@ -27,6 +29,7 @@ interface Pedido {
   created_at: string;
   itens: unknown;
   endereco: unknown;
+  codigo_rastreio: string | null;
 }
 
 interface PedidosTabProps {
@@ -46,6 +49,9 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>("todos");
   const [selectedPedido, setSelectedPedido] = useState<Pedido | null>(null);
+  const [trackingModalOpen, setTrackingModalOpen] = useState(false);
+  const [trackingCode, setTrackingCode] = useState("");
+  const [pendingStatusChange, setPendingStatusChange] = useState<{ id: string; status: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,7 +74,21 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
     }
   };
 
-  const updateStatus = async (id: string, newStatus: string) => {
+  const handleStatusChange = (id: string, newStatus: string) => {
+    if (newStatus === "enviado") {
+      const pedido = pedidos.find((p) => p.id === id);
+      setPendingStatusChange({ id, status: newStatus });
+      setTrackingCode(pedido?.codigo_rastreio || "");
+      setTrackingModalOpen(true);
+    } else {
+      updateStatus(id, newStatus);
+    }
+  };
+
+  const confirmTrackingAndUpdateStatus = async () => {
+    if (!pendingStatusChange) return;
+
+    const { id, status } = pendingStatusChange;
     const pedido = pedidos.find((p) => p.id === id);
     if (!pedido) return;
 
@@ -77,7 +97,59 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
     try {
       const { error } = await supabase
         .from("pedidos")
-        .update({ status: newStatus })
+        .update({ status, codigo_rastreio: trackingCode || null })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setPedidos((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, status, codigo_rastreio: trackingCode || null } : p))
+      );
+      onUpdate();
+      toast({ title: "Status atualizado!" });
+
+      // Send email notification if customer has email
+      if (pedido.cliente_email) {
+        try {
+          await supabase.functions.invoke("send-status-update-email", {
+            body: {
+              numeroPedido: pedido.numero_pedido,
+              clienteNome: pedido.cliente_nome,
+              clienteEmail: pedido.cliente_email,
+              novoStatus: status,
+              statusAnterior: previousStatus,
+              codigoRastreio: trackingCode || null,
+            },
+          });
+          toast({ title: "Email de notificação enviado!" });
+        } catch (emailError) {
+          console.error("Error sending status update email:", emailError);
+        }
+      }
+    } catch (error) {
+      toast({ title: "Erro ao atualizar status", variant: "destructive" });
+    } finally {
+      setTrackingModalOpen(false);
+      setTrackingCode("");
+      setPendingStatusChange(null);
+    }
+  };
+
+  const updateStatus = async (id: string, newStatus: string, codigoRastreio?: string) => {
+    const pedido = pedidos.find((p) => p.id === id);
+    if (!pedido) return;
+
+    const previousStatus = pedido.status;
+
+    try {
+      const updateData: { status: string; codigo_rastreio?: string | null } = { status: newStatus };
+      if (codigoRastreio !== undefined) {
+        updateData.codigo_rastreio = codigoRastreio || null;
+      }
+
+      const { error } = await supabase
+        .from("pedidos")
+        .update(updateData)
         .eq("id", id);
 
       if (error) throw error;
@@ -98,12 +170,12 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
               clienteEmail: pedido.cliente_email,
               novoStatus: newStatus,
               statusAnterior: previousStatus,
+              codigoRastreio: codigoRastreio || pedido.codigo_rastreio || null,
             },
           });
           toast({ title: "Email de notificação enviado!" });
         } catch (emailError) {
           console.error("Error sending status update email:", emailError);
-          // Don't show error to user, the status was updated successfully
         }
       }
     } catch (error) {
@@ -284,7 +356,7 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
                     <TableCell>
                       <Select
                         value={pedido.status}
-                        onValueChange={(value) => updateStatus(pedido.id, value)}
+                        onValueChange={(value) => handleStatusChange(pedido.id, value)}
                       >
                         <SelectTrigger className="w-32">
                           <Badge className={statusColors[pedido.status] || ""}>
@@ -413,6 +485,44 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
               </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Tracking Code Modal */}
+      <Dialog open={trackingModalOpen} onOpenChange={setTrackingModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Package className="w-5 h-5" />
+              Código de Rastreio
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Informe o código de rastreio para enviar junto com a notificação ao cliente.
+            </p>
+            <div className="space-y-2">
+              <Label htmlFor="tracking-code">Código de Rastreio (opcional)</Label>
+              <Input
+                id="tracking-code"
+                placeholder="Ex: BR123456789BR"
+                value={trackingCode}
+                onChange={(e) => setTrackingCode(e.target.value.toUpperCase())}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setTrackingModalOpen(false);
+              setTrackingCode("");
+              setPendingStatusChange(null);
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={confirmTrackingAndUpdateStatus}>
+              Confirmar Envio
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>

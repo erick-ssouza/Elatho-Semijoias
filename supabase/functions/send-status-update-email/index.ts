@@ -14,6 +14,7 @@ interface StatusUpdateRequest {
   clienteEmail: string;
   novoStatus: string;
   statusAnterior: string;
+  codigoRastreio?: string | null;
 }
 
 const statusLabels: Record<string, string> = {
@@ -40,12 +41,17 @@ const statusColors: Record<string, { bg: string; text: string; accent: string }>
   cancelado: { bg: "#fee2e2", text: "#991b1b", accent: "#ef4444" },
 };
 
-const statusMessages: Record<string, string> = {
-  pendente: "Seu pedido está aguardando confirmação de pagamento.",
-  confirmado: "Seu pagamento foi confirmado! Estamos preparando seu pedido com muito carinho.",
-  enviado: "Seu pedido foi enviado! Em breve você receberá em casa.",
-  entregue: "Seu pedido foi entregue! Esperamos que você ame suas novas semijoias. 💛",
-  cancelado: "Seu pedido foi cancelado. Se tiver dúvidas, entre em contato conosco.",
+const getStatusMessage = (status: string, codigoRastreio?: string | null): string => {
+  const messages: Record<string, string> = {
+    pendente: "Seu pedido está aguardando confirmação de pagamento.",
+    confirmado: "Seu pagamento foi confirmado! Estamos preparando seu pedido com muito carinho.",
+    enviado: codigoRastreio 
+      ? `Seu pedido foi enviado! Use o código <strong>${codigoRastreio}</strong> para rastrear.`
+      : "Seu pedido foi enviado! Em breve você receberá em casa.",
+    entregue: "Seu pedido foi entregue! Esperamos que você ame suas novas semijoias. 💛",
+    cancelado: "Seu pedido foi cancelado. Se tiver dúvidas, entre em contato conosco.",
+  };
+  return messages[status] || "O status do seu pedido foi atualizado.";
 };
 
 const handler = async (req: Request): Promise<Response> => {
@@ -59,7 +65,7 @@ const handler = async (req: Request): Promise<Response> => {
     const data: StatusUpdateRequest = await req.json();
     console.log("Status update data received:", data);
 
-    const { numeroPedido, clienteNome, clienteEmail, novoStatus } = data;
+    const { numeroPedido, clienteNome, clienteEmail, novoStatus, codigoRastreio } = data;
 
     if (!clienteEmail) {
       console.log("No customer email provided, skipping email notification");
@@ -72,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
     const colors = statusColors[novoStatus] || statusColors.pendente;
     const emoji = statusEmojis[novoStatus] || "📋";
     const statusLabel = statusLabels[novoStatus] || novoStatus;
-    const message = statusMessages[novoStatus] || "O status do seu pedido foi atualizado.";
+    const message = getStatusMessage(novoStatus, codigoRastreio);
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -131,6 +137,20 @@ const handler = async (req: Request): Promise<Response> => {
                 }).join('')}
               </div>
             </div>
+            
+            ${novoStatus === 'enviado' && codigoRastreio ? `
+              <div style="background-color: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 16px; margin-top: 24px;">
+                <h4 style="color: #0369a1; margin: 0 0 8px 0; font-size: 14px;">📦 Rastrear Pedido</h4>
+                <p style="color: #0369a1; margin: 0; font-size: 18px; font-weight: 700; font-family: monospace;">
+                  ${codigoRastreio}
+                </p>
+                <a href="https://www.linkcorreios.com.br/?id=${codigoRastreio}" 
+                   target="_blank" 
+                   style="display: inline-block; margin-top: 12px; background-color: #0369a1; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+                  Rastrear nos Correios
+                </a>
+              </div>
+            ` : ''}
             
             ${novoStatus === 'cancelado' ? `
               <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; margin-top: 24px;">
