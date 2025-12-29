@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      avaliacoes: {
+        Row: {
+          aprovado: boolean | null
+          cliente_email: string
+          cliente_nome: string
+          comentario: string | null
+          created_at: string
+          id: string
+          nota: number
+          produto_id: string
+          titulo: string | null
+        }
+        Insert: {
+          aprovado?: boolean | null
+          cliente_email: string
+          cliente_nome: string
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          nota: number
+          produto_id: string
+          titulo?: string | null
+        }
+        Update: {
+          aprovado?: boolean | null
+          cliente_email?: string
+          cliente_nome?: string
+          comentario?: string | null
+          created_at?: string
+          id?: string
+          nota?: number
+          produto_id?: string
+          titulo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           cpf: string | null
