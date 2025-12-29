@@ -27,6 +27,32 @@ serve(async (req) => {
     const body = await req.json();
     console.log("Webhook received:", JSON.stringify(body));
 
+    // Check if this is a test/simulation request
+    if (body.test === true && body.numeroPedido && body.status) {
+      console.log("Test mode: simulating payment update");
+      
+      const { data: pedido, error } = await supabase
+        .from("pedidos")
+        .update({ status: body.status })
+        .eq("numero_pedido", body.numeroPedido)
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error updating order:", error);
+        return new Response(
+          JSON.stringify({ received: true, error: error.message }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      console.log("Test order updated:", pedido);
+      return new Response(
+        JSON.stringify({ received: true, updated: true, pedido }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Mercado Pago sends different types of notifications
     const { type, data, action } = body;
 
@@ -74,11 +100,12 @@ serve(async (req) => {
       }
 
       // Map Mercado Pago status to our order status
+      // Valid statuses: pendente, confirmado, enviado, entregue, cancelado
       let novoStatus: string | null = null;
       
       switch (payment.status) {
         case "approved":
-          novoStatus = "pago";
+          novoStatus = "confirmado"; // Payment confirmed
           break;
         case "pending":
         case "in_process":
@@ -108,15 +135,15 @@ serve(async (req) => {
         } else {
           console.log("Order updated successfully:", pedido);
 
-          // Send email notification if payment approved
-          if (novoStatus === "pago" && pedido?.cliente_email) {
+          // Send email notification if payment confirmed
+          if (novoStatus === "confirmado" && pedido?.cliente_email) {
             try {
               await supabase.functions.invoke("send-status-update-email", {
                 body: {
                   to: pedido.cliente_email,
                   customerName: pedido.cliente_nome,
                   orderNumber: pedido.numero_pedido,
-                  newStatus: "pago",
+                  newStatus: "confirmado",
                 },
               });
               console.log("Status update email sent");
