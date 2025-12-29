@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from './ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -25,6 +25,27 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
   const [produtos, setProdutos] = useState<ProductWithRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('recentes');
+  const [headerVisible, setHeaderVisible] = useState(false);
+  const headerRef = useRef<HTMLDivElement>(null);
+
+  // Intersection observer for header animation
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHeaderVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.2, rootMargin: '0px' }
+    );
+
+    if (headerRef.current) {
+      observer.observe(headerRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -101,19 +122,51 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
   return (
     <section id="produtos" className="py-16 md:py-24">
       <div className="container px-6 lg:px-12">
-        {/* Header - Minimal */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12">
-          <div>
+        {/* Header - Minimal with entrance animation */}
+        <div 
+          ref={headerRef}
+          className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12"
+        >
+          <div 
+            className="overflow-hidden"
+            style={{
+              opacity: headerVisible ? 1 : 0,
+              transform: headerVisible ? 'translateY(0)' : 'translateY(30px)',
+              transition: 'opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+          >
             <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground">
               Coleção
             </h2>
-            <p className="text-sm text-muted-foreground mt-2">
+            <p 
+              className="text-sm text-muted-foreground mt-2"
+              style={{
+                opacity: headerVisible ? 1 : 0,
+                transform: headerVisible ? 'translateY(0)' : 'translateY(10px)',
+                transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
+              }}
+            >
               {produtos.length} produto{produtos.length !== 1 ? 's' : ''}
             </p>
+            {/* Animated underline */}
+            <div 
+              className="h-[1px] bg-foreground mt-4"
+              style={{
+                width: headerVisible ? '60px' : '0px',
+                transition: 'width 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.4s',
+              }}
+            />
           </div>
 
-          {/* Sort - Text only */}
-          <div className="flex items-center gap-4 text-xs uppercase tracking-[0.15em]">
+          {/* Sort - Text only with fade animation */}
+          <div 
+            className="flex items-center gap-4 text-xs uppercase tracking-[0.15em]"
+            style={{
+              opacity: headerVisible ? 1 : 0,
+              transform: headerVisible ? 'translateX(0)' : 'translateX(20px)',
+              transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
+            }}
+          >
             <span className="text-muted-foreground">Ordenar:</span>
             {[
               { value: 'recentes', label: 'Recentes' },
