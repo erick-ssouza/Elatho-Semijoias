@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import Index from "./pages/Index";
 import Produto from "./pages/Produto";
+import Checkout from "./pages/Checkout";
+import PedidoConfirmado from "./pages/PedidoConfirmado";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -20,6 +22,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/produto/:id" element={<Produto />} />
+            <Route path="/checkout" element={<Checkout />} />
+            <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
