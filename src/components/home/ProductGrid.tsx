@@ -13,12 +13,17 @@ interface Produto {
   categoria: string;
 }
 
+interface ProductWithRating extends Produto {
+  mediaAvaliacoes: number | null;
+  totalAvaliacoes: number;
+}
+
 interface ProductGridProps {
   selectedCategory: string;
 }
 
 export default function ProductGrid({ selectedCategory }: ProductGridProps) {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
+  const [produtos, setProdutos] = useState<ProductWithRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('recentes');
 
@@ -38,7 +43,33 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
       const { data, error } = await query;
 
       if (!error && data) {
-        let sortedData = [...data];
+        // Fetch ratings for all products
+        const { data: avaliacoes } = await supabase
+          .from('avaliacoes')
+          .select('produto_id, nota')
+          .eq('aprovado', true);
+
+        // Calculate average ratings per product
+        const ratingsMap = new Map<string, { sum: number; count: number }>();
+        
+        avaliacoes?.forEach((avaliacao) => {
+          const current = ratingsMap.get(avaliacao.produto_id) || { sum: 0, count: 0 };
+          ratingsMap.set(avaliacao.produto_id, {
+            sum: current.sum + avaliacao.nota,
+            count: current.count + 1,
+          });
+        });
+
+        const produtosComRating: ProductWithRating[] = data.map((produto) => {
+          const rating = ratingsMap.get(produto.id);
+          return {
+            ...produto,
+            mediaAvaliacoes: rating ? rating.sum / rating.count : null,
+            totalAvaliacoes: rating?.count || 0,
+          };
+        });
+
+        let sortedData = [...produtosComRating];
         
         switch (sortBy) {
           case 'menor':
@@ -105,7 +136,12 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {produtos.map((produto) => (
-              <ProductCard key={produto.id} {...produto} />
+              <ProductCard 
+                key={produto.id} 
+                {...produto}
+                mediaAvaliacoes={produto.mediaAvaliacoes}
+                totalAvaliacoes={produto.totalAvaliacoes}
+              />
             ))}
           </div>
         )}
