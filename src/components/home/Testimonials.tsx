@@ -49,19 +49,35 @@ export default function Testimonials() {
   return (
     <section className="py-20 md:py-32">
       <div className="container px-6 lg:px-12">
-        <div className="max-w-3xl mx-auto text-center">
+        <div 
+          className="max-w-3xl mx-auto text-center rounded-lg"
+          style={{
+            backgroundColor: '#FFFFFF',
+            padding: '60px 40px',
+            boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
+          }}
+        >
           {/* Large decorative quote */}
-          <span className="text-6xl md:text-8xl font-display text-border leading-none select-none">
+          <span 
+            className="text-6xl md:text-8xl font-display leading-none select-none"
+            style={{ color: '#CCCCCC' }}
+          >
             "
           </span>
 
           {/* Testimonial text */}
-          <blockquote className="font-display text-xl md:text-2xl lg:text-3xl font-normal italic text-foreground leading-relaxed -mt-8 mb-8">
+          <blockquote 
+            className="font-display text-xl md:text-2xl lg:text-3xl font-normal italic leading-relaxed -mt-8 mb-8"
+            style={{ color: '#1A1A1A' }}
+          >
             {currentDepoimento.texto}
           </blockquote>
 
           {/* Author */}
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">
+          <p 
+            className="text-xs uppercase tracking-[0.2em]"
+            style={{ color: '#666666' }}
+          >
             — {currentDepoimento.cliente_nome}
           </p>
 

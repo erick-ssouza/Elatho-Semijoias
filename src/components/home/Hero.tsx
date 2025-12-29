@@ -17,8 +17,13 @@ export default function Hero() {
           backgroundImage: 'url(https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=2070&auto=format&fit=crop)',
         }}
       >
-        {/* Subtle gradient overlay - only at bottom */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
+        {/* Gradient overlay - darker at top for text readability */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
+          }}
+        />
       </div>
 
       {/* Content - Left aligned */}
@@ -33,11 +38,15 @@ export default function Hero() {
 
           {/* Title */}
           <h1 
-            className="font-display text-5xl md:text-6xl lg:text-7xl font-normal text-white leading-[1.1] mb-10 animate-fade-in-up"
-            style={{ animationDelay: '100ms' }}
+            className="font-display text-5xl md:text-6xl lg:text-7xl font-normal leading-[1.1] mb-10 animate-fade-in-up"
+            style={{ 
+              animationDelay: '100ms',
+              color: '#FFFFFF',
+              textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+            }}
           >
-            Elegância<br />
-            Atemporal
+            Bem-vinda à<br />
+            Elatho Semijoias
           </h1>
 
           {/* CTA - Simple underlined text */}
