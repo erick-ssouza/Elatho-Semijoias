@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Crown } from "lucide-react";
+import { Loader2, Crown, ArrowLeft } from "lucide-react";
+
+type ViewMode = "login" | "signup" | "forgot";
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("login");
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,7 +23,21 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      if (isSignUp) {
+      if (viewMode === "forgot") {
+        // Password reset flow
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/painel-elatho-2025/reset-password`,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Email enviado!",
+          description: "Verifique sua caixa de entrada para redefinir sua senha.",
+        });
+        setViewMode("login");
+        setEmail("");
+      } else if (viewMode === "signup") {
         // Sign up flow
         const { data, error } = await supabase.auth.signUp({
           email,
@@ -37,7 +53,7 @@ const AdminLogin = () => {
           title: "Conta criada!",
           description: "Agora você pode fazer login. Aguarde enquanto o admin configura suas permissões.",
         });
-        setIsSignUp(false);
+        setViewMode("login");
         setPassword("");
       } else {
         // Login flow
@@ -76,13 +92,62 @@ const AdminLogin = () => {
         navigate("/painel-elatho-2025/dashboard");
       }
     } catch (error: any) {
+      const errorTitle = viewMode === "forgot" 
+        ? "Erro ao enviar email" 
+        : viewMode === "signup" 
+          ? "Erro no cadastro" 
+          : "Erro no login";
+      
       toast({
-        title: isSignUp ? "Erro no cadastro" : "Erro no login",
+        title: errorTitle,
         description: error.message || "Algo deu errado.",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getTitle = () => {
+    switch (viewMode) {
+      case "forgot":
+        return "Recuperar Senha";
+      case "signup":
+        return "Criar Conta";
+      default:
+        return "Painel Administrativo";
+    }
+  };
+
+  const getDescription = () => {
+    switch (viewMode) {
+      case "forgot":
+        return "Digite seu email para receber o link de recuperação";
+      case "signup":
+        return "Crie sua conta de administrador";
+      default:
+        return "Acesse com suas credenciais de administrador";
+    }
+  };
+
+  const getButtonText = () => {
+    if (loading) {
+      switch (viewMode) {
+        case "forgot":
+          return "Enviando...";
+        case "signup":
+          return "Criando conta...";
+        default:
+          return "Entrando...";
+      }
+    }
+    switch (viewMode) {
+      case "forgot":
+        return "Enviar Link";
+      case "signup":
+        return "Criar conta";
+      default:
+        return "Entrar";
     }
   };
 
@@ -95,10 +160,8 @@ const AdminLogin = () => {
               <Crown className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-display">Painel Administrativo</CardTitle>
-          <CardDescription>
-            {isSignUp ? "Crie sua conta de administrador" : "Acesse com suas credenciais de administrador"}
-          </CardDescription>
+          <CardTitle className="text-2xl font-display">{getTitle()}</CardTitle>
+          <CardDescription>{getDescription()}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -113,37 +176,65 @@ const AdminLogin = () => {
                 required
               />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Senha</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                minLength={6}
-              />
-            </div>
+            {viewMode !== "forgot" && (
+              <div className="space-y-2">
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+              </div>
+            )}
             <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isSignUp ? "Criando conta..." : "Entrando..."}
-                </>
-              ) : (
-                isSignUp ? "Criar conta" : "Entrar"
-              )}
+              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {getButtonText()}
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              onClick={() => setIsSignUp(!isSignUp)}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
-            >
-              {isSignUp ? "Já tem conta? Faça login" : "Não tem conta? Cadastre-se"}
-            </button>
+          
+          <div className="mt-4 space-y-2 text-center">
+            {viewMode === "login" && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("forgot")}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
+                >
+                  Esqueceu sua senha?
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("signup")}
+                  className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
+                >
+                  Não tem conta? Cadastre-se
+                </button>
+              </>
+            )}
+            {viewMode === "signup" && (
+              <button
+                type="button"
+                onClick={() => setViewMode("login")}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 w-full"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                Voltar para login
+              </button>
+            )}
+            {viewMode === "forgot" && (
+              <button
+                type="button"
+                onClick={() => setViewMode("login")}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 w-full"
+              >
+                <ArrowLeft className="w-3 h-3" />
+                Voltar para login
+              </button>
+            )}
           </div>
         </CardContent>
       </Card>
