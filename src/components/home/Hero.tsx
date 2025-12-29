@@ -27,6 +27,10 @@ export default function Hero() {
     }
   };
 
+  // Calculate opacity based on scroll (fade out as user scrolls)
+  const textOpacity = Math.max(0, 1 - scrollY / 400);
+  const textTranslateY = scrollY * 0.2;
+
   return (
     <section ref={sectionRef} className="relative h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image - Gold and Silver Jewelry with Parallax */}
@@ -46,8 +50,14 @@ export default function Hero() {
         />
       </div>
 
-      {/* Content - Left aligned */}
-      <div className="container relative z-10 px-6 lg:px-12">
+      {/* Content - Left aligned with fade on scroll */}
+      <div 
+        className="container relative z-10 px-6 lg:px-12 will-change-transform"
+        style={{
+          opacity: textOpacity,
+          transform: `translateY(${textTranslateY}px)`,
+        }}
+      >
         <div className="max-w-2xl">
           {/* Subtitle with letter-spacing animation */}
           <p 
@@ -93,11 +103,14 @@ export default function Hero() {
         </div>
       </div>
 
-      {/* Scroll indicator - with subtle bounce */}
+      {/* Scroll indicator - with subtle bounce and fade on scroll */}
       <button 
         onClick={scrollToProducts}
         className="absolute bottom-12 left-1/2 text-white/60 hover:text-white transition-colors duration-300 animate-bounce-subtle"
-        style={{ animationDelay: '1000ms' }}
+        style={{ 
+          animationDelay: '1000ms',
+          opacity: textOpacity,
+        }}
       >
         <ArrowDown className="h-5 w-5 stroke-[1]" />
       </button>
