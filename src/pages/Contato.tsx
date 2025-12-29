@@ -185,7 +185,7 @@ export default function Contato() {
 
                 <div className="space-y-6">
                   <a 
-                    href="https://wa.me/5511999999999" 
+                    href="https://wa.me/5519998229202" 
                     target="_blank" 
                     rel="noopener noreferrer"
                     className="card-elegant p-6 flex items-start gap-4 hover:border-primary/30 transition-colors"
@@ -195,13 +195,13 @@ export default function Contato() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">WhatsApp</h3>
-                      <p className="text-muted-foreground">(11) 99999-9999</p>
+                      <p className="text-muted-foreground">(19) 99822-9202</p>
                       <p className="text-sm text-primary mt-1">Resposta rápida!</p>
                     </div>
                   </a>
 
                   <a 
-                    href="mailto:contato@elathosemijoias.com.br"
+                    href="mailto:elathosemijoias@gmail.com"
                     className="card-elegant p-6 flex items-start gap-4 hover:border-primary/30 transition-colors"
                   >
                     <div className="w-12 h-12 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
@@ -209,7 +209,7 @@ export default function Contato() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-1">Email</h3>
-                      <p className="text-muted-foreground">contato@elathosemijoias.com.br</p>
+                      <p className="text-muted-foreground">elathosemijoias@gmail.com</p>
                       <p className="text-sm text-muted-foreground mt-1">Resposta em até 24h</p>
                     </div>
                   </a>

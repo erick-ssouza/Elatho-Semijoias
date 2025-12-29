@@ -140,7 +140,7 @@ export default function Cuidados() {
               Nossa equipe está pronta para ajudar você a cuidar das suas peças.
             </p>
             <a 
-              href="https://wa.me/5511999999999" 
+              href="https://wa.me/5519998229202" 
               target="_blank" 
               rel="noopener noreferrer"
               className="btn-gold inline-flex"
