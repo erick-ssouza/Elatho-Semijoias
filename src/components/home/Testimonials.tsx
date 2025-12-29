@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +15,10 @@ export default function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Touch/swipe state
+  const touchStartX = useRef<number | null>(null);
+  const touchEndX = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchDepoimentos = async () => {
@@ -47,8 +51,36 @@ export default function Testimonials() {
     changeSlide((currentIndex + 1) % depoimentos.length);
   }, [currentIndex, depoimentos.length, changeSlide]);
 
-  const prevSlide = () => {
+  const prevSlide = useCallback(() => {
     changeSlide((currentIndex - 1 + depoimentos.length) % depoimentos.length);
+  }, [currentIndex, depoimentos.length, changeSlide]);
+
+  // Swipe handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = null;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return;
+    
+    const diff = touchStartX.current - touchEndX.current;
+    const minSwipeDistance = 50;
+
+    if (Math.abs(diff) > minSwipeDistance) {
+      if (diff > 0) {
+        nextSlide(); // Swipe left -> next
+      } else {
+        prevSlide(); // Swipe right -> prev
+      }
+    }
+
+    touchStartX.current = null;
+    touchEndX.current = null;
   };
 
   // Auto-play every 5 seconds
@@ -72,12 +104,15 @@ export default function Testimonials() {
     <section className="py-20 md:py-32">
       <div className="container px-6 lg:px-12">
         <div 
-          className="max-w-3xl mx-auto text-center rounded-lg animate-fade-in"
+          className="max-w-3xl mx-auto text-center rounded-lg animate-fade-in touch-pan-y"
           style={{
             backgroundColor: '#FFFFFF',
             padding: '60px 40px',
             boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
           }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           {/* Large decorative quote */}
           <span 
