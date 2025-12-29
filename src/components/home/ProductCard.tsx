@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Eye } from 'lucide-react';
+import { Eye, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface ProductCardProps {
@@ -9,6 +9,8 @@ interface ProductCardProps {
   preco_promocional?: number | null;
   imagem_url: string | null;
   categoria: string;
+  mediaAvaliacoes?: number | null;
+  totalAvaliacoes?: number;
 }
 
 export default function ProductCard({
@@ -18,6 +20,8 @@ export default function ProductCard({
   preco_promocional,
   imagem_url,
   categoria,
+  mediaAvaliacoes,
+  totalAvaliacoes = 0,
 }: ProductCardProps) {
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
@@ -68,6 +72,27 @@ export default function ProductCard({
             {nome}
           </h3>
         </Link>
+
+        {/* Rating */}
+        {totalAvaliacoes > 0 && mediaAvaliacoes !== null && (
+          <div className="flex items-center gap-1 mb-2">
+            <div className="flex items-center gap-0.5">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <Star
+                  key={star}
+                  className={`h-3.5 w-3.5 ${
+                    star <= Math.round(mediaAvaliacoes)
+                      ? 'fill-primary text-primary'
+                      : 'text-muted-foreground/40'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-xs text-muted-foreground">
+              ({totalAvaliacoes})
+            </span>
+          </div>
+        )}
         
         <div className="flex items-center gap-2">
           {hasDiscount ? (
