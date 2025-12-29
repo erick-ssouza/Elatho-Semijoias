@@ -101,7 +101,7 @@ const ProdutosTab = () => {
       imagem_url: produto.imagem_url || "",
       estoque: String(produto.estoque || 10),
       destaque: produto.destaque || false,
-      variacoes: (produto.variacoes || []).join(", "),
+      variacoes: (Array.isArray(produto.variacoes) ? produto.variacoes : []).join(", "),
     });
     setDialogOpen(true);
   };
