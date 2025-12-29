@@ -69,6 +69,11 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
   };
 
   const updateStatus = async (id: string, newStatus: string) => {
+    const pedido = pedidos.find((p) => p.id === id);
+    if (!pedido) return;
+
+    const previousStatus = pedido.status;
+
     try {
       const { error } = await supabase
         .from("pedidos")
@@ -82,6 +87,25 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
       );
       onUpdate();
       toast({ title: "Status atualizado!" });
+
+      // Send email notification if customer has email
+      if (pedido.cliente_email) {
+        try {
+          await supabase.functions.invoke("send-status-update-email", {
+            body: {
+              numeroPedido: pedido.numero_pedido,
+              clienteNome: pedido.cliente_nome,
+              clienteEmail: pedido.cliente_email,
+              novoStatus: newStatus,
+              statusAnterior: previousStatus,
+            },
+          });
+          toast({ title: "Email de notificação enviado!" });
+        } catch (emailError) {
+          console.error("Error sending status update email:", emailError);
+          // Don't show error to user, the status was updated successfully
+        }
+      }
     } catch (error) {
       toast({ title: "Erro ao atualizar status", variant: "destructive" });
     }
