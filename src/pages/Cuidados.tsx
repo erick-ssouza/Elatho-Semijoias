@@ -7,37 +7,31 @@ const cuidados = [
     icon: Droplets,
     titulo: 'Evite contato com água',
     descricao: 'Retire suas joias antes de banho, piscina ou praia. A água, especialmente salgada ou clorada, pode danificar o banho de ouro.',
-    cor: 'from-blue-500 to-blue-600'
   },
   {
     icon: Box,
     titulo: 'Guarde separadamente',
     descricao: 'Armazene cada peça em local separado para evitar arranhões. Use saquinhos de veludo ou a caixinha original.',
-    cor: 'from-amber-500 to-amber-600'
   },
   {
     icon: FlaskConical,
     titulo: 'Evite perfumes e cremes',
     descricao: 'Aplique perfumes e cremes antes de colocar suas joias. Produtos químicos podem oxidar e manchar as peças.',
-    cor: 'from-pink-500 to-pink-600'
   },
   {
     icon: Sparkles,
     titulo: 'Limpe com flanela macia',
     descricao: 'Para manter o brilho, limpe suas peças regularmente com uma flanela macia e seca. Evite produtos abrasivos.',
-    cor: 'from-purple-500 to-purple-600'
   },
   {
     icon: Moon,
     titulo: 'Retire para dormir',
     descricao: 'Evite dormir com suas joias para prevenir danos causados por movimentos durante o sono e contato com travesseiros.',
-    cor: 'from-indigo-500 to-indigo-600'
   },
   {
     icon: Wind,
     titulo: 'Evite produtos químicos',
     descricao: 'Retire suas joias ao manusear produtos de limpeza, alvejantes ou qualquer substância química.',
-    cor: 'from-green-500 to-green-600'
   }
 ];
 
@@ -69,8 +63,8 @@ export default function Cuidados() {
                     key={index}
                     className="card-elegant p-8 hover:-translate-y-1 transition-all duration-300"
                   >
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${cuidado.cor} flex items-center justify-center mb-6`}>
-                      <Icon className="h-8 w-8 text-white" />
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: '#F5ECD7' }}>
+                      <Icon className="h-8 w-8" style={{ color: '#D4AF37' }} />
                     </div>
                     <h3 className="font-display text-xl font-semibold mb-3">
                       {cuidado.titulo}

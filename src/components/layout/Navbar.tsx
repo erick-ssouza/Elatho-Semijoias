@@ -1,11 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ShoppingBag, User } from 'lucide-react';
+import { Search, Menu, X, ShoppingBag, User, Heart, Package, MessageCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CartDrawer from '@/components/cart/CartDrawer';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface Produto {
   id: string;
@@ -159,14 +165,56 @@ export default function Navbar() {
                 <WhatsAppIcon className="h-5 w-5" />
               </a>
 
-              {/* User */}
+              {/* Favorites */}
               <Link
-                to={user ? "/favoritos" : "/auth"}
+                to="/favoritos"
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="Minha conta"
+                aria-label="Favoritos"
               >
-                <User className="h-5 w-5 stroke-[1.5]" />
+                <Heart className="h-5 w-5 stroke-[1.5]" />
               </Link>
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                    aria-label="Minha conta"
+                  >
+                    <User className="h-5 w-5 stroke-[1.5]" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
+                  <DropdownMenuItem asChild>
+                    <a
+                      href="https://wa.me/5519998229202?text=Olá! Gostaria de consultar meus pedidos."
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <Package className="h-4 w-4" />
+                      Meus Pedidos
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/favoritos" className="flex items-center gap-2">
+                      <Heart className="h-4 w-4" />
+                      Meus Favoritos
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <a
+                      href="https://wa.me/5519998229202"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      Fale Conosco
+                    </a>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Cart */}
               <button
@@ -185,35 +233,13 @@ export default function Navbar() {
 
             {/* Mobile - Right */}
             <div className="flex lg:hidden items-center gap-4">
-              {/* Instagram */}
-              <a
-                href="https://instagram.com/elathosemijoias"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="Instagram"
-              >
-                <InstagramIcon className="h-5 w-5" />
-              </a>
-
-              {/* WhatsApp */}
-              <a
-                href="https://wa.me/5519998229202"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="WhatsApp"
-              >
-                <WhatsAppIcon className="h-5 w-5" />
-              </a>
-
-              {/* User */}
+              {/* Favorites */}
               <Link
-                to={user ? "/favoritos" : "/auth"}
+                to="/favoritos"
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="Minha conta"
+                aria-label="Favoritos"
               >
-                <User className="h-5 w-5 stroke-[1.5]" />
+                <Heart className="h-5 w-5 stroke-[1.5]" />
               </Link>
 
               {/* Cart */}
