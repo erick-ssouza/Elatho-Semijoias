@@ -50,7 +50,7 @@ export default function Testimonials() {
     <section className="py-20 md:py-32">
       <div className="container px-6 lg:px-12">
         <div 
-          className="max-w-3xl mx-auto text-center rounded-lg"
+          className="max-w-3xl mx-auto text-center rounded-lg animate-fade-in"
           style={{
             backgroundColor: '#FFFFFF',
             padding: '60px 40px',
