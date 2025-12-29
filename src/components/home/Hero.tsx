@@ -1,5 +1,4 @@
 import { ArrowDown } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 
 export default function Hero() {
   const scrollToProducts = () => {
@@ -10,59 +9,54 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with overlay */}
+    <section className="relative h-screen flex items-center justify-center overflow-hidden">
+      {/* Background Image */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: 'url(https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2070&auto=format&fit=crop)',
         }}
       >
-        <div className="absolute inset-0 bg-foreground/40" />
+        {/* Subtle gradient overlay - only at bottom */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
       </div>
 
-      {/* Content */}
+      {/* Content - Left aligned */}
       <div className="container relative z-10 px-6 lg:px-12">
-        <div className="max-w-3xl">
+        <div className="max-w-2xl">
           {/* Subtitle */}
           <p 
-            className="text-sm tracking-[0.3em] text-background/80 uppercase mb-6 animate-fade-in"
+            className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 animate-fade-in"
           >
-            Bem-vinda à
+            Coleção 2025
           </p>
 
           {/* Title */}
           <h1 
-            className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-background leading-[0.9] mb-8 animate-fade-in-up"
+            className="font-display text-5xl md:text-6xl lg:text-7xl font-normal text-white leading-[1.1] mb-10 animate-fade-in-up"
             style={{ animationDelay: '100ms' }}
           >
-            Elatho<br />
-            <span className="text-primary">Semijoias</span>
+            Elegância<br />
+            Atemporal
           </h1>
 
-          {/* CTA */}
-          <div 
-            className="animate-fade-in-up"
+          {/* CTA - Simple underlined text */}
+          <button 
+            onClick={scrollToProducts}
+            className="text-sm text-white underline underline-offset-8 decoration-[0.5px] hover:decoration-2 transition-all duration-300 animate-fade-in-up"
             style={{ animationDelay: '200ms' }}
           >
-            <Button 
-              onClick={scrollToProducts}
-              variant="outline"
-              className="h-14 px-10 text-sm tracking-[0.2em] uppercase border-background/50 text-background hover:bg-background hover:text-foreground rounded-none transition-all duration-300"
-            >
-              Ver Coleção
-            </Button>
-          </div>
+            Explorar
+          </button>
         </div>
       </div>
 
-      {/* Scroll indicator */}
+      {/* Scroll indicator - Minimal */}
       <button 
         onClick={scrollToProducts}
-        className="absolute bottom-12 left-1/2 -translate-x-1/2 animate-bounce text-background/70 hover:text-background transition-colors"
+        className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white/60 hover:text-white transition-colors duration-300"
       >
-        <span className="text-xs tracking-[0.3em] uppercase block mb-2">Scroll</span>
-        <ArrowDown className="h-5 w-5 mx-auto" />
+        <ArrowDown className="h-5 w-5 stroke-[1]" />
       </button>
     </section>
   );
