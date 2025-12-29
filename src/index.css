@@ -2,117 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
-@import '@fontsource/playfair-display/400.css';
-@import '@fontsource/playfair-display/600.css';
-@import '@fontsource/playfair-display/700.css';
+@import '@fontsource/inter/300.css';
 @import '@fontsource/inter/400.css';
 @import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
 
-/* Elatho Semijoias Design System - Luxury Gold Palette */
+/* Elatho Semijoias Design System - Ultra Minimalist */
 
 @layer base {
   :root {
-    /* Background Colors */
-    --background: 40 33% 97%; /* Off-white #FAF9F6 */
-    --background-secondary: 40 76% 97%; /* Cream #FDF8F0 */
-    --foreground: 0 0% 18%; /* Graphite #2D2D2D */
+    /* Background Colors - Pure White */
+    --background: 0 0% 100%;
+    --background-secondary: 0 0% 98%;
+    --foreground: 0 0% 10%; /* #1A1A1A */
 
     /* Card */
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 18%;
+    --card-foreground: 0 0% 10%;
 
     /* Popover */
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 18%;
+    --popover-foreground: 0 0% 10%;
 
-    /* Primary - Gold */
-    --primary: 45 65% 52%; /* Gold #D4AF37 */
-    --primary-dark: 45 88% 38%; /* Dark Gold #B8960C */
+    /* Primary - Gold (minimal use) */
+    --primary: 43 74% 52%; /* #D4AF37 */
+    --primary-dark: 43 74% 42%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
-    --secondary: 40 76% 97%;
-    --secondary-foreground: 0 0% 18%;
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 0 0% 10%;
 
     /* Muted */
-    --muted: 60 20% 95%; /* Pearl #F5F5F0 */
-    --muted-foreground: 0 0% 42%; /* Gray #6B6B6B */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%; /* #666666 */
 
-    /* Accent - Champagne */
-    --accent: 39 71% 89%; /* Champagne #F7E7CE */
-    --accent-foreground: 0 0% 18%;
+    /* Accent */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
 
     /* Destructive */
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Border & Input */
-    --border: 40 20% 88%;
-    --input: 40 20% 88%;
-    --ring: 45 65% 52%;
+    /* Border & Input - Very Light Gray */
+    --border: 0 0% 90%; /* #E5E5E5 */
+    --input: 0 0% 90%;
+    --ring: 43 74% 52%;
 
-    --radius: 0.75rem;
+    --radius: 0;
 
-    /* Gold Gradient */
-    --gradient-gold: linear-gradient(135deg, hsl(45, 65%, 52%) 0%, hsl(45, 88%, 38%) 100%);
-    --gradient-gold-light: linear-gradient(135deg, hsl(45, 65%, 62%) 0%, hsl(45, 65%, 52%) 100%);
-    --gradient-hero: linear-gradient(180deg, hsla(40, 33%, 97%, 0) 0%, hsl(40, 33%, 97%) 100%);
-
-    /* Shadows */
-    --shadow-gold: 0 4px 20px -4px hsla(45, 65%, 52%, 0.3);
-    --shadow-elegant: 0 10px 40px -10px hsla(0, 0%, 0%, 0.1);
+    /* Shadows - Minimal */
+    --shadow-elegant: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
 
     /* Sidebar */
-    --sidebar-background: 40 33% 97%;
-    --sidebar-foreground: 0 0% 18%;
-    --sidebar-primary: 45 65% 52%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 43 74% 52%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 39 71% 89%;
-    --sidebar-accent-foreground: 0 0% 18%;
-    --sidebar-border: 40 20% 88%;
-    --sidebar-ring: 45 65% 52%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 43 74% 52%;
   }
 
   .dark {
-    --background: 0 0% 8%;
-    --background-secondary: 0 0% 12%;
-    --foreground: 40 33% 97%;
+    --background: 0 0% 5%;
+    --background-secondary: 0 0% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 0 0% 10%;
-    --card-foreground: 40 33% 97%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 0 0% 10%;
-    --popover-foreground: 40 33% 97%;
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 45 65% 52%;
-    --primary-dark: 45 88% 38%;
-    --primary-foreground: 0 0% 8%;
+    --primary: 43 74% 52%;
+    --primary-dark: 43 74% 42%;
+    --primary-foreground: 0 0% 5%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 40 33% 97%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 95%;
 
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 60%;
 
-    --accent: 39 40% 20%;
-    --accent-foreground: 40 33% 97%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 95%;
 
     --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 45 65% 52%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 43 74% 52%;
 
-    --sidebar-background: 0 0% 8%;
-    --sidebar-foreground: 40 33% 97%;
-    --sidebar-primary: 45 65% 52%;
-    --sidebar-primary-foreground: 0 0% 8%;
-    --sidebar-accent: 0 0% 15%;
-    --sidebar-accent-foreground: 40 33% 97%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 45 65% 52%;
+    --sidebar-background: 0 0% 5%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 74% 52%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 43 74% 52%;
   }
 }
 
@@ -127,60 +118,52 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    font-weight: 300;
+    letter-spacing: 0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    @apply font-display font-normal;
   }
 }
 
 @layer utilities {
   .text-gradient-gold {
-    background: linear-gradient(135deg, hsl(45, 65%, 52%) 0%, hsl(45, 88%, 38%) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: hsl(43, 74%, 52%);
   }
 
-  .bg-gradient-gold {
-    background: linear-gradient(135deg, hsl(45, 65%, 52%) 0%, hsl(45, 88%, 38%) 100%);
+  .tracking-wide-custom {
+    letter-spacing: 0.2em;
   }
 
-  .bg-gradient-gold-hover {
-    background: linear-gradient(135deg, hsl(45, 65%, 58%) 0%, hsl(45, 88%, 44%) 100%);
-  }
-
-  .shadow-gold {
-    box-shadow: 0 4px 20px -4px hsla(45, 65%, 52%, 0.3);
-  }
-
-  .shadow-elegant {
-    box-shadow: 0 10px 40px -10px hsla(0, 0%, 0%, 0.1);
-  }
-
-  .border-gold {
-    border-color: hsl(45, 65%, 52%);
-  }
-
-  .ring-gold {
-    --tw-ring-color: hsl(45, 65%, 52%);
+  .tracking-wider-custom {
+    letter-spacing: 0.3em;
   }
 }
 
 @layer components {
-  .btn-gold {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-medium text-white rounded-xl transition-all duration-300 bg-gradient-gold hover:bg-gradient-gold-hover shadow-gold hover:shadow-lg hover:-translate-y-0.5;
+  /* Minimalist Button - Primary */
+  .btn-minimal {
+    @apply inline-flex items-center justify-center px-8 py-3 text-xs uppercase tracking-wider-custom font-normal border border-foreground text-foreground bg-transparent transition-all duration-300 hover:bg-foreground hover:text-background;
   }
 
-  .btn-gold-outline {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-medium rounded-xl transition-all duration-300 border-2 border-primary text-primary hover:bg-primary hover:text-white;
+  /* Minimalist Button - Inverse */
+  .btn-minimal-inverse {
+    @apply inline-flex items-center justify-center px-8 py-3 text-xs uppercase tracking-wider-custom font-normal border border-background text-background bg-transparent transition-all duration-300 hover:bg-background hover:text-foreground;
   }
 
-  .card-elegant {
-    @apply bg-card rounded-xl shadow-elegant border border-border/50 transition-all duration-300 hover:shadow-lg hover:border-primary/20;
+  /* Minimalist Link */
+  .link-minimal {
+    @apply text-foreground hover:underline underline-offset-4 transition-all duration-300;
   }
 
-  .input-elegant {
-    @apply w-full px-4 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200;
+  /* Minimalist Card */
+  .card-minimal {
+    @apply bg-card transition-all duration-300;
+  }
+
+  /* Minimalist Input */
+  .input-minimal {
+    @apply w-full py-3 border-b border-border bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-foreground transition-all duration-300;
   }
 }

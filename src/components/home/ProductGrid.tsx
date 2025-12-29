@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from './ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface Produto {
   id: string;
@@ -80,7 +79,6 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
             break;
           case 'avaliacao':
             sortedData.sort((a, b) => {
-              // Products with ratings come first, sorted by average rating (highest first)
               if (a.mediaAvaliacoes === null && b.mediaAvaliacoes === null) return 0;
               if (a.mediaAvaliacoes === null) return 1;
               if (b.mediaAvaliacoes === null) return -1;
@@ -88,7 +86,6 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
             });
             break;
           default:
-            // Keep default order (most recent)
             break;
         }
         
@@ -102,49 +99,62 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
   }, [selectedCategory, sortBy]);
 
   return (
-    <section id="produtos" className="py-12 md:py-16 bg-background-secondary">
-      <div className="container px-4">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
+    <section id="produtos" className="py-16 md:py-24">
+      <div className="container px-6 lg:px-12">
+        {/* Header - Minimal */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 mb-12">
           <div>
-            <h2 className="text-2xl md:text-3xl font-display font-bold">
-              Nossas <span className="text-gradient-gold">Semijoias</span>
+            <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground">
+              Coleção
             </h2>
-            <p className="text-muted-foreground mt-1">
-              {produtos.length} produto{produtos.length !== 1 ? 's' : ''} encontrado{produtos.length !== 1 ? 's' : ''}
+            <p className="text-sm text-muted-foreground mt-2">
+              {produtos.length} produto{produtos.length !== 1 ? 's' : ''}
             </p>
           </div>
 
-          <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-48 input-elegant">
-              <SelectValue placeholder="Ordenar por" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="recentes">Mais Recentes</SelectItem>
-              <SelectItem value="avaliacao">Melhor Avaliação</SelectItem>
-              <SelectItem value="menor">Menor Preço</SelectItem>
-              <SelectItem value="maior">Maior Preço</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Sort - Text only */}
+          <div className="flex items-center gap-4 text-xs uppercase tracking-[0.15em]">
+            <span className="text-muted-foreground">Ordenar:</span>
+            {[
+              { value: 'recentes', label: 'Recentes' },
+              { value: 'menor', label: 'Menor Preço' },
+              { value: 'maior', label: 'Maior Preço' },
+            ].map((option, index) => (
+              <div key={option.value} className="flex items-center">
+                <button
+                  onClick={() => setSortBy(option.value)}
+                  className={`transition-colors ${
+                    sortBy === option.value
+                      ? 'text-foreground underline underline-offset-4'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                >
+                  {option.label}
+                </button>
+                {index < 2 && <span className="text-muted-foreground/30 ml-4">·</span>}
+              </div>
+            ))}
+          </div>
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 md:gap-16">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="card-elegant overflow-hidden">
-                <Skeleton className="aspect-square" />
-                <div className="p-4 space-y-2">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-5 w-1/2" />
+              <div key={i}>
+                <Skeleton className="aspect-[4/5] mb-5" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-3/4 mx-auto" />
+                  <Skeleton className="h-4 w-1/2 mx-auto" />
                 </div>
               </div>
             ))}
           </div>
         ) : produtos.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-muted-foreground">Nenhum produto encontrado nesta categoria.</p>
+          <div className="text-center py-24">
+            <p className="text-muted-foreground">Nenhum produto encontrado.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 md:gap-16">
             {produtos.map((produto) => (
               <ProductCard 
                 key={produto.id} 

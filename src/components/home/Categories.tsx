@@ -1,48 +1,41 @@
-import { CircleDot, Gem, Heart, Link2, Sparkles } from 'lucide-react';
-
 interface CategoriesProps {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
 }
 
 const categories = [
-  { id: 'todos', name: 'Todos', icon: Sparkles },
-  { id: 'aneis', name: 'Anéis', icon: CircleDot },
-  { id: 'brincos', name: 'Brincos', icon: Gem },
-  { id: 'colares', name: 'Colares', icon: Heart },
-  { id: 'pulseiras', name: 'Pulseiras', icon: Link2 },
-  { id: 'conjuntos', name: 'Conjuntos', icon: Sparkles },
+  { id: 'todos', name: 'Todos' },
+  { id: 'aneis', name: 'Anéis' },
+  { id: 'brincos', name: 'Brincos' },
+  { id: 'colares', name: 'Colares' },
+  { id: 'pulseiras', name: 'Pulseiras' },
+  { id: 'conjuntos', name: 'Conjuntos' },
 ];
 
 export default function Categories({ selectedCategory, onSelectCategory }: CategoriesProps) {
   return (
     <section className="py-12 md:py-16">
-      <div className="container px-4">
-        <h2 className="text-2xl md:text-3xl font-display font-bold text-center mb-8">
-          Explore por <span className="text-gradient-gold">Categoria</span>
-        </h2>
-
-        <div className="flex flex-wrap justify-center gap-3 md:gap-4">
-          {categories.map((category) => {
-            const Icon = category.icon;
-            const isSelected = selectedCategory === category.id;
-            
-            return (
+      <div className="container px-6 lg:px-12">
+        {/* Horizontal text categories with dot separators */}
+        <nav className="flex flex-wrap justify-center items-center gap-x-2 gap-y-3">
+          {categories.map((category, index) => (
+            <div key={category.id} className="flex items-center">
               <button
-                key={category.id}
                 onClick={() => onSelectCategory(category.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-full transition-all duration-300 ${
-                  isSelected
-                    ? 'bg-gradient-gold text-primary-foreground shadow-gold'
-                    : 'bg-card border border-border hover:border-primary/30 hover:shadow-sm'
+                className={`text-xs uppercase tracking-[0.2em] transition-all duration-300 ${
+                  selectedCategory === category.id
+                    ? 'text-foreground underline underline-offset-8'
+                    : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                <span className="font-medium">{category.name}</span>
+                {category.name}
               </button>
-            );
-          })}
-        </div>
+              {index < categories.length - 1 && (
+                <span className="text-muted-foreground/50 mx-4">·</span>
+              )}
+            </div>
+          ))}
+        </nav>
       </div>
     </section>
   );

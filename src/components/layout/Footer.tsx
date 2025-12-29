@@ -1,123 +1,107 @@
 import { Link } from 'react-router-dom';
-import { Instagram, Mail, Phone } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-foreground text-background py-12 md:py-16">
-      <div className="container mx-auto px-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
-          {/* Institucional */}
+    <footer className="bg-background-secondary py-16 md:py-24">
+      <div className="container px-6 lg:px-12">
+        {/* Logo */}
+        <div className="text-center mb-16">
+          <Link to="/" className="font-display text-3xl md:text-4xl text-foreground">
+            Elatho
+          </Link>
+        </div>
+
+        {/* Links Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-12 md:gap-16 max-w-3xl mx-auto mb-16">
+          {/* Shop */}
           <div>
-            <h3 className="font-display text-lg font-semibold mb-4 text-primary">
-              Institucional
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
+              Shop
             </h3>
-            <nav className="flex flex-col gap-2">
-              <Link to="/sobre" className="text-background/70 hover:text-primary transition-colors">
-                Sobre Nós
+            <nav className="flex flex-col gap-3">
+              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
+                Todos os produtos
               </Link>
-              <Link to="/trocas" className="text-background/70 hover:text-primary transition-colors">
-                Trocas e Devoluções
+              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
+                Anéis
               </Link>
-              <Link to="/privacidade" className="text-background/70 hover:text-primary transition-colors">
-                Política de Privacidade
+              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
+                Brincos
               </Link>
-              <Link to="/faq" className="text-background/70 hover:text-primary transition-colors">
-                FAQ
+              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
+                Colares
+              </Link>
+              <Link to="/#produtos" className="text-sm text-foreground hover:underline underline-offset-4">
+                Pulseiras
               </Link>
             </nav>
           </div>
 
           {/* Ajuda */}
           <div>
-            <h3 className="font-display text-lg font-semibold mb-4 text-primary">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
               Ajuda
             </h3>
-            <nav className="flex flex-col gap-2">
-              <Link to="/cuidados" className="text-background/70 hover:text-primary transition-colors">
-                Cuidados com as Joias
+            <nav className="flex flex-col gap-3">
+              <Link to="/faq" className="text-sm text-foreground hover:underline underline-offset-4">
+                FAQ
               </Link>
-              <Link to="/contato" className="text-background/70 hover:text-primary transition-colors">
-                Contato
+              <Link to="/trocas" className="text-sm text-foreground hover:underline underline-offset-4">
+                Trocas e Devoluções
               </Link>
-              <a
-                href="https://rastreamento.correios.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-background/70 hover:text-primary transition-colors"
-              >
-                Rastreio de Pedido
-              </a>
+              <Link to="/cuidados" className="text-sm text-foreground hover:underline underline-offset-4">
+                Cuidados
+              </Link>
+              <Link to="/privacidade" className="text-sm text-foreground hover:underline underline-offset-4">
+                Privacidade
+              </Link>
             </nav>
           </div>
 
           {/* Contato */}
-          <div>
-            <h3 className="font-display text-lg font-semibold mb-4 text-primary">
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground mb-6">
               Contato
             </h3>
-            <div className="flex flex-col gap-3">
+            <nav className="flex flex-col gap-3">
               <a
                 href="https://wa.me/5519998229202"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-background/70 hover:text-primary transition-colors"
+                className="text-sm text-foreground hover:underline underline-offset-4"
               >
-                <Phone className="h-4 w-4" />
-                (19) 99822-9202
-              </a>
-              <a
-                href="mailto:elathosemijoias@gmail.com"
-                className="flex items-center gap-2 text-background/70 hover:text-primary transition-colors"
-              >
-                <Mail className="h-4 w-4" />
-                elathosemijoias@gmail.com
+                WhatsApp
               </a>
               <a
                 href="https://instagram.com/elathosemijoias"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-background/70 hover:text-primary transition-colors"
+                className="text-sm text-foreground hover:underline underline-offset-4"
               >
-                <Instagram className="h-4 w-4" />
-                @elathosemijoias
+                Instagram
               </a>
-            </div>
-          </div>
-
-          {/* Pagamento */}
-          <div>
-            <h3 className="font-display text-lg font-semibold mb-4 text-primary">
-              Formas de Pagamento
-            </h3>
-            <div className="flex flex-wrap gap-3">
-              <div className="bg-background/10 rounded-lg px-3 py-2 text-sm font-medium">
-                PIX
-              </div>
-              <div className="bg-background/10 rounded-lg px-3 py-2 text-sm font-medium">
-                Visa
-              </div>
-              <div className="bg-background/10 rounded-lg px-3 py-2 text-sm font-medium">
-                Mastercard
-              </div>
-              <div className="bg-background/10 rounded-lg px-3 py-2 text-sm font-medium">
-                Elo
-              </div>
-            </div>
-            <p className="text-sm text-background/50 mt-4">
-              Parcelamos em até 3x sem juros
-            </p>
+              <a
+                href="mailto:elathosemijoias@gmail.com"
+                className="text-sm text-foreground hover:underline underline-offset-4"
+              >
+                Email
+              </a>
+            </nav>
           </div>
         </div>
 
-        <div className="border-t border-background/10 mt-12 pt-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-background/50">
-              © 2025 Elatho Semijoias. Todos os direitos reservados.
-            </p>
-            <p className="text-sm text-background/50">
-              Erica C. M. Bortolin - CPF: 337.645.358-65
-            </p>
-          </div>
+        {/* Payment methods - text only */}
+        <div className="text-center mb-12">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            Pix · Visa · Mastercard · Elo
+          </p>
+        </div>
+
+        {/* Copyright */}
+        <div className="text-center">
+          <p className="text-[11px] text-muted-foreground">
+            © 2025 Elatho Semijoias. Todos os direitos reservados.
+          </p>
         </div>
       </div>
     </footer>
