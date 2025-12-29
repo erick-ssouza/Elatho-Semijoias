@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import Index from "./pages/Index";
 import Produto from "./pages/Produto";
 import Checkout from "./pages/Checkout";
@@ -33,25 +34,27 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/produto/:id" element={<Produto />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
-              <Route path="/pagamento-pix" element={<PagamentoPix />} />
-              <Route path="/sobre" element={<Sobre />} />
-              <Route path="/faq" element={<FAQ />} />
-              <Route path="/trocas" element={<Trocas />} />
-              <Route path="/privacidade" element={<Privacidade />} />
-              <Route path="/cuidados" element={<Cuidados />} />
-              <Route path="/contato" element={<Contato />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/favoritos" element={<Favoritos />} />
-              <Route path="/painel-elatho-2025" element={<AdminLogin />} />
-              <Route path="/painel-elatho-2025/dashboard" element={<AdminDashboard />} />
-              <Route path="/painel-elatho-2025/reset-password" element={<ResetPassword />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <BackgroundLayout>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/produto/:id" element={<Produto />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
+                <Route path="/pagamento-pix" element={<PagamentoPix />} />
+                <Route path="/sobre" element={<Sobre />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/trocas" element={<Trocas />} />
+                <Route path="/privacidade" element={<Privacidade />} />
+                <Route path="/cuidados" element={<Cuidados />} />
+                <Route path="/contato" element={<Contato />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/favoritos" element={<Favoritos />} />
+                <Route path="/painel-elatho-2025" element={<AdminLogin />} />
+                <Route path="/painel-elatho-2025/dashboard" element={<AdminDashboard />} />
+                <Route path="/painel-elatho-2025/reset-password" element={<ResetPassword />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BackgroundLayout>
           </BrowserRouter>
         </TooltipProvider>
       </CartProvider>
