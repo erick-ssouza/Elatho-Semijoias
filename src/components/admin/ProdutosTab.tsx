@@ -120,12 +120,18 @@ const ProdutosTab = () => {
       .map((v) => v.trim())
       .filter(Boolean);
 
+    // Garantir que categoria está em minúsculas sem acento
+    const categoriaValue = form.categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+
+    console.log("Categoria selecionada:", form.categoria);
+    console.log("Categoria normalizada:", categoriaValue);
+
     const produtoData = {
       nome: form.nome,
       descricao: form.descricao || null,
       preco: parseFloat(form.preco),
       preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
-      categoria: form.categoria,
+      categoria: categoriaValue,
       imagem_url: form.imagem_url || null,
       estoque: parseInt(form.estoque),
       destaque: form.destaque,
