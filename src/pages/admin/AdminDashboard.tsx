@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, LogOut, Package, ShoppingCart, Users, MessageSquare, Star, TrendingUp, Ticket } from "lucide-react";
+import { Loader2, LogOut, Package, ShoppingCart, Users, MessageSquare, Star, TrendingUp, Ticket, ThumbsUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from "recharts";
 import { format, subDays, subWeeks, subMonths, startOfDay, startOfWeek, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -16,6 +16,7 @@ import ClientesTab from "@/components/admin/ClientesTab";
 import DepoimentosTab from "@/components/admin/DepoimentosTab";
 import MensagensTab from "@/components/admin/MensagensTab";
 import CuponsTab from "@/components/admin/CuponsTab";
+import AvaliacoesTab from "@/components/admin/AvaliacoesTab";
 
 interface Metrics {
   totalPedidos: number;
@@ -414,7 +415,7 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="pedidos" className="space-y-4">
-          <TabsList className="grid grid-cols-6 w-full max-w-3xl">
+          <TabsList className="grid grid-cols-7 w-full max-w-4xl">
             <TabsTrigger value="pedidos" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
               <span className="hidden sm:inline">Pedidos</span>
@@ -430,6 +431,10 @@ const AdminDashboard = () => {
             <TabsTrigger value="cupons" className="flex items-center gap-2">
               <Ticket className="w-4 h-4" />
               <span className="hidden sm:inline">Cupons</span>
+            </TabsTrigger>
+            <TabsTrigger value="avaliacoes" className="flex items-center gap-2">
+              <ThumbsUp className="w-4 h-4" />
+              <span className="hidden sm:inline">Avaliações</span>
             </TabsTrigger>
             <TabsTrigger value="depoimentos" className="flex items-center gap-2">
               <Star className="w-4 h-4" />
@@ -452,6 +457,9 @@ const AdminDashboard = () => {
           </TabsContent>
           <TabsContent value="cupons">
             <CuponsTab />
+          </TabsContent>
+          <TabsContent value="avaliacoes">
+            <AvaliacoesTab />
           </TabsContent>
           <TabsContent value="depoimentos">
             <DepoimentosTab />

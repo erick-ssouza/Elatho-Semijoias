@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Minus, Plus, ShoppingBag, Heart, Share2, Truck, Shield, RotateCcw } from 'lucide-react';
+import { ChevronLeft, Minus, Plus, ShoppingBag, Heart, Share2, Truck, Shield, RotateCcw, Star } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
@@ -9,6 +9,8 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
+import ProductReviews from '@/components/product/ProductReviews';
+import ProductReviewForm from '@/components/product/ProductReviewForm';
 
 interface Produto {
   id: string;
@@ -29,6 +31,7 @@ export default function ProdutoPage() {
   const [selectedVariacao, setSelectedVariacao] = useState<string>('');
   const [quantidade, setQuantidade] = useState(1);
   const [imageZoom, setImageZoom] = useState(false);
+  const [reviewRefresh, setReviewRefresh] = useState(0);
   const { addItem } = useCart();
   const { toast } = useToast();
 
@@ -313,24 +316,31 @@ export default function ProdutoPage() {
           {/* Product Details Tabs */}
           <div className="mt-12 md:mt-16">
             <Tabs defaultValue="descricao" className="w-full">
-              <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 gap-8">
+              <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent h-auto p-0 gap-4 md:gap-8 flex-wrap">
                 <TabsTrigger 
                   value="descricao"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-lg"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-base md:text-lg"
                 >
                   Descrição
                 </TabsTrigger>
                 <TabsTrigger 
                   value="especificacoes"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-lg"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-base md:text-lg"
                 >
                   Especificações
                 </TabsTrigger>
                 <TabsTrigger 
                   value="cuidados"
-                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-lg"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-base md:text-lg"
                 >
                   Cuidados
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="avaliacoes"
+                  className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-0 pb-3 font-display text-base md:text-lg flex items-center gap-2"
+                >
+                  <Star className="w-4 h-4" />
+                  Avaliações
                 </TabsTrigger>
               </TabsList>
               
@@ -386,6 +396,25 @@ export default function ProdutoPage() {
                     Evite exposição a produtos químicos
                   </li>
                 </ul>
+              </TabsContent>
+
+              <TabsContent value="avaliacoes" className="mt-6">
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <div>
+                    <h3 className="text-xl font-display font-semibold mb-4">Avaliações dos Clientes</h3>
+                    <ProductReviews produtoId={produto.id} refreshTrigger={reviewRefresh} />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-display font-semibold mb-4">Deixe sua Avaliação</h3>
+                    <div className="p-6 bg-accent/30 rounded-xl">
+                      <ProductReviewForm 
+                        produtoId={produto.id} 
+                        produtoNome={produto.nome}
+                        onSuccess={() => setReviewRefresh((prev) => prev + 1)}
+                      />
+                    </div>
+                  </div>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
