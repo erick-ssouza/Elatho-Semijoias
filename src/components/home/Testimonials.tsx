@@ -15,6 +15,7 @@ export default function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   
   // Touch/swipe state
   const touchStartX = useRef<number | null>(null);
@@ -59,6 +60,7 @@ export default function Testimonials() {
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = null;
+    setIsPaused(true);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -83,16 +85,16 @@ export default function Testimonials() {
     touchEndX.current = null;
   };
 
-  // Auto-play every 5 seconds
+  // Auto-play every 5 seconds (pauses on hover/touch)
   useEffect(() => {
-    if (depoimentos.length <= 1) return;
+    if (depoimentos.length <= 1 || isPaused) return;
     
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [depoimentos.length, nextSlide]);
+  }, [depoimentos.length, nextSlide, isPaused]);
 
   if (loading || depoimentos.length === 0) {
     return null;
@@ -104,12 +106,14 @@ export default function Testimonials() {
     <section className="py-20 md:py-32">
       <div className="container px-6 lg:px-12">
         <div 
-          className="max-w-3xl mx-auto text-center rounded-lg animate-fade-in touch-pan-y"
+          className="max-w-3xl mx-auto text-center rounded-lg animate-fade-in touch-pan-y cursor-pointer"
           style={{
             backgroundColor: '#FFFFFF',
             padding: '60px 40px',
             boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
           }}
+          onMouseEnter={() => setIsPaused(true)}
+          onMouseLeave={() => setIsPaused(false)}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
