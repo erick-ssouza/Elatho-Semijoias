@@ -115,7 +115,7 @@ export default function Footer() {
               © 2025 Elatho Semijoias. Todos os direitos reservados.
             </p>
             <p className="text-sm text-background/50">
-              CNPJ: 00.000.000/0001-00
+              Erica C. M. Bortolin - CPF: 337.645.358-65
             </p>
           </div>
         </div>
