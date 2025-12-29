@@ -155,12 +155,13 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
           </div>
         ) : (
           <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 md:gap-16">
-            {produtos.map((produto) => (
+            {produtos.map((produto, index) => (
               <ProductCard 
                 key={produto.id} 
                 {...produto}
                 mediaAvaliacoes={produto.mediaAvaliacoes}
                 totalAvaliacoes={produto.totalAvaliacoes}
+                index={index % 4}
               />
             ))}
           </div>
