@@ -78,6 +78,15 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
           case 'maior':
             sortedData.sort((a, b) => (b.preco_promocional || b.preco) - (a.preco_promocional || a.preco));
             break;
+          case 'avaliacao':
+            sortedData.sort((a, b) => {
+              // Products with ratings come first, sorted by average rating (highest first)
+              if (a.mediaAvaliacoes === null && b.mediaAvaliacoes === null) return 0;
+              if (a.mediaAvaliacoes === null) return 1;
+              if (b.mediaAvaliacoes === null) return -1;
+              return b.mediaAvaliacoes - a.mediaAvaliacoes;
+            });
+            break;
           default:
             // Keep default order (most recent)
             break;
@@ -111,6 +120,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="recentes">Mais Recentes</SelectItem>
+              <SelectItem value="avaliacao">Melhor Avaliação</SelectItem>
               <SelectItem value="menor">Menor Preço</SelectItem>
               <SelectItem value="maior">Maior Preço</SelectItem>
             </SelectContent>
