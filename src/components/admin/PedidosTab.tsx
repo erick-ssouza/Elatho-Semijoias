@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, Trash2, Phone, Download, FileText, Package } from "lucide-react";
+import { Loader2, Eye, Trash2, Phone, Download, FileText, Package, MessageCircle } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import jsPDF from "jspdf";
@@ -483,6 +483,62 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
                   <span>R$ {Number(selectedPedido.total).toFixed(2)}</span>
                 </div>
               </div>
+
+              {/* WhatsApp Notification Buttons */}
+              {selectedPedido.cliente_whatsapp && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <MessageCircle className="w-4 h-4 text-green-600" />
+                    Enviar Notificação via WhatsApp
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <a
+                      href={`https://wa.me/55${selectedPedido.cliente_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
+                        `Olá ${selectedPedido.cliente_nome}! 🌟\n\nRecebemos seu pedido #${selectedPedido.numero_pedido} na Elatho Semijoias!\n\nValor: R$ ${Number(selectedPedido.total).toFixed(2)}\n\nAgradecemos a preferência! Em breve você receberá atualizações sobre o envio. 💎`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors text-sm"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Confirmar Pedido
+                    </a>
+                    <a
+                      href={`https://wa.me/55${selectedPedido.cliente_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
+                        `Olá ${selectedPedido.cliente_nome}! 📦\n\nSeu pedido #${selectedPedido.numero_pedido} foi enviado!\n\n${selectedPedido.codigo_rastreio ? `Código de rastreio: ${selectedPedido.codigo_rastreio}\n\nAcompanhe em: https://www.linkcorreios.com.br/?id=${selectedPedido.codigo_rastreio}` : "Em breve enviaremos o código de rastreio."}\n\nObrigado por comprar na Elatho Semijoias! 💎`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors text-sm"
+                    >
+                      <Package className="w-4 h-4" />
+                      Notificar Envio
+                    </a>
+                    <a
+                      href={`https://wa.me/55${selectedPedido.cliente_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
+                        `Olá ${selectedPedido.cliente_nome}! 🎉\n\nSeu pedido #${selectedPedido.numero_pedido} foi entregue!\n\nEsperamos que você ame suas novas semijoias! ✨\n\nSe puder, deixe uma avaliação no nosso site. Sua opinião é muito importante para nós!\n\nObrigado por escolher a Elatho Semijoias! 💎`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Confirmar Entrega
+                    </a>
+                    <a
+                      href={`https://wa.me/55${selectedPedido.cliente_whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(
+                        `Olá ${selectedPedido.cliente_nome}!\n\nEstamos entrando em contato sobre o pedido #${selectedPedido.numero_pedido}.\n\nComo podemos ajudá-lo(a)?`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-2 px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+                    >
+                      <Phone className="w-4 h-4" />
+                      Contato Geral
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </DialogContent>
