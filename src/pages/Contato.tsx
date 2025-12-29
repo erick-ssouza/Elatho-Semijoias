@@ -256,7 +256,7 @@ export default function Contato() {
                     </div>
                     <div>
                       <h3 className="font-semibold mb-2">Localização</h3>
-                      <p className="text-muted-foreground">São Paulo - SP</p>
+                      <p className="text-muted-foreground">Rio Claro - SP</p>
                       <p className="text-sm text-muted-foreground mt-2">
                         Trabalhamos exclusivamente online, atendendo todo o Brasil.
                       </p>
