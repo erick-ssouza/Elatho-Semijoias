@@ -384,7 +384,7 @@ export default function Checkout() {
     return `ELA-${date}-${random}`;
   };
 
-  const handleFinalizarPedido = async (metodoPagamento: 'pix' | 'whatsapp') => {
+  const handleFinalizarPedido = async (metodoPagamento: 'pix' | 'cartao') => {
     if (!aceitouTermos) {
       toast({
         title: 'Aceite os termos',
@@ -491,57 +491,40 @@ export default function Checkout() {
       });
 
       if (metodoPagamento === 'pix') {
-        // Create PIX payment via Mercado Pago
-        const { data: pixData, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
-          body: {
-            numeroPedido,
-            clienteNome: dadosPessoais.nome,
-            clienteEmail: dadosPessoais.email,
-            clienteCpf: dadosPessoais.cpf,
-            total,
-            descricao: `Pedido ${numeroPedido} - Elatho Semijoias`,
-          },
-        });
-
-        if (pixError || !pixData?.success) {
-          throw new Error(pixData?.details || 'Erro ao gerar PIX');
-        }
-
+        // PIX manual - redirect to PIX page with CPF key
         clearCart();
         
         navigate('/pagamento-pix', { 
           state: { 
             numeroPedido,
-            paymentId: pixData.paymentId,
-            qrCode: pixData.qrCode,
-            qrCodeBase64: pixData.qrCodeBase64,
             total,
-            expirationDate: pixData.expirationDate,
+            clienteNome: dadosPessoais.nome,
           } 
         });
       } else {
-        // WhatsApp flow
-        const itensTexto = items
-          .map(item => `- ${item.quantidade}x ${item.nome} (${item.variacao}) - R$ ${formatPrice((item.preco_promocional ?? item.preco) * item.quantidade)}`)
-          .join('%0A');
+        // Cartão parcelado via Mercado Pago
+        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout-link', {
+          body: {
+            numeroPedido,
+            clienteNome: dadosPessoais.nome,
+            clienteEmail: dadosPessoais.email,
+            total,
+            itens: items.map(item => ({
+              nome: item.nome,
+              quantidade: item.quantidade,
+              preco: item.preco_promocional ?? item.preco,
+            })),
+          },
+        });
 
-        const enderecoTexto = `${endereco.rua}, ${endereco.numero}${endereco.complemento ? `, ${endereco.complemento}` : ''}%0A${endereco.bairro} - ${endereco.cidade}/${endereco.estado}%0ACEP: ${endereco.cep}`;
-
-        const cupomTexto = cupomAplicado ? `%0A🎫 *Cupom:* ${cupomAplicado.codigo} (-R$ ${formatPrice(desconto)})` : '';
-
-        const mensagem = `*NOVO PEDIDO - ELATHO SEMIJOIAS*%0A%0A📦 *Pedido:* ${numeroPedido}%0A%0A👤 *Cliente:* ${dadosPessoais.nome}%0A📱 *WhatsApp:* ${dadosPessoais.whatsapp}%0A📧 *Email:* ${dadosPessoais.email}%0A%0A📍 *Endereço:*%0A${enderecoTexto}%0A%0A🛒 *Itens:*%0A${itensTexto}${cupomTexto}%0A%0A📦 Frete: R$ ${formatPrice(frete)}%0A💰 *Total: R$ ${formatPrice(total)}*%0A%0AAguardo instruções para pagamento! 💛`;
-
-        const whatsappUrl = `https://wa.me/5519998229202?text=${mensagem}`;
+        if (checkoutError || !checkoutData?.success) {
+          throw new Error(checkoutData?.details || 'Erro ao gerar link de pagamento');
+        }
 
         clearCart();
         
-        navigate('/pedido-confirmado', { 
-          state: { 
-            numeroPedido, 
-            whatsappUrl,
-            total,
-          } 
-        });
+        // Redirect to Mercado Pago checkout
+        window.location.href = checkoutData.checkoutUrl;
       }
 
     } catch (error) {
@@ -912,17 +895,17 @@ export default function Checkout() {
                           )}
                         </Button>
                         <Button 
-                          onClick={() => handleFinalizarPedido('whatsapp')} 
+                          onClick={() => handleFinalizarPedido('cartao')} 
                           variant="outline"
-                          className="gap-2 border-green-500 text-green-600 hover:bg-green-50"
+                          className="gap-2 border-primary text-primary hover:bg-primary/5"
                           disabled={loading || !aceitouTermos}
                         >
                           {loading ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>
-                              <ChevronRight className="h-4 w-4" />
-                              Pagar via WhatsApp
+                              <CreditCard className="h-4 w-4" />
+                              Cartão (até 3x)
                             </>
                           )}
                         </Button>
