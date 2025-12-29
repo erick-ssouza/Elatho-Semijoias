@@ -8,9 +8,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Eye, Trash2, Phone } from "lucide-react";
+import { Loader2, Eye, Trash2, Phone, Download, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Pedido {
   id: string;
@@ -98,6 +100,79 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
     }
   };
 
+  const exportToCSV = () => {
+    const dataToExport = filteredPedidos;
+    if (dataToExport.length === 0) {
+      toast({ title: "Nenhum pedido para exportar", variant: "destructive" });
+      return;
+    }
+
+    const headers = ["Número", "Cliente", "Email", "WhatsApp", "Subtotal", "Frete", "Total", "Status", "Data"];
+    const rows = dataToExport.map((p) => [
+      p.numero_pedido,
+      p.cliente_nome,
+      p.cliente_email || "",
+      p.cliente_whatsapp || "",
+      Number(p.subtotal).toFixed(2),
+      Number(p.frete).toFixed(2),
+      Number(p.total).toFixed(2),
+      p.status,
+      format(new Date(p.created_at), "dd/MM/yyyy HH:mm"),
+    ]);
+
+    const csvContent = [
+      headers.join(";"),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(";")),
+    ].join("\n");
+
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `pedidos_${format(new Date(), "yyyy-MM-dd")}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({ title: "CSV exportado com sucesso!" });
+  };
+
+  const exportToPDF = () => {
+    const dataToExport = filteredPedidos;
+    if (dataToExport.length === 0) {
+      toast({ title: "Nenhum pedido para exportar", variant: "destructive" });
+      return;
+    }
+
+    const doc = new jsPDF();
+    
+    // Title
+    doc.setFontSize(18);
+    doc.text("Relatório de Pedidos", 14, 22);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${format(new Date(), "dd/MM/yyyy HH:mm")}`, 14, 30);
+    doc.text(`Total de pedidos: ${dataToExport.length}`, 14, 36);
+
+    // Table
+    const tableData = dataToExport.map((p) => [
+      `#${p.numero_pedido}`,
+      p.cliente_nome,
+      `R$ ${Number(p.total).toFixed(2)}`,
+      p.status,
+      format(new Date(p.created_at), "dd/MM/yyyy"),
+    ]);
+
+    autoTable(doc, {
+      startY: 42,
+      head: [["Número", "Cliente", "Total", "Status", "Data"]],
+      body: tableData,
+      styles: { fontSize: 9 },
+      headStyles: { fillColor: [139, 92, 246] },
+    });
+
+    doc.save(`pedidos_${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast({ title: "PDF exportado com sucesso!" });
+  };
+
   const filteredPedidos = filterStatus === "todos"
     ? pedidos
     : pedidos.filter((p) => p.status === filterStatus);
@@ -112,21 +187,31 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <CardTitle>Gerenciar Pedidos</CardTitle>
-        <Select value={filterStatus} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="pendente">Pendente</SelectItem>
-            <SelectItem value="confirmado">Confirmado</SelectItem>
-            <SelectItem value="enviado">Enviado</SelectItem>
-            <SelectItem value="entregue">Entregue</SelectItem>
-            <SelectItem value="cancelado">Cancelado</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportToCSV}>
+            <Download className="w-4 h-4 mr-1" />
+            CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportToPDF}>
+            <FileText className="w-4 h-4 mr-1" />
+            PDF
+          </Button>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-40">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="pendente">Pendente</SelectItem>
+              <SelectItem value="confirmado">Confirmado</SelectItem>
+              <SelectItem value="enviado">Enviado</SelectItem>
+              <SelectItem value="entregue">Entregue</SelectItem>
+              <SelectItem value="cancelado">Cancelado</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
