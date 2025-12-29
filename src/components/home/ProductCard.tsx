@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Eye, Star } from 'lucide-react';
+import { Eye, Star, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface ProductCardProps {
   id: string;
@@ -23,6 +25,8 @@ export default function ProductCard({
   mediaAvaliacoes,
   totalAvaliacoes = 0,
 }: ProductCardProps) {
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite, loading } = useFavorites();
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
   };
@@ -31,6 +35,14 @@ export default function ProductCard({
   const discountPercent = hasDiscount
     ? Math.round(((preco - preco_promocional) / preco) * 100)
     : 0;
+
+  const favorited = isFavorite(id);
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(id);
+  };
 
   return (
     <div className="group card-elegant overflow-hidden">
@@ -50,9 +62,20 @@ export default function ProductCard({
         )}
 
         {/* Category Badge */}
-        <div className="absolute top-3 right-3 px-2 py-1 rounded-lg bg-background/80 backdrop-blur-sm text-xs font-medium capitalize">
+        <div className="absolute top-3 right-12 px-2 py-1 rounded-lg bg-background/80 backdrop-blur-sm text-xs font-medium capitalize">
           {categoria}
         </div>
+
+        {/* Favorite Button */}
+        <button
+          onClick={handleFavoriteClick}
+          disabled={loading}
+          className={`absolute top-3 right-3 p-1.5 rounded-lg bg-background/80 backdrop-blur-sm transition-colors ${
+            favorited ? 'text-destructive' : 'text-muted-foreground hover:text-destructive'
+          }`}
+        >
+          <Heart className={`h-4 w-4 ${favorited ? 'fill-current' : ''}`} />
+        </button>
 
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
