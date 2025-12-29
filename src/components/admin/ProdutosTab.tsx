@@ -28,13 +28,17 @@ interface Produto {
 }
 
 const categorias = [
-  "Anéis",
-  "Brincos",
-  "Colares",
-  "Pulseiras",
-  "Conjuntos",
-  "Acessórios",
+  { value: "aneis", label: "Anéis" },
+  { value: "brincos", label: "Brincos" },
+  { value: "colares", label: "Colares" },
+  { value: "pulseiras", label: "Pulseiras" },
+  { value: "conjuntos", label: "Conjuntos" },
 ];
+
+const getCategoriaLabel = (value: string) => {
+  const cat = categorias.find(c => c.value === value);
+  return cat ? cat.label : value;
+};
 
 const ProdutosTab = () => {
   const [produtos, setProdutos] = useState<Produto[]>([]);
@@ -220,7 +224,7 @@ const ProdutosTab = () => {
                     </SelectTrigger>
                     <SelectContent>
                       {categorias.map((cat) => (
-                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -337,7 +341,7 @@ const ProdutosTab = () => {
                       />
                     </TableCell>
                     <TableCell className="font-medium">{produto.nome}</TableCell>
-                    <TableCell>{produto.categoria}</TableCell>
+                    <TableCell>{getCategoriaLabel(produto.categoria)}</TableCell>
                     <TableCell>
                       {produto.preco_promocional ? (
                         <div>
