@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Newsletter() {
   const [email, setEmail] = useState('');
@@ -31,7 +32,9 @@ export default function Newsletter() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email || !email.includes('@')) {
+    const trimmedEmail = email.trim().toLowerCase();
+    
+    if (!trimmedEmail || !trimmedEmail.includes('@') || trimmedEmail.length > 255) {
       toast({
         title: "Email inválido",
         description: "Por favor, insira um email válido.",
@@ -42,17 +45,39 @@ export default function Newsletter() {
 
     setIsLoading(true);
     
-    // Simulate API call - in production, this would save to database
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    setIsLoading(false);
-    setIsSubmitted(true);
-    setEmail('');
-    
-    toast({
-      title: "Inscrição confirmada!",
-      description: "Você receberá nossas novidades em primeira mão.",
-    });
+    try {
+      const { error } = await supabase
+        .from('newsletter_inscricoes')
+        .insert({ email: trimmedEmail });
+
+      if (error) {
+        if (error.code === '23505') {
+          // Unique constraint violation - email already exists
+          toast({
+            title: "Email já cadastrado",
+            description: "Este email já está inscrito na nossa newsletter.",
+          });
+        } else {
+          throw error;
+        }
+      } else {
+        setIsSubmitted(true);
+        toast({
+          title: "Inscrição confirmada!",
+          description: "Você receberá nossas novidades em primeira mão.",
+        });
+      }
+    } catch (error) {
+      console.error('Error subscribing to newsletter:', error);
+      toast({
+        title: "Erro ao inscrever",
+        description: "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+      setEmail('');
+    }
   };
 
   return (
