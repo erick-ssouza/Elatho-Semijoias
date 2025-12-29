@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -33,22 +33,34 @@ export default function Testimonials() {
     fetchDepoimentos();
   }, []);
 
-  const changeSlide = (newIndex: number) => {
+  const changeSlide = useCallback((newIndex: number) => {
     if (isTransitioning) return;
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex(newIndex);
       setIsTransitioning(false);
     }, 300);
-  };
+  }, [isTransitioning]);
 
-  const nextSlide = () => {
+  const nextSlide = useCallback(() => {
+    if (depoimentos.length === 0) return;
     changeSlide((currentIndex + 1) % depoimentos.length);
-  };
+  }, [currentIndex, depoimentos.length, changeSlide]);
 
   const prevSlide = () => {
     changeSlide((currentIndex - 1 + depoimentos.length) % depoimentos.length);
   };
+
+  // Auto-play every 5 seconds
+  useEffect(() => {
+    if (depoimentos.length <= 1) return;
+    
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [depoimentos.length, nextSlide]);
 
   if (loading || depoimentos.length === 0) {
     return null;
