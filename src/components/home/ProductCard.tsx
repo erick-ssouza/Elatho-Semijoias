@@ -60,18 +60,32 @@ export default function ProductCard({
         transitionDelay: `${index * 100}ms`,
       }}
     >
-      {/* Image Container - 4:5 aspect ratio */}
+      {/* Image Container - 4:5 aspect ratio with hover effects */}
       <div className="relative aspect-[4/5] overflow-hidden bg-muted mb-5">
+        {/* Image with scale effect */}
         <img
           src={imagem_url || '/placeholder.svg'}
           alt={nome}
-          className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+          className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05]"
         />
+        
+        {/* Hover overlay with gradient */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
+        {/* Quick view text */}
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500">
+          <span className="text-white text-xs uppercase tracking-[0.2em] px-6 py-3 border border-white/50 bg-black/20 backdrop-blur-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+            Ver Detalhes
+          </span>
+        </div>
+
+        {/* Corner accent on hover */}
+        <div className="absolute top-0 left-0 w-0 h-0 border-t-[40px] border-t-white/90 border-r-[40px] border-r-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" />
       </div>
 
-      {/* Info - Centered, minimal */}
-      <div className="text-center space-y-2">
-        <h3 className="font-display text-base md:text-lg font-medium text-foreground leading-tight">
+      {/* Info - Centered, minimal with hover effect */}
+      <div className="text-center space-y-2 transition-transform duration-500 group-hover:-translate-y-1">
+        <h3 className="font-display text-base md:text-lg font-medium text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
           {nome}
         </h3>
         
@@ -86,11 +100,14 @@ export default function ProductCard({
               </span>
             </>
           ) : (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
               R$ {formatPrice(preco)}
             </span>
           )}
         </div>
+        
+        {/* Underline animation */}
+        <div className="w-0 h-[1px] bg-foreground mx-auto group-hover:w-12 transition-all duration-500 ease-out" />
       </div>
     </Link>
   );
