@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import ImageUpload from "./ImageUpload";
 
 interface Produto {
   id: string;
@@ -270,12 +271,10 @@ const ProdutosTab = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="imagem_url">URL da Imagem</Label>
-                <Input
-                  id="imagem_url"
+                <Label>Imagem do Produto</Label>
+                <ImageUpload
                   value={form.imagem_url}
-                  onChange={(e) => setForm({ ...form, imagem_url: e.target.value })}
-                  placeholder="https://..."
+                  onChange={(url) => setForm({ ...form, imagem_url: url })}
                 />
               </div>
 
