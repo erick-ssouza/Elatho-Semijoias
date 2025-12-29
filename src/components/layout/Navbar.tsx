@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, ShoppingBag, User } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CartDrawer from '@/components/cart/CartDrawer';
+import logoElatho from '@/assets/logo-elatho-text.jpg';
 
 interface Produto {
   id: string;
@@ -19,6 +20,22 @@ const navLinks = [
   { to: '/sobre', label: 'SOBRE' },
   { to: '/contato', label: 'CONTATO' },
 ];
+
+// Instagram icon component (thin line style)
+const InstagramIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+  </svg>
+);
+
+// WhatsApp icon component (thin line style)
+const WhatsAppIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+  </svg>
+);
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -88,15 +105,18 @@ export default function Navbar() {
       >
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
-            {/* Logo - Text Only */}
+            {/* Logo - Image */}
             <Link to="/" className="flex-shrink-0">
-              <span className="font-display text-2xl tracking-wide text-foreground">
-                Elatho
-              </span>
+              <img 
+                src={logoElatho} 
+                alt="Elatho Semijoias" 
+                className="h-10 w-auto object-contain"
+                style={{ filter: 'brightness(0)' }}
+              />
             </Link>
 
-            {/* Desktop Navigation - Right */}
-            <div className="hidden lg:flex items-center gap-10">
+            {/* Desktop Navigation - Center */}
+            <div className="hidden lg:flex items-center gap-8">
               <nav className="flex items-center gap-8">
                 {navLinks.map((link) => (
                   <button
@@ -108,32 +128,110 @@ export default function Navbar() {
                   </button>
                 ))}
               </nav>
+            </div>
 
+            {/* Desktop Right Icons */}
+            <div className="hidden lg:flex items-center gap-5">
               {/* Search Toggle */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="text-[11px] uppercase tracking-[0.2em] text-foreground/80 hover:text-foreground transition-colors duration-300"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Buscar"
               >
-                {searchOpen ? 'FECHAR' : 'BUSCAR'}
+                <Search className="h-5 w-5 stroke-[1.5]" />
               </button>
+
+              {/* Instagram */}
+              <a
+                href="https://instagram.com/elathosemijoias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="h-5 w-5" />
+              </a>
+
+              {/* WhatsApp */}
+              <a
+                href="https://wa.me/5519998229202"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="WhatsApp"
+              >
+                <WhatsAppIcon className="h-5 w-5" />
+              </a>
+
+              {/* User */}
+              <Link
+                to={user ? "/favoritos" : "/auth"}
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Minha conta"
+              >
+                <User className="h-5 w-5 stroke-[1.5]" />
+              </Link>
 
               {/* Cart */}
               <button
                 onClick={() => setCartOpen(true)}
-                className="text-[11px] uppercase tracking-[0.2em] text-foreground/80 hover:text-foreground transition-colors duration-300"
+                className="relative text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Carrinho"
               >
-                CARRINHO {itemCount > 0 && `(${itemCount})`}
+                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-foreground text-background text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
+                    {itemCount}
+                  </span>
+                )}
               </button>
             </div>
 
             {/* Mobile - Right */}
-            <div className="flex lg:hidden items-center gap-6">
+            <div className="flex lg:hidden items-center gap-4">
+              {/* Instagram */}
+              <a
+                href="https://instagram.com/elathosemijoias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="h-5 w-5" />
+              </a>
+
+              {/* WhatsApp */}
+              <a
+                href="https://wa.me/5519998229202"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="WhatsApp"
+              >
+                <WhatsAppIcon className="h-5 w-5" />
+              </a>
+
+              {/* User */}
+              <Link
+                to={user ? "/favoritos" : "/auth"}
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Minha conta"
+              >
+                <User className="h-5 w-5 stroke-[1.5]" />
+              </Link>
+
               {/* Cart */}
               <button
                 onClick={() => setCartOpen(true)}
-                className="text-[11px] uppercase tracking-[0.2em] text-foreground/80"
+                className="relative text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Carrinho"
               >
-                ({itemCount})
+                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-foreground text-background text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
+                    {itemCount}
+                  </span>
+                )}
               </button>
 
               {/* Menu Button */}
@@ -192,7 +290,12 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <span className="font-display text-xl">Elatho</span>
+              <img 
+                src={logoElatho} 
+                alt="Elatho Semijoias" 
+                className="h-8 w-auto object-contain"
+                style={{ filter: 'brightness(0)' }}
+              />
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
               </button>

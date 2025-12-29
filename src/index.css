@@ -23,9 +23,9 @@
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
 
-    /* Primary - Gold (minimal use) */
-    --primary: 43 74% 52%; /* #D4AF37 */
-    --primary-dark: 43 74% 42%;
+    /* Primary - Black (was gold) */
+    --primary: 0 0% 10%; /* #1A1A1A */
+    --primary-dark: 0 0% 5%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
@@ -47,7 +47,7 @@
     /* Border & Input - Very Light Gray */
     --border: 0 0% 90%; /* #E5E5E5 */
     --input: 0 0% 90%;
-    --ring: 43 74% 52%;
+    --ring: 0 0% 10%;
 
     --radius: 0;
 
@@ -57,12 +57,12 @@
     /* Sidebar */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 43 74% 52%;
+    --sidebar-primary: 0 0% 10%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 96%;
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 0 0% 90%;
-    --sidebar-ring: 43 74% 52%;
+    --sidebar-ring: 0 0% 10%;
   }
 
   .dark {
@@ -76,8 +76,8 @@
     --popover: 0 0% 8%;
     --popover-foreground: 0 0% 95%;
 
-    --primary: 43 74% 52%;
-    --primary-dark: 43 74% 42%;
+    --primary: 0 0% 95%;
+    --primary-dark: 0 0% 85%;
     --primary-foreground: 0 0% 5%;
 
     --secondary: 0 0% 12%;
@@ -94,16 +94,16 @@
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 43 74% 52%;
+    --ring: 0 0% 95%;
 
     --sidebar-background: 0 0% 5%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 43 74% 52%;
+    --sidebar-primary: 0 0% 95%;
     --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 43 74% 52%;
+    --sidebar-ring: 0 0% 95%;
   }
 }
 
@@ -120,6 +120,23 @@
     @apply bg-background text-foreground font-sans antialiased;
     font-weight: 300;
     letter-spacing: 0.01em;
+    background-image: url('/bg-crystals.jpg');
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.88);
+    z-index: -1;
+    pointer-events: none;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -129,7 +146,7 @@
 
 @layer utilities {
   .text-gradient-gold {
-    color: hsl(43, 74%, 52%);
+    color: hsl(0, 0%, 10%);
   }
 
   .tracking-wide-custom {
