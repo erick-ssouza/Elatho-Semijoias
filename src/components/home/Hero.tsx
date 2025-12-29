@@ -30,25 +30,29 @@ export default function Hero() {
   // Calculate opacity based on scroll (fade out as user scrolls)
   const textOpacity = Math.max(0, 1 - scrollY / 400);
   const textTranslateY = scrollY * 0.2;
+  
+  // Calculate blur based on scroll (increases as user scrolls)
+  const blurAmount = Math.min(10, scrollY / 50);
 
   return (
     <section ref={sectionRef} className="relative h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image - Gold and Silver Jewelry with Parallax */}
+      {/* Background Image - Gold and Silver Jewelry with Parallax and Progressive Blur */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
         style={{
           backgroundImage: 'url(https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=2070&auto=format&fit=crop)',
           transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
+          filter: `blur(${blurAmount}px)`,
         }}
-      >
-        {/* Gradient overlay - darker at top for text readability */}
-        <div 
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
-          }}
-        />
-      </div>
+      />
+      
+      {/* Gradient overlay - darker at top for text readability */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
+        }}
+      />
 
       {/* Content - Left aligned with fade on scroll */}
       <div 
