@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import BackgroundLayout from "@/components/layout/BackgroundLayout";
+import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import Index from "./pages/Index";
 import Produto from "./pages/Produto";
 import Checkout from "./pages/Checkout";
@@ -54,6 +55,7 @@ const App = () => (
                 <Route path="/painel-elatho-2025/reset-password" element={<ResetPassword />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <WhatsAppButton />
             </BackgroundLayout>
           </BrowserRouter>
         </TooltipProvider>
