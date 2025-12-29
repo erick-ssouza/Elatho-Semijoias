@@ -53,6 +53,14 @@ export default function Hero() {
           background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
         }}
       />
+      
+      {/* Vignette overlay - darkens edges */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)'
+        }}
+      />
 
       {/* Content - Left aligned with fade on scroll */}
       <div 
