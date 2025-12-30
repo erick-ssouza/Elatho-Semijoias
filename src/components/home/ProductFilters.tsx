@@ -200,7 +200,7 @@ export default function ProductFilters({
       </div>
 
       {/* Mobile Filters */}
-      <div className="lg:hidden mb-6">
+      <div className="lg:hidden mb-4">
         <div className="flex items-center justify-between gap-4">
           <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
             <SheetTrigger asChild>

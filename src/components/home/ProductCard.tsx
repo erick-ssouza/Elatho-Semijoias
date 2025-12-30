@@ -65,7 +65,7 @@ export default function ProductCard({
     <>
       <div 
         ref={cardRef}
-        className="group block"
+        className="group block w-full"
         style={{
           opacity: isVisible ? 1 : 0,
           transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
@@ -74,7 +74,7 @@ export default function ProductCard({
         }}
       >
         {/* Image Container - 4:5 aspect ratio with hover effects */}
-        <Link to={`/produto/${id}`} className="relative aspect-[4/5] overflow-hidden bg-muted mb-5 block">
+        <Link to={`/produto/${id}`} className="relative aspect-[4/5] overflow-hidden bg-muted mb-3 md:mb-5 block w-full">
           {/* Image with scale effect */}
           <img
             src={imagem_url || '/placeholder.svg'}
@@ -95,7 +95,7 @@ export default function ProductCard({
           </button>
 
           {/* Quick view text */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
+          <div className="absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
             <span className="text-white text-xs uppercase tracking-[0.2em] px-6 py-3 border border-white/50 bg-black/20 backdrop-blur-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
               Ver Detalhes
             </span>
@@ -106,30 +106,30 @@ export default function ProductCard({
         </Link>
 
         {/* Info - Centered, minimal with hover effect */}
-        <Link to={`/produto/${id}`} className="text-center space-y-2 transition-transform duration-500 group-hover:-translate-y-1 block">
-          <h3 className="font-display text-base md:text-lg font-medium text-foreground leading-tight group-hover:text-primary transition-colors duration-300">
+        <Link to={`/produto/${id}`} className="text-center space-y-1 md:space-y-2 transition-transform duration-500 group-hover:-translate-y-1 block w-full">
+          <h3 className="font-display text-sm md:text-base lg:text-lg font-medium text-foreground leading-tight group-hover:text-primary transition-colors duration-300 line-clamp-2 px-1">
             {nome}
           </h3>
           
-          <div className="flex items-center justify-center gap-3">
+          <div className="flex items-center justify-center gap-2 md:gap-3">
             {hasDiscount ? (
               <>
-                <span className="text-sm text-muted-foreground line-through">
+                <span className="text-xs md:text-sm text-muted-foreground line-through">
                   R$ {formatPrice(preco)}
                 </span>
-                <span className="text-sm text-foreground">
+                <span className="text-xs md:text-sm text-foreground">
                   R$ {formatPrice(preco_promocional)}
                 </span>
               </>
             ) : (
-              <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+              <span className="text-xs md:text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-300">
                 R$ {formatPrice(preco)}
               </span>
             )}
           </div>
           
-          {/* Underline animation */}
-          <div className="w-0 h-[1px] bg-foreground mx-auto group-hover:w-12 transition-all duration-500 ease-out" />
+          {/* Underline animation - hidden on mobile */}
+          <div className="hidden md:block w-0 h-[1px] bg-foreground mx-auto group-hover:w-12 transition-all duration-500 ease-out" />
         </Link>
       </div>
 
