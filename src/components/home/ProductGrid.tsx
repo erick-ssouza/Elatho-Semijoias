@@ -213,23 +213,35 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
           </div>
         </div>
 
-        {/* Main content with filters */}
-        <div className="flex gap-12">
-          {/* Filters sidebar */}
+        {/* Mobile Filters - rendered outside flex container */}
+        <div className="lg:hidden">
           <ProductFilters
             filters={filters}
             onFiltersChange={setFilters}
             onClearFilters={handleClearFilters}
             totalProducts={filteredProdutos.length}
           />
+        </div>
+
+        {/* Main content with filters */}
+        <div className="flex gap-12">
+          {/* Filters sidebar - desktop only */}
+          <div className="hidden lg:block">
+            <ProductFilters
+              filters={filters}
+              onFiltersChange={setFilters}
+              onClearFilters={handleClearFilters}
+              totalProducts={filteredProdutos.length}
+            />
+          </div>
 
           {/* Products grid */}
-          <div className="flex-1">
+          <div className="flex-1 w-full">
             {loading ? (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
+              <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-3 gap-4 min-[400px]:gap-4 md:gap-12">
                 {Array.from({ length: 6 }).map((_, i) => (
                   <div key={i}>
-                    <Skeleton className="aspect-[4/5] mb-5" />
+                    <Skeleton className="aspect-[4/5] mb-3 md:mb-5" />
                     <div className="space-y-2">
                       <Skeleton className="h-5 w-3/4 mx-auto" />
                       <Skeleton className="h-4 w-1/2 mx-auto" />
@@ -250,7 +262,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
                 )}
               </div>
             ) : (
-              <div className="grid grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
+              <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-3 gap-4 min-[400px]:gap-4 md:gap-12">
                 {filteredProdutos.map((produto, index) => (
                   <ProductCard 
                     key={produto.id} 
