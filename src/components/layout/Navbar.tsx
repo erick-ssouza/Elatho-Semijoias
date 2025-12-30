@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CartDrawer from '@/components/cart/CartDrawer';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -174,6 +175,9 @@ export default function Navbar() {
                 <Heart className="h-5 w-5 stroke-[1.5]" />
               </Link>
 
+              {/* Theme Toggle */}
+              <ThemeToggle />
+
               {/* User Menu */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -186,15 +190,10 @@ export default function Navbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
                   <DropdownMenuItem asChild>
-                    <a
-                      href="https://wa.me/5519998229202?text=Olá! Gostaria de consultar meus pedidos."
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
+                    <Link to="/meus-pedidos" className="flex items-center gap-2">
                       <Package className="h-4 w-4" />
                       Meus Pedidos
-                    </a>
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/favoritos" className="flex items-center gap-2">

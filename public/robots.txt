@@ -12,3 +12,7 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /painel-elatho-2025
+Disallow: /api/
+
+Sitemap: https://elathosemijoias.com.br/sitemap.xml
