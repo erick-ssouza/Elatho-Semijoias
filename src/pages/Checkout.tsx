@@ -98,7 +98,10 @@ export default function Checkout() {
 
   const subtotal = getSubtotal();
   const desconto = cupomAplicado?.desconto || 0;
-  const frete = subtotal > 299 ? 0 : (FRETE_REGIOES[endereco.estado] || 0);
+  // Frete grátis: somente se subtotal > 299 OU se cupom de frete grátis foi aplicado
+  const freteGratisPorCupom = cupomAplicado?.tipo === 'frete_gratis';
+  const freteGratisPorValor = subtotal > 299;
+  const frete = (freteGratisPorValor || freteGratisPorCupom) ? 0 : (FRETE_REGIOES[endereco.estado] || 0);
   const total = Math.max(0, subtotal - desconto + frete);
 
   useEffect(() => {
@@ -344,6 +347,8 @@ export default function Checkout() {
       let descontoCalculado = 0;
       if (cupom.tipo === 'percentual') {
         descontoCalculado = subtotal * (Number(cupom.valor) / 100);
+      } else if (cupom.tipo === 'frete_gratis') {
+        descontoCalculado = 0; // Frete grátis não dá desconto no subtotal, zera o frete
       } else {
         descontoCalculado = Math.min(Number(cupom.valor), subtotal);
       }
@@ -355,9 +360,13 @@ export default function Checkout() {
         desconto: descontoCalculado,
       });
 
+      const mensagem = cupom.tipo === 'frete_gratis' 
+        ? 'Frete grátis aplicado!'
+        : `Desconto de R$ ${descontoCalculado.toFixed(2).replace('.', ',')} aplicado.`;
+
       toast({
         title: 'Cupom aplicado!',
-        description: `Desconto de R$ ${descontoCalculado.toFixed(2).replace('.', ',')} aplicado.`,
+        description: mensagem,
       });
 
       setCupomCodigo('');
@@ -905,7 +914,7 @@ export default function Checkout() {
                           ) : (
                             <>
                               <CreditCard className="h-4 w-4" />
-                              Cartão (até 3x)
+                              Cartão (até 10x)
                             </>
                           )}
                         </Button>
@@ -999,7 +1008,9 @@ export default function Checkout() {
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Frete</span>
                     <span className={frete === 0 ? 'text-green-600 font-medium' : ''}>
-                      {frete === 0 ? 'Grátis' : `R$ ${formatPrice(frete)}`}
+                      {frete === 0 
+                        ? (freteGratisPorCupom ? 'R$ 0,00 (cupom aplicado)' : 'Grátis') 
+                        : `R$ ${formatPrice(frete)}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-lg font-display font-bold pt-2 border-t border-border">

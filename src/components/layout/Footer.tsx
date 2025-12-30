@@ -1,10 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { Instagram, MessageCircle } from 'lucide-react';
 
 export default function Footer() {
   const [isVisible, setIsVisible] = useState(false);
   const footerRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -23,6 +24,20 @@ export default function Footer() {
 
     return () => observer.disconnect();
   }, []);
+
+  const handleCategoryClick = (categoria: string) => {
+    navigate(`/?categoria=${categoria}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const shopLinks = [
+    { label: 'Todos os produtos', categoria: 'todos' },
+    { label: 'Anéis', categoria: 'aneis' },
+    { label: 'Brincos', categoria: 'brincos' },
+    { label: 'Colares', categoria: 'colares' },
+    { label: 'Pulseiras', categoria: 'pulseiras' },
+    { label: 'Conjuntos', categoria: 'conjuntos' },
+  ];
 
   return (
     <footer 
@@ -79,17 +94,17 @@ export default function Footer() {
               Shop
             </h3>
             <nav className="flex flex-col gap-3">
-              {['Todos os produtos', 'Anéis', 'Brincos', 'Colares', 'Pulseiras'].map((item) => (
-                <Link 
-                  key={item}
-                  to="/#produtos" 
-                  className="text-sm transition-colors duration-300"
+              {shopLinks.map((item) => (
+                <button 
+                  key={item.categoria}
+                  onClick={() => handleCategoryClick(item.categoria)}
+                  className="text-sm transition-colors duration-300 text-left"
                   style={{ color: '#CCCCCC' }}
                   onMouseEnter={(e) => e.currentTarget.style.color = '#FFFFFF'}
                   onMouseLeave={(e) => e.currentTarget.style.color = '#CCCCCC'}
                 >
-                  {item}
-                </Link>
+                  {item.label}
+                </button>
               ))}
             </nav>
           </div>
@@ -111,9 +126,11 @@ export default function Footer() {
             </h3>
             <nav className="flex flex-col gap-3">
               {[
+                { label: 'Sobre Nós', to: '/sobre' },
                 { label: 'FAQ', to: '/faq' },
                 { label: 'Trocas e Devoluções', to: '/trocas' },
                 { label: 'Cuidados', to: '/cuidados' },
+                { label: 'Rastrear Pedido', to: '/rastreio' },
                 { label: 'Privacidade', to: '/privacidade' },
               ].map((item) => (
                 <Link 

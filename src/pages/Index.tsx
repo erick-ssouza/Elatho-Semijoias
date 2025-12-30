@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -9,7 +10,15 @@ import Testimonials from '@/components/home/Testimonials';
 import Features from '@/components/home/Features';
 
 const Index = () => {
-  const [selectedCategory, setSelectedCategory] = useState('todos');
+  const [searchParams] = useSearchParams();
+  const categoriaFromUrl = searchParams.get('categoria');
+  const [selectedCategory, setSelectedCategory] = useState(categoriaFromUrl || 'todos');
+
+  useEffect(() => {
+    if (categoriaFromUrl) {
+      setSelectedCategory(categoriaFromUrl);
+    }
+  }, [categoriaFromUrl]);
 
   return (
     <>
