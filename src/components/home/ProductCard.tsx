@@ -79,6 +79,8 @@ export default function ProductCard({
           <img
             src={imagem_url || '/placeholder.svg'}
             alt={nome}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05]"
           />
           
