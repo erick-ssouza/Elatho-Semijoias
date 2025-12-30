@@ -1,15 +1,6 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-
-interface Produto {
-  id: string;
-  nome: string;
-  preco: number;
-  preco_promocional: number | null;
-  imagem_url: string | null;
-  categoria: string;
-}
+import { useRelatedProducts } from '@/hooks/useProductQueries';
+import { ProductSkeleton } from '@/components/ui/skeletons';
 
 interface RelatedProductsProps {
   categoria: string;
@@ -17,44 +8,14 @@ interface RelatedProductsProps {
 }
 
 export function RelatedProducts({ categoria, currentProductId }: RelatedProductsProps) {
-  const [produtos, setProdutos] = useState<Produto[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchRelated = async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria')
-        .eq('categoria', categoria)
-        .neq('id', currentProductId)
-        .limit(4);
-
-      if (data) {
-        setProdutos(data);
-      }
-      setLoading(false);
-    };
-
-    fetchRelated();
-  }, [categoria, currentProductId]);
+  const { data: produtos = [], isLoading: loading } = useRelatedProducts(categoria, currentProductId);
 
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
   };
 
   if (loading) {
-    return (
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="animate-pulse">
-            <div className="aspect-square bg-muted rounded-sm" />
-            <div className="mt-3 h-4 bg-muted rounded w-3/4" />
-            <div className="mt-2 h-3 bg-muted rounded w-1/2" />
-          </div>
-        ))}
-      </div>
-    );
+    return <ProductSkeleton count={4} columns={4} />;
   }
 
   if (produtos.length === 0) {
@@ -79,6 +40,7 @@ export function RelatedProducts({ categoria, currentProductId }: RelatedProducts
                 alt={produto.nome}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
+                decoding="async"
               />
             </div>
             <div className="mt-3 space-y-1">
