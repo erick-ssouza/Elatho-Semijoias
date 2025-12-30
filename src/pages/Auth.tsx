@@ -45,11 +45,7 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
+  // Removed auto-redirect - let user navigate manually if already logged in
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
