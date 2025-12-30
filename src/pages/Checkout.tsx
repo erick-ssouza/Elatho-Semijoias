@@ -509,18 +509,36 @@ export default function Checkout() {
       if (metodoPagamento === 'pix') {
         clearCart();
         
-        navigate('/pagamento-pix', { 
-          state: { 
-            numeroPedido,
-            total,
-            clienteNome: dadosPessoais.nome,
-            paymentId: pixData?.paymentId,
-            qrCode: pixData?.qrCode,
-            qrCodeBase64: pixData?.qrCodeBase64,
-            ticketUrl: pixData?.ticketUrl,
-            expirationDate: pixData?.expirationDate,
-          } 
-        });
+        // Se tiver QR Code automático, vai para página de PIX
+        if (pixData?.qrCodeBase64 || pixData?.qrCode) {
+          navigate('/pagamento-pix', { 
+            state: { 
+              numeroPedido,
+              total,
+              clienteNome: dadosPessoais.nome,
+              paymentId: pixData?.paymentId,
+              qrCode: pixData?.qrCode,
+              qrCodeBase64: pixData?.qrCodeBase64,
+              ticketUrl: pixData?.ticketUrl,
+              expirationDate: pixData?.expirationDate,
+            } 
+          });
+        } else {
+          // Fallback: vai direto para confirmação com PIX manual
+          navigate('/pedido-confirmado', {
+            state: {
+              numeroPedido,
+              total,
+              subtotal,
+              frete,
+              desconto,
+              metodoPagamento: 'pix',
+              itens: itensJson,
+              endereco: enderecoJson,
+              clienteNome: dadosPessoais.nome,
+            }
+          });
+        }
       } else {
         // Cartão parcelado via Mercado Pago
         const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout-link', {

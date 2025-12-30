@@ -63,14 +63,8 @@ export default function PagamentoPix() {
           title: 'Pagamento confirmado!',
           description: 'Seu pedido foi aprovado com sucesso.',
         });
-        // Redirecionar para página de confirmação
-        navigate('/pedido-confirmado', {
-          state: {
-            numeroPedido: state.numeroPedido,
-            total: state.total,
-            whatsappUrl: `https://wa.me/5519998229202?text=${encodeURIComponent(`Olá! Meu pagamento PIX do pedido ${state.numeroPedido} foi confirmado!`)}`,
-          },
-        });
+        // Redirecionar para home após pagamento aprovado (pedido já foi criado)
+        navigate('/', { replace: true });
       }
     } catch (error) {
       console.error('Error:', error);
