@@ -130,7 +130,7 @@ export default function Navbar() {
             {/* Logo - Text */}
             <Link to="/" className="flex-shrink-0">
               <span className="font-display text-2xl md:text-3xl tracking-wide text-foreground italic">
-                Elatho<span className="text-lg md:text-xl ml-1 not-italic font-sans font-light tracking-[0.15em] uppercase">Semijoias</span>
+                Elatho
               </span>
             </Link>
 
@@ -380,7 +380,7 @@ export default function Navbar() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <span className="font-display text-xl tracking-wide text-foreground italic">
-                Elatho<span className="text-sm ml-1 not-italic font-sans font-light tracking-[0.15em] uppercase">Semijoias</span>
+                Elatho
               </span>
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
