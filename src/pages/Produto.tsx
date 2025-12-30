@@ -13,6 +13,7 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ShareButtons } from '@/components/product/ShareButtons';
 import ProductReviews from '@/components/product/ProductReviews';
 import ProductReviewForm from '@/components/product/ProductReviewForm';
+import { RelatedProducts } from '@/components/product/RelatedProducts';
 
 interface Produto {
   id: string;
@@ -442,6 +443,15 @@ export default function ProdutoPage() {
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Produtos Relacionados */}
+          <div className="mt-16 md:mt-24 border-t border-border pt-12">
+            <h2 className="font-display text-xl md:text-2xl mb-8">Você também pode gostar</h2>
+            <RelatedProducts 
+              categoria={produto.categoria} 
+              currentProductId={produto.id} 
+            />
           </div>
         </div>
       </main>
