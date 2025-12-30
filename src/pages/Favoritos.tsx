@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,6 +66,14 @@ export default function Favoritos() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Meus Favoritos | Elatho Semijoias</title>
+        <meta name="description" content="Suas semijoias favoritas salvas em um só lugar. Acesse sua lista de desejos Elatho." />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta property="og:title" content="Meus Favoritos | Elatho Semijoias" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+      </Helmet>
       <Navbar />
       
       <main className="pt-24 pb-16">

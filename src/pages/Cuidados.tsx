@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { Droplets, Box, Sparkles, Moon, FlaskConical, Wind } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -38,6 +39,20 @@ const cuidados = [
 export default function Cuidados() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Cuidados com Semijoias | Elatho Semijoias</title>
+        <meta name="description" content="Dicas essenciais para conservar suas semijoias Elatho. Aprenda a manter o brilho e durabilidade das suas peças com banho de ouro 18k." />
+        <link rel="canonical" href="https://elathosemijoias.com.br/cuidados" />
+        <meta property="og:title" content="Cuidados com Semijoias | Elatho Semijoias" />
+        <meta property="og:description" content="Dicas essenciais para conservar suas semijoias Elatho. Aprenda a manter o brilho e durabilidade das suas peças com banho de ouro 18k." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/cuidados" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Cuidados com Semijoias | Elatho Semijoias" />
+        <meta name="twitter:description" content="Dicas essenciais para conservar suas semijoias Elatho. Aprenda a manter o brilho e durabilidade das suas peças com banho de ouro 18k." />
+      </Helmet>
       <Navbar />
       <main className="pt-20 md:pt-24">
         {/* Hero */}
