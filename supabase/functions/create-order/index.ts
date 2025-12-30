@@ -34,6 +34,8 @@ interface CreateOrderRequest {
   frete: number;
   total: number;
   cupomCodigo?: string;
+  metodoPagamento?: string;
+  paymentId?: string;
 }
 
 serve(async (req) => {
@@ -101,6 +103,8 @@ serve(async (req) => {
       frete: Number(body.frete || 0),
       total: Number(body.total || 0),
       status: "pendente",
+      metodo_pagamento: body?.metodoPagamento || "pix",
+      payment_id: body?.paymentId || null,
     });
 
     if (pedidoError) {
