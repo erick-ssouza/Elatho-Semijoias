@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { CheckCircle, MessageCircle, Home } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -31,7 +32,12 @@ export default function PedidoConfirmado() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <Helmet>
+        <title>Pedido Confirmado | Elatho Semijoias</title>
+        <meta name="robots" content="noindex, nofollow" />
+      </Helmet>
+      <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-20 md:pt-24">
         <div className="container px-4 py-16">
@@ -103,5 +109,6 @@ export default function PedidoConfirmado() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }

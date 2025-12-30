@@ -9,12 +9,18 @@ export default function Sobre() {
       <Helmet>
         <title>Sobre a Elatho | Nossa História e Valores</title>
         <meta name="description" content="Conheça a Elatho Semijoias. Nascemos do desejo de oferecer semijoias de alta qualidade com preços acessíveis. Desde 2020 encantando mulheres em todo o Brasil." />
+        <link rel="canonical" href="https://elathosemijoias.com.br/sobre" />
         <meta property="og:title" content="Sobre a Elatho | Nossa História e Valores" />
         <meta property="og:description" content="Conheça a Elatho Semijoias. Desde 2020 oferecendo elegância e qualidade." />
         <meta property="og:url" content="https://elathosemijoias.com.br/sobre" />
-        <meta name="twitter:card" content="summary" />
+        <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://elathosemijoias.com.br/og-image.jpg" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Sobre a Elatho Semijoias" />
-        <link rel="canonical" href="https://elathosemijoias.com.br/sobre" />
+        <meta name="twitter:description" content="Conheça nossa história e valores." />
+        <meta name="twitter:image" content="https://elathosemijoias.com.br/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
