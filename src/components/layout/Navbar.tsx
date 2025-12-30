@@ -133,7 +133,7 @@ export default function Navbar() {
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-16 md:h-20 w-auto"
+                className="h-32 md:h-40 w-auto"
               />
             </Link>
 
@@ -385,7 +385,7 @@ export default function Navbar() {
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-14 w-auto"
+                className="h-28 w-auto"
               />
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
