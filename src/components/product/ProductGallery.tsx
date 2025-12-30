@@ -51,6 +51,8 @@ export function ProductGallery({ mainImage, images, productName }: ProductGaller
           <img
             src={allImages[activeIndex]}
             alt={productName}
+            loading={activeIndex === 0 ? "eager" : "lazy"}
+            decoding="async"
             className="w-full h-full object-cover transition-transform duration-200"
             style={
               isZooming
@@ -86,6 +88,8 @@ export function ProductGallery({ mainImage, images, productName }: ProductGaller
                 <img
                   src={img}
                   alt={`${productName} - ${index + 1}`}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover"
                 />
               </button>
@@ -146,6 +150,8 @@ export function ProductGallery({ mainImage, images, productName }: ProductGaller
                     <img
                       src={img}
                       alt={`${productName} - ${index + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover"
                     />
                   </button>
