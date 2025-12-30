@@ -12,6 +12,7 @@ import {
   Clock,
   QrCode,
   Loader2,
+  BadgeCheck,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -66,6 +67,8 @@ interface PedidoData {
   endereco: EnderecoPedido;
   clienteNome: string;
   pixCopiaECola?: string;
+  paymentStatus?: string;
+  status?: string;
 }
 
 const PIX_KEY = 'elathosemijoias@gmail.com';
@@ -87,6 +90,8 @@ export default function PedidoConfirmado() {
   const [loading, setLoading] = useState(!locationState && !!numeroPedido);
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const [pedidoId, setPedidoId] = useState<string | null>(null);
 
   // Buscar dados do pedido no backend se não tiver state
   useEffect(() => {
@@ -120,6 +125,8 @@ export default function PedidoConfirmado() {
         estado: '',
       };
 
+      setPedidoId(data.id);
+      setPaymentStatus(data.payment_status);
       setPedidoData({
         numeroPedido: data.numero_pedido,
         total: Number(data.total) || 0,
@@ -129,6 +136,8 @@ export default function PedidoConfirmado() {
         itens,
         endereco,
         clienteNome: data.cliente_nome,
+        paymentStatus: data.payment_status || undefined,
+        status: data.status || undefined,
       });
 
       setLoading(false);
@@ -136,6 +145,52 @@ export default function PedidoConfirmado() {
 
     fetchPedido();
   }, [numeroPedido, locationState]);
+
+  // Realtime subscription para atualização do status de pagamento
+  useEffect(() => {
+    if (!numeroPedido) return;
+
+    console.log('[Realtime] Inscrevendo para atualizações do pedido:', numeroPedido);
+
+    const channel = supabase
+      .channel(`pedido-${numeroPedido}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pedidos',
+          filter: `numero_pedido=eq.${numeroPedido}`,
+        },
+        (payload) => {
+          console.log('[Realtime] Atualização recebida:', payload);
+          const newData = payload.new as { payment_status?: string; status?: string; id?: string };
+          
+          if (newData.payment_status) {
+            setPaymentStatus(newData.payment_status);
+            
+            if (newData.payment_status === 'approved') {
+              toast({
+                title: '🎉 Pagamento Confirmado!',
+                description: 'Seu pagamento PIX foi aprovado com sucesso.',
+              });
+            }
+          }
+          
+          if (newData.id) {
+            setPedidoId(newData.id);
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('[Realtime] Status da subscription:', status);
+      });
+
+    return () => {
+      console.log('[Realtime] Removendo subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [numeroPedido, toast]);
 
   useEffect(() => {
     if (!numeroPedido) navigate('/');
@@ -270,14 +325,35 @@ export default function PedidoConfirmado() {
                 </p>
               </header>
 
-              {/* Pagamento PIX */}
-              {isPix && (
+              {/* Status do Pagamento em tempo real */}
+              {isPix && paymentStatus === 'approved' && (
+                <section className="card-elegant p-6 border-2 border-success/50 bg-success/10 animate-fade-in-up">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
+                      <BadgeCheck className="h-7 w-7 text-success" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-display font-bold text-success">Pagamento Confirmado!</h2>
+                      <p className="text-muted-foreground">Seu pagamento PIX foi aprovado com sucesso.</p>
+                    </div>
+                  </div>
+                </section>
+              )}
+
+              {/* Pagamento PIX - Aguardando */}
+              {isPix && paymentStatus !== 'approved' && (
                 <section className="card-elegant p-6 border-2 border-primary/30 bg-primary/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
-                  <div className="flex items-center gap-2 mb-4">
-                    <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                      <QrCode className="h-5 w-5" />
-                    </span>
-                    <h2 className="text-xl font-display font-bold">Pague via PIX</h2>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                        <QrCode className="h-5 w-5" />
+                      </span>
+                      <h2 className="text-xl font-display font-bold">Pague via PIX</h2>
+                    </div>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                      <span className="text-sm font-medium text-amber-600">Aguardando pagamento</span>
+                    </div>
                   </div>
 
                   <div className="grid md:grid-cols-[280px_1fr] gap-5 items-start">
