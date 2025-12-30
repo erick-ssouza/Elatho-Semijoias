@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ShoppingBag, User, Heart, Package, LogOut, UserCircle } from 'lucide-react';
+import logoElatho from '@/assets/logo-elatho-navbar.jpg';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -127,11 +128,13 @@ export default function Navbar() {
       >
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
-            {/* Logo - Text */}
+            {/* Logo */}
             <Link to="/" className="flex-shrink-0">
-              <span className="font-display text-2xl md:text-3xl tracking-wide text-foreground italic">
-                Elatho<span className="text-lg md:text-xl ml-1 not-italic font-sans font-light tracking-[0.15em] uppercase">Semijoias</span>
-              </span>
+              <img 
+                src={logoElatho} 
+                alt="Elatho Semijoias" 
+                className="h-12 md:h-14 w-auto"
+              />
             </Link>
 
             {/* Desktop Navigation - Center */}
@@ -379,9 +382,11 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <span className="font-display text-xl tracking-wide text-foreground italic">
-                Elatho<span className="text-sm ml-1 not-italic font-sans font-light tracking-[0.15em] uppercase">Semijoias</span>
-              </span>
+              <img 
+                src={logoElatho} 
+                alt="Elatho Semijoias" 
+                className="h-10 w-auto"
+              />
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
               </button>
