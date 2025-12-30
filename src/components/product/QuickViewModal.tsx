@@ -16,6 +16,7 @@ interface QuickViewModalProps {
     imagem_url: string | null;
     variacoes?: string[] | null;
     descricao?: string | null;
+    estoque?: number | null;
   };
 }
 
@@ -42,6 +43,7 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
       preco: finalPrice,
       imagem_url: product.imagem_url || "",
       variacao: selectedVariacao,
+      estoque: product.estoque,
     }, 1);
 
     toast.success("Produto adicionado ao carrinho!");

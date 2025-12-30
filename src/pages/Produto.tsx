@@ -94,6 +94,7 @@ export default function ProdutoPage() {
       preco_promocional: produto.preco_promocional,
       imagem_url: produto.imagem_url || '/placeholder.svg',
       variacao: selectedVariacao,
+      estoque: produto.estoque,
     }, quantidade);
 
     toast({

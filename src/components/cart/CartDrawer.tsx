@@ -84,7 +84,8 @@ export default function CartDrawer({ open, onOpenChange }: CartDrawerProps) {
                         </span>
                         <button
                           onClick={() => updateQuantity(item.id, item.variacao, item.quantidade + 1)}
-                          className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-accent transition-colors"
+                          className="w-7 h-7 rounded-lg border border-border flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          disabled={item.estoque != null && item.quantidade >= item.estoque}
                         >
                           <Plus className="h-3 w-3" />
                         </button>
