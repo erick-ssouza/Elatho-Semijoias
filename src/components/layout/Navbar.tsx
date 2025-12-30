@@ -127,13 +127,13 @@ export default function Navbar() {
         }`}
       >
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="flex items-center justify-between h-20 md:h-36">
+          <div className="flex items-center justify-between h-24 md:h-36">
             {/* Logo */}
             <Link to="/" className="flex-shrink-0 flex items-center h-full">
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-16 md:h-60 w-auto"
+                className="h-24 md:h-60 w-auto"
               />
             </Link>
 
