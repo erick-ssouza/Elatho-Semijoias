@@ -14,6 +14,7 @@ interface ProductCardProps {
   descricao?: string | null;
   mediaAvaliacoes?: number | null;
   totalAvaliacoes?: number;
+  estoque?: number | null;
   index?: number;
 }
 
@@ -25,6 +26,7 @@ export default function ProductCard({
   imagem_url,
   variacoes,
   descricao,
+  estoque,
   index = 0,
 }: ProductCardProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -54,11 +56,14 @@ export default function ProductCard({
   };
 
   const hasDiscount = preco_promocional && preco_promocional < preco;
+  const isOutOfStock = estoque !== null && estoque !== undefined && estoque <= 0;
 
   const handleQuickView = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setQuickViewOpen(true);
+    if (!isOutOfStock) {
+      setQuickViewOpen(true);
+    }
   };
 
   return (
@@ -87,24 +92,39 @@ export default function ProductCard({
           {/* Hover overlay with gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
+          {/* Out of Stock Badge */}
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+              <span className="bg-background text-foreground text-xs uppercase tracking-[0.15em] px-4 py-2 font-medium">
+                Esgotado
+              </span>
+            </div>
+          )}
+          
           {/* Quick View Button */}
-          <button
-            onClick={handleQuickView}
-            className="absolute top-4 right-4 p-2.5 bg-background/90 hover:bg-background text-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10"
-            aria-label="Visualização rápida"
-          >
-            <Eye className="h-4 w-4" />
-          </button>
+          {!isOutOfStock && (
+            <button
+              onClick={handleQuickView}
+              className="absolute top-4 right-4 p-2.5 bg-background/90 hover:bg-background text-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10"
+              aria-label="Visualização rápida"
+            >
+              <Eye className="h-4 w-4" />
+            </button>
+          )}
 
           {/* Quick view text */}
-          <div className="absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
-            <span className="text-white text-xs uppercase tracking-[0.2em] px-6 py-3 border border-white/50 bg-black/20 backdrop-blur-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-              Ver Detalhes
-            </span>
-          </div>
+          {!isOutOfStock && (
+            <div className="absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none">
+              <span className="text-white text-xs uppercase tracking-[0.2em] px-6 py-3 border border-white/50 bg-black/20 backdrop-blur-sm transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                Ver Detalhes
+              </span>
+            </div>
+          )}
 
           {/* Corner accent on hover */}
-          <div className="absolute top-0 left-0 w-0 h-0 border-t-[40px] border-t-white/90 border-r-[40px] border-r-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" />
+          {!isOutOfStock && (
+            <div className="absolute top-0 left-0 w-0 h-0 border-t-[40px] border-t-white/90 border-r-[40px] border-r-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100" />
+          )}
         </Link>
 
         {/* Info - Centered, minimal with hover effect */}
@@ -135,19 +155,22 @@ export default function ProductCard({
         </Link>
       </div>
 
-      <QuickViewModal
-        open={quickViewOpen}
-        onOpenChange={setQuickViewOpen}
-        product={{
-          id,
-          nome,
-          preco,
-          preco_promocional,
-          imagem_url,
-          variacoes,
-          descricao,
-        }}
-      />
+      {!isOutOfStock && (
+        <QuickViewModal
+          open={quickViewOpen}
+          onOpenChange={setQuickViewOpen}
+          product={{
+            id,
+            nome,
+            preco,
+            preco_promocional,
+            imagem_url,
+            variacoes,
+            descricao,
+            estoque,
+          }}
+        />
+      )}
     </>
   );
 }

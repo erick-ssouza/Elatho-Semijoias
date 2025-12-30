@@ -84,8 +84,10 @@ export default function ProdutoPage() {
     return price.toFixed(2).replace('.', ',');
   };
 
+  const isOutOfStock = produto && (produto.estoque !== null && produto.estoque !== undefined && produto.estoque <= 0);
+
   const handleAddToCart = () => {
-    if (!produto || !selectedVariacao) return;
+    if (!produto || !selectedVariacao || isOutOfStock) return;
 
     addItem({
       id: produto.id,
@@ -342,35 +344,43 @@ export default function ProdutoPage() {
               </div>
 
               {/* Quantity Selector - Minimal */}
-              <div className="flex items-center gap-6">
-                <div className="flex items-center border border-border">
-                  <button
-                    onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-muted transition-colors"
-                    disabled={quantidade <= 1}
-                  >
-                    <Minus className="h-4 w-4 stroke-[1.5]" />
-                  </button>
-                  <span className="w-12 h-12 flex items-center justify-center text-sm border-x border-border">
-                    {quantidade}
-                  </span>
-                  <button
-                    onClick={() => setQuantidade(quantidade + 1)}
-                    className="w-12 h-12 flex items-center justify-center hover:bg-muted transition-colors"
-                    disabled={quantidade >= (produto.estoque || 10)}
-                  >
-                    <Plus className="h-4 w-4 stroke-[1.5]" />
-                  </button>
+              {!isOutOfStock && (
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center border border-border">
+                    <button
+                      onClick={() => setQuantidade(Math.max(1, quantidade - 1))}
+                      className="w-12 h-12 flex items-center justify-center hover:bg-muted transition-colors"
+                      disabled={quantidade <= 1}
+                    >
+                      <Minus className="h-4 w-4 stroke-[1.5]" />
+                    </button>
+                    <span className="w-12 h-12 flex items-center justify-center text-sm border-x border-border">
+                      {quantidade}
+                    </span>
+                    <button
+                      onClick={() => setQuantidade(quantidade + 1)}
+                      className="w-12 h-12 flex items-center justify-center hover:bg-muted transition-colors"
+                      disabled={quantidade >= (produto.estoque || 10)}
+                    >
+                      <Plus className="h-4 w-4 stroke-[1.5]" />
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Add to Cart */}
-              <button 
-                onClick={handleAddToCart}
-                className="w-full btn-minimal py-4"
-              >
-                Adicionar ao carrinho
-              </button>
+              {isOutOfStock ? (
+                <div className="w-full py-4 text-center border border-border bg-muted text-muted-foreground cursor-not-allowed">
+                  <span className="text-sm uppercase tracking-[0.15em]">Produto Esgotado</span>
+                </div>
+              ) : (
+                <button 
+                  onClick={handleAddToCart}
+                  className="w-full btn-minimal py-4"
+                >
+                  Adicionar ao carrinho
+                </button>
+              )}
 
               {/* Share Buttons */}
               <ShareButtons 
