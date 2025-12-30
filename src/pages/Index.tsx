@@ -16,16 +16,18 @@ const Index = () => {
       <Helmet>
         <title>Elatho Semijoias | Elegância que você merece</title>
         <meta name="description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras. Frete grátis acima de R$299. Garantia de 12 meses." />
-        <meta property="og:site_name" content="Elatho Semijoias" />
-        <meta property="og:locale" content="pt_BR" />
+        <link rel="canonical" href="https://elathosemijoias.com.br" />
         <meta property="og:title" content="Elatho Semijoias | Elegância que você merece" />
-        <meta property="og:description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras." />
+        <meta property="og:description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras. Frete grátis acima de R$299." />
         <meta property="og:url" content="https://elathosemijoias.com.br" />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content="https://elathosemijoias.com.br/og-image.jpg" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content="Elatho Semijoias | Elegância que você merece" />
-        <meta name="twitter:description" content="Semijoias femininas com acabamento em ouro 18k." />
-        <link rel="canonical" href="https://elathosemijoias.com.br" />
+        <meta name="twitter:description" content="Semijoias femininas com acabamento em ouro 18k. Frete grátis acima de R$299." />
+        <meta name="twitter:image" content="https://elathosemijoias.com.br/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
