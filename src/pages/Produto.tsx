@@ -14,6 +14,8 @@ import { ShareButtons } from '@/components/product/ShareButtons';
 import ProductReviews from '@/components/product/ProductReviews';
 import ProductReviewForm from '@/components/product/ProductReviewForm';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
+import { RecentlyViewed } from '@/components/product/RecentlyViewed';
+import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 interface Produto {
   id: string;
@@ -38,6 +40,7 @@ export default function ProdutoPage() {
   const [activeTab, setActiveTab] = useState<'descricao' | 'cuidados' | 'avaliacoes'>('descricao');
   const { addItem } = useCart();
   const { toast } = useToast();
+  const { addProduct, getProductsExcluding } = useRecentlyViewed();
 
   useEffect(() => {
     const fetchProduto = async () => {
@@ -61,6 +64,15 @@ export default function ProdutoPage() {
         
         setProduto({ ...data, variacoes, imagens });
         setSelectedVariacao(variacoes[0] || '');
+        
+        // Track recently viewed
+        addProduct({
+          id: data.id,
+          nome: data.nome,
+          preco: data.preco,
+          preco_promocional: data.preco_promocional,
+          imagem_url: data.imagem_url,
+        });
       }
       setLoading(false);
     };
@@ -453,6 +465,14 @@ export default function ProdutoPage() {
               currentProductId={produto.id} 
             />
           </div>
+
+          {/* Produtos Vistos Recentemente */}
+          {getProductsExcluding(produto.id).length > 0 && (
+            <div className="mt-16 md:mt-24 border-t border-border pt-12">
+              <h2 className="font-display text-xl md:text-2xl mb-8">Vistos recentemente</h2>
+              <RecentlyViewed products={getProductsExcluding(produto.id)} />
+            </div>
+          )}
         </div>
       </main>
       <Footer />
