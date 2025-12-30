@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, ShoppingBag, User, Heart, Package, MessageCircle } from 'lucide-react';
+import { Search, Menu, X, ShoppingBag, User, Heart, Package, LogOut, UserCircle } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import CartDrawer from '@/components/cart/CartDrawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { useToast } from '@/hooks/use-toast';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -55,6 +56,16 @@ export default function Navbar() {
   const { itemCount } = useCart();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Get first name from user metadata
+  const firstName = user?.user_metadata?.nome?.split(' ')[0] || 'Usuário';
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast({ title: 'Você saiu da sua conta' });
+    navigate('/');
+  };
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -184,41 +195,46 @@ export default function Navbar() {
               <ThemeToggle />
 
               {/* User Menu */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                    aria-label="Minha conta"
-                  >
-                    <User className="h-5 w-5 stroke-[1.5]" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
-                  <DropdownMenuItem asChild>
-                    <Link to="/meus-pedidos" className="flex items-center gap-2">
-                      <Package className="h-4 w-4" />
-                      Meus Pedidos
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/favoritos" className="flex items-center gap-2">
-                      <Heart className="h-4 w-4" />
-                      Meus Favoritos
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <a
-                      href="https://wa.me/5519998229202"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2 cursor-pointer"
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="text-foreground/80 hover:text-foreground transition-colors duration-300 text-[11px] uppercase tracking-[0.15em] whitespace-nowrap"
                     >
-                      <MessageCircle className="h-4 w-4" />
-                      Fale Conosco
-                    </a>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      Olá, {firstName}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
+                    <DropdownMenuItem asChild>
+                      <Link to="/meus-pedidos" className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Meus Pedidos
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/minha-conta" className="flex items-center gap-2">
+                        <UserCircle className="h-4 w-4" />
+                        Meus Dados
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={handleSignOut}
+                      className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                  aria-label="Entrar"
+                >
+                  <User className="h-5 w-5 stroke-[1.5]" />
+                </Link>
+              )}
 
               {/* Cart */}
               <button
@@ -258,13 +274,49 @@ export default function Navbar() {
               </Link>
 
               {/* User */}
-              <Link
-                to="/auth"
-                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="Minha conta"
-              >
-                <User className="h-[18px] w-[18px] sm:h-5 sm:w-5 stroke-[1.5]" />
-              </Link>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      className="text-foreground/80 hover:text-foreground transition-colors duration-300 text-[10px] sm:text-[11px] uppercase tracking-[0.1em] whitespace-nowrap max-w-[80px] truncate"
+                    >
+                      Olá, {firstName}
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
+                    <DropdownMenuItem asChild>
+                      <Link to="/meus-pedidos" className="flex items-center gap-2">
+                        <Package className="h-4 w-4" />
+                        Meus Pedidos
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/minha-conta" className="flex items-center gap-2">
+                        <UserCircle className="h-4 w-4" />
+                        Meus Dados
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      Sair
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                  aria-label="Entrar"
+                >
+                  <User className="h-[18px] w-[18px] sm:h-5 sm:w-5 stroke-[1.5]" />
+                </Link>
+              )}
 
               {/* Cart */}
               <button
@@ -402,15 +454,31 @@ export default function Navbar() {
                   FAQ
                 </Link>
                 {user ? (
-                  <button
-                    onClick={() => {
-                      signOut();
-                      setMobileMenuOpen(false);
-                    }}
-                    className="block w-full text-left py-4 text-sm uppercase tracking-[0.2em] text-foreground border-b border-border"
-                  >
-                    SAIR
-                  </button>
+                  <>
+                    <Link
+                      to="/minha-conta"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full text-left py-4 text-sm uppercase tracking-[0.2em] text-foreground border-b border-border"
+                    >
+                      MINHA CONTA
+                    </Link>
+                    <Link
+                      to="/meus-pedidos"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full text-left py-4 text-sm uppercase tracking-[0.2em] text-foreground border-b border-border"
+                    >
+                      MEUS PEDIDOS
+                    </Link>
+                    <button
+                      onClick={() => {
+                        handleSignOut();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="block w-full text-left py-4 text-sm uppercase tracking-[0.2em] text-destructive border-b border-border"
+                    >
+                      SAIR
+                    </button>
+                  </>
                 ) : (
                   <Link
                     to="/auth"
