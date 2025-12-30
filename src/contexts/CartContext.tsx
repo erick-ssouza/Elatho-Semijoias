@@ -8,6 +8,7 @@ export interface CartItem {
   imagem_url: string;
   variacao: string;
   quantidade: number;
+  estoque?: number | null;
 }
 
 interface CartContextType {
@@ -44,11 +45,22 @@ export function CartProvider({ children }: { children: ReactNode }) {
       
       if (existingIndex > -1) {
         const updated = [...prev];
-        updated[existingIndex].quantidade += quantidade;
+        const currentQty = updated[existingIndex].quantidade;
+        const estoque = item.estoque ?? updated[existingIndex].estoque;
+        // Respeitar limite de estoque se disponível
+        const newQty = estoque != null 
+          ? Math.min(currentQty + quantidade, estoque) 
+          : currentQty + quantidade;
+        updated[existingIndex].quantidade = newQty;
+        updated[existingIndex].estoque = estoque;
         return updated;
       }
       
-      return [...prev, { ...item, quantidade }];
+      // Respeitar limite de estoque no primeiro add também
+      const initialQty = item.estoque != null 
+        ? Math.min(quantidade, item.estoque) 
+        : quantidade;
+      return [...prev, { ...item, quantidade: initialQty }];
     });
   };
 
@@ -62,9 +74,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       return;
     }
     setItems(prev =>
-      prev.map(i =>
-        i.id === id && i.variacao === variacao ? { ...i, quantidade } : i
-      )
+      prev.map(i => {
+        if (i.id === id && i.variacao === variacao) {
+          // Respeitar limite de estoque se disponível
+          const maxQuantidade = i.estoque != null ? Math.min(quantidade, i.estoque) : quantidade;
+          return { ...i, quantidade: maxQuantidade };
+        }
+        return i;
+      })
     );
   };
 
