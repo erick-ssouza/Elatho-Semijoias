@@ -264,7 +264,10 @@ export type Database = {
           frete: number
           id: string
           itens: Json
+          metodo_pagamento: string | null
           numero_pedido: string
+          payment_id: string | null
+          payment_status: string | null
           status: string
           subtotal: number
           total: number
@@ -280,7 +283,10 @@ export type Database = {
           frete?: number
           id?: string
           itens: Json
+          metodo_pagamento?: string | null
           numero_pedido: string
+          payment_id?: string | null
+          payment_status?: string | null
           status?: string
           subtotal: number
           total: number
@@ -296,7 +302,10 @@ export type Database = {
           frete?: number
           id?: string
           itens?: Json
+          metodo_pagamento?: string | null
           numero_pedido?: string
+          payment_id?: string | null
+          payment_status?: string | null
           status?: string
           subtotal?: number
           total?: number

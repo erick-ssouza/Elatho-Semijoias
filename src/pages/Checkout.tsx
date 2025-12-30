@@ -426,7 +426,32 @@ export default function Checkout() {
         preco: item.preco_promocional ?? item.preco,
       }));
 
-      // Registrar pedido no backend (evita bloqueios de permissão em checkout como visitante)
+      let paymentId: string | undefined;
+      let pixData: { paymentId?: string; qrCode?: string; qrCodeBase64?: string; ticketUrl?: string; expirationDate?: string; success?: boolean; error?: string } | null = null;
+
+      // Para PIX, gerar o pagamento ANTES de criar o pedido para ter o paymentId
+      if (metodoPagamento === 'pix') {
+        const { data, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
+          body: {
+            numeroPedido,
+            clienteNome: dadosPessoais.nome,
+            clienteEmail: dadosPessoais.email,
+            clienteCpf: dadosPessoais.cpf,
+            total,
+            descricao: `Pedido ${numeroPedido} - Elatho Semijoias`,
+          },
+        });
+
+        if (pixError || !data?.success) {
+          // Fallback: continuar sem QR automático (PIX manual)
+          console.warn('PIX automático falhou, usando fallback manual:', data?.error || pixError);
+        } else {
+          pixData = data;
+          paymentId = data.paymentId;
+        }
+      }
+
+      // Registrar pedido no backend
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
         body: {
           numeroPedido,
@@ -442,6 +467,8 @@ export default function Checkout() {
           frete,
           total,
           cupomCodigo: cupomAplicado?.codigo,
+          metodoPagamento,
+          paymentId,
         },
       });
 
@@ -480,7 +507,6 @@ export default function Checkout() {
       });
 
       if (metodoPagamento === 'pix') {
-        // PIX manual - redirect to PIX page with CPF key
         clearCart();
         
         navigate('/pagamento-pix', { 
@@ -488,6 +514,11 @@ export default function Checkout() {
             numeroPedido,
             total,
             clienteNome: dadosPessoais.nome,
+            paymentId: pixData?.paymentId,
+            qrCode: pixData?.qrCode,
+            qrCodeBase64: pixData?.qrCodeBase64,
+            ticketUrl: pixData?.ticketUrl,
+            expirationDate: pixData?.expirationDate,
           } 
         });
       } else {
