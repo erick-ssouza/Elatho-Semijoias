@@ -10,6 +10,8 @@ interface Produto {
   preco_promocional: number | null;
   imagem_url: string | null;
   categoria: string;
+  variacoes: string[] | null;
+  descricao: string | null;
 }
 
 interface ProductWithRating extends Produto {
@@ -53,7 +55,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
       
       let query = supabase
         .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria')
+        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao')
         .eq('destaque', true);
 
       if (selectedCategory !== 'todos') {
@@ -84,6 +86,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
           const rating = ratingsMap.get(produto.id);
           return {
             ...produto,
+            variacoes: Array.isArray(produto.variacoes) ? produto.variacoes as string[] : null,
             mediaAvaliacoes: rating ? rating.sum / rating.count : null,
             totalAvaliacoes: rating?.count || 0,
           };
