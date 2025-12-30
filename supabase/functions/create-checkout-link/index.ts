@@ -74,7 +74,7 @@ serve(async (req) => {
           excluded_payment_types: [
             { id: "ticket" }, // Exclude boleto
           ],
-          installments: 3, // Max 3x sem juros
+          installments: 10, // Até 10x
         },
         back_urls: {
           success: `https://eyvcrvqpxlldxyrfwjpn.lovableproject.com/pedido-confirmado?pedido=${numeroPedido}`,
