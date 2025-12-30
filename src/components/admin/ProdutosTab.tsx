@@ -11,8 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
-import ImageUpload from "./ImageUpload";
+import { Loader2, Plus, Pencil, Trash2, Images } from "lucide-react";
+import MultiImageUpload from "./MultiImageUpload";
 
 interface Produto {
   id: string;
@@ -22,6 +22,7 @@ interface Produto {
   preco_promocional: number | null;
   categoria: string;
   imagem_url: string | null;
+  imagens: string[] | null;
   estoque: number | null;
   destaque: boolean | null;
   variacoes: unknown;
@@ -55,6 +56,7 @@ const ProdutosTab = () => {
     preco_promocional: "",
     categoria: "",
     imagem_url: "",
+    imagens: [] as string[],
     estoque: "10",
     destaque: false,
     variacoes: "Dourado, Prateado, Rosé",
@@ -72,7 +74,14 @@ const ProdutosTab = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setProdutos(data || []);
+      
+      // Cast imagens to string array
+      const produtosFormatted = (data || []).map(p => ({
+        ...p,
+        imagens: Array.isArray(p.imagens) ? p.imagens as string[] : null
+      })) as Produto[];
+      
+      setProdutos(produtosFormatted);
     } catch (error) {
       console.error("Error fetching produtos:", error);
     } finally {
@@ -88,6 +97,7 @@ const ProdutosTab = () => {
       preco_promocional: "",
       categoria: "",
       imagem_url: "",
+      imagens: [],
       estoque: "10",
       destaque: false,
       variacoes: "Dourado, Prateado, Rosé",
@@ -104,6 +114,7 @@ const ProdutosTab = () => {
       preco_promocional: produto.preco_promocional ? String(produto.preco_promocional) : "",
       categoria: produto.categoria,
       imagem_url: produto.imagem_url || "",
+      imagens: Array.isArray(produto.imagens) ? produto.imagens : [],
       estoque: String(produto.estoque || 10),
       destaque: produto.destaque || false,
       variacoes: (Array.isArray(produto.variacoes) ? produto.variacoes : []).join(", "),
@@ -133,6 +144,7 @@ const ProdutosTab = () => {
       preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
       categoria: categoriaValue,
       imagem_url: form.imagem_url || null,
+      imagens: form.imagens.length > 0 ? form.imagens : null,
       estoque: parseInt(form.estoque),
       destaque: form.destaque,
       variacoes: variacoesArray,
@@ -281,10 +293,15 @@ const ProdutosTab = () => {
               </div>
 
               <div className="space-y-2">
-                <Label>Imagem do Produto</Label>
-                <ImageUpload
-                  value={form.imagem_url}
-                  onChange={(url) => setForm({ ...form, imagem_url: url })}
+                <Label className="flex items-center gap-2">
+                  <Images className="w-4 h-4" />
+                  Imagens do Produto (até 5)
+                </Label>
+                <MultiImageUpload
+                  mainImage={form.imagem_url}
+                  additionalImages={form.imagens}
+                  onMainImageChange={(url) => setForm({ ...form, imagem_url: url })}
+                  onAdditionalImagesChange={(urls) => setForm({ ...form, imagens: urls })}
                 />
               </div>
 

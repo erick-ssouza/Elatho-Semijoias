@@ -19,6 +19,8 @@ interface Produto {
   nome: string;
   preco: number;
   imagem_url: string | null;
+  categoria: string;
+  descricao: string | null;
 }
 
 const navLinks = [
@@ -67,10 +69,13 @@ export default function Navbar() {
         return;
       }
 
+      const searchTerm = searchQuery.toLowerCase();
+      
+      // Search by name, category, or description
       const { data } = await supabase
         .from('produtos')
-        .select('id, nome, preco, imagem_url')
-        .ilike('nome', `%${searchQuery}%`)
+        .select('id, nome, preco, imagem_url, categoria, descricao')
+        .or(`nome.ilike.%${searchTerm}%,categoria.ilike.%${searchTerm}%,descricao.ilike.%${searchTerm}%`)
         .limit(5);
 
       setSearchResults(data || []);
@@ -300,7 +305,7 @@ export default function Navbar() {
               
               {searchResults.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-4 bg-background border border-border z-50">
-                  {searchResults.map((produto) => (
+              {searchResults.map((produto) => (
                     <button
                       key={produto.id}
                       onClick={() => handleProductClick(produto.id)}
@@ -313,8 +318,8 @@ export default function Navbar() {
                       />
                       <div>
                         <p className="text-sm">{produto.nome}</p>
-                        <p className="text-xs text-muted-foreground">
-                          R$ {produto.preco.toFixed(2).replace('.', ',')}
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {produto.categoria} · R$ {produto.preco.toFixed(2).replace('.', ',')}
                         </p>
                       </div>
                     </button>
