@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -49,7 +50,18 @@ const faqItems = [
 
 export default function FAQ() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <Helmet>
+        <title>Perguntas Frequentes | Elatho Semijoias</title>
+        <meta name="description" content="Tire suas dúvidas sobre semijoias Elatho: garantia, frete grátis, formas de pagamento, trocas e devoluções, cuidados com as peças e muito mais." />
+        <meta property="og:title" content="Perguntas Frequentes | Elatho Semijoias" />
+        <meta property="og:description" content="Dúvidas sobre garantia, frete, pagamento e cuidados com semijoias." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/faq" />
+        <meta name="twitter:card" content="summary" />
+        <link rel="canonical" href="https://elathosemijoias.com.br/faq" />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-20 md:pt-24">
         {/* Hero */}
@@ -105,5 +117,6 @@ export default function FAQ() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }

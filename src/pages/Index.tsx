@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
@@ -11,20 +12,37 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState('todos');
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-16 md:pt-20">
-        <Hero />
-        <Categories 
-          selectedCategory={selectedCategory} 
-          onSelectCategory={setSelectedCategory} 
-        />
-        <ProductGrid selectedCategory={selectedCategory} />
-        <Testimonials />
-        <Features />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <Helmet>
+        <title>Elatho Semijoias | Elegância que você merece</title>
+        <meta name="description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras. Frete grátis acima de R$299. Garantia de 12 meses." />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta property="og:title" content="Elatho Semijoias | Elegância que você merece" />
+        <meta property="og:description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras." />
+        <meta property="og:url" content="https://elathosemijoias.com.br" />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Elatho Semijoias | Elegância que você merece" />
+        <meta name="twitter:description" content="Semijoias femininas com acabamento em ouro 18k." />
+        <link rel="canonical" href="https://elathosemijoias.com.br" />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-16 md:pt-20">
+          <Hero />
+          <Categories 
+            selectedCategory={selectedCategory} 
+            onSelectCategory={setSelectedCategory} 
+          />
+          <ProductGrid selectedCategory={selectedCategory} />
+          <Testimonials />
+          <Features />
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 };
 

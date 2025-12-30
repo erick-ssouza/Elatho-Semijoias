@@ -1,10 +1,23 @@
 import { Heart, Target, Eye, Sparkles } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 export default function Sobre() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <Helmet>
+        <title>Sobre a Elatho | Nossa História e Valores</title>
+        <meta name="description" content="Conheça a Elatho Semijoias. Nascemos do desejo de oferecer semijoias de alta qualidade com preços acessíveis. Desde 2020 encantando mulheres em todo o Brasil." />
+        <meta property="og:title" content="Sobre a Elatho | Nossa História e Valores" />
+        <meta property="og:description" content="Conheça a Elatho Semijoias. Desde 2020 oferecendo elegância e qualidade." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/sobre" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:title" content="Sobre a Elatho Semijoias" />
+        <link rel="canonical" href="https://elathosemijoias.com.br/sobre" />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-20 md:pt-24">
         {/* Hero */}
@@ -127,5 +140,6 @@ export default function Sobre() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
