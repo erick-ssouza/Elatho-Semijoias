@@ -1,24 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import ProductCard from './ProductCard';
 import ProductFilters, { FilterState, priceRanges, colors } from './ProductFilters';
 import { Skeleton } from '@/components/ui/skeleton';
-
-interface Produto {
-  id: string;
-  nome: string;
-  preco: number;
-  preco_promocional: number | null;
-  imagem_url: string | null;
-  categoria: string;
-  variacoes: string[] | null;
-  descricao: string | null;
-}
-
-interface ProductWithRating extends Produto {
-  mediaAvaliacoes: number | null;
-  totalAvaliacoes: number;
-}
+import { useProducts } from '@/hooks/useProductQueries';
 
 interface ProductGridProps {
   selectedCategory: string;
@@ -31,9 +15,7 @@ const initialFilters: FilterState = {
 };
 
 export default function ProductGrid({ selectedCategory }: ProductGridProps) {
-  const [produtos, setProdutos] = useState<ProductWithRating[]>([]);
-  const [filteredProdutos, setFilteredProdutos] = useState<ProductWithRating[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { data: produtos = [], isLoading: loading } = useProducts(selectedCategory);
   const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [headerVisible, setHeaderVisible] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
@@ -57,61 +39,8 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
     return () => observer.disconnect();
   }, []);
 
-  // Fetch products
-  useEffect(() => {
-    const fetchProdutos = async () => {
-      setLoading(true);
-      
-      let query = supabase
-        .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao')
-        .eq('destaque', true);
-
-      if (selectedCategory !== 'todos') {
-        query = query.eq('categoria', selectedCategory);
-      }
-
-      const { data, error } = await query;
-
-      if (!error && data) {
-        // Fetch ratings for all products
-        const { data: avaliacoes } = await supabase
-          .from('avaliacoes')
-          .select('produto_id, nota')
-          .eq('aprovado', true);
-
-        // Calculate average ratings per product
-        const ratingsMap = new Map<string, { sum: number; count: number }>();
-        
-        avaliacoes?.forEach((avaliacao) => {
-          const current = ratingsMap.get(avaliacao.produto_id) || { sum: 0, count: 0 };
-          ratingsMap.set(avaliacao.produto_id, {
-            sum: current.sum + avaliacao.nota,
-            count: current.count + 1,
-          });
-        });
-
-        const produtosComRating: ProductWithRating[] = data.map((produto) => {
-          const rating = ratingsMap.get(produto.id);
-          return {
-            ...produto,
-            variacoes: Array.isArray(produto.variacoes) ? produto.variacoes as string[] : null,
-            mediaAvaliacoes: rating ? rating.sum / rating.count : null,
-            totalAvaliacoes: rating?.count || 0,
-          };
-        });
-
-        setProdutos(produtosComRating);
-      }
-      
-      setLoading(false);
-    };
-
-    fetchProdutos();
-  }, [selectedCategory]);
-
-  // Apply filters and sorting
-  useEffect(() => {
+  // Apply filters and sorting with useMemo
+  const filteredProdutos = useMemo(() => {
     let result = [...produtos];
 
     // Filter by price range
@@ -158,15 +87,13 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
         });
         break;
       case 'vendidos':
-        // For now, sort by total reviews as proxy for "most sold"
         result.sort((a, b) => b.totalAvaliacoes - a.totalAvaliacoes);
         break;
       default:
-        // recentes - keep original order
         break;
     }
 
-    setFilteredProdutos(result);
+    return result;
   }, [produtos, filters]);
 
   const handleClearFilters = () => {

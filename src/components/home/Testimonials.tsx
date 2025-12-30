@@ -1,43 +1,17 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useTestimonials } from '@/hooks/useProductQueries';
 import { TestimonialSkeleton } from '@/components/ui/skeletons';
 
-interface Depoimento {
-  id: string;
-  cliente_nome: string;
-  texto: string;
-  nota: number;
-  resposta_admin: string | null;
-}
-
 export default function Testimonials() {
-  const [depoimentos, setDepoimentos] = useState<Depoimento[]>([]);
+  const { data: depoimentos = [], isLoading: loading } = useTestimonials();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   
   // Touch/swipe state
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
-
-  useEffect(() => {
-    const fetchDepoimentos = async () => {
-      const { data, error } = await supabase
-        .from('depoimentos')
-        .select('*')
-        .eq('aprovado', true)
-        .order('created_at', { ascending: false });
-
-      if (!error && data) {
-        setDepoimentos(data);
-      }
-      setLoading(false);
-    };
-
-    fetchDepoimentos();
-  }, []);
 
   const changeSlide = useCallback((newIndex: number) => {
     if (isTransitioning) return;
@@ -76,9 +50,9 @@ export default function Testimonials() {
 
     if (Math.abs(diff) > minSwipeDistance) {
       if (diff > 0) {
-        nextSlide(); // Swipe left -> next
+        nextSlide();
       } else {
-        prevSlide(); // Swipe right -> prev
+        prevSlide();
       }
     }
 
@@ -86,7 +60,7 @@ export default function Testimonials() {
     touchEndX.current = null;
   };
 
-  // Auto-play every 5 seconds (pauses on hover/touch)
+  // Auto-play every 5 seconds
   useEffect(() => {
     if (depoimentos.length <= 1 || isPaused) return;
     
