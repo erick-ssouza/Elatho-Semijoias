@@ -142,6 +142,98 @@ export default function ProdutoPage() {
     pulseiras: 'Pulseiras',
   }[produto.categoria] || produto.categoria;
 
+  // Schema JSON-LD para SEO
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": produto.nome,
+    "description": produto.descricao || `${produto.nome} - Semijoia exclusiva Elatho com acabamento em ouro 18k.`,
+    "image": produto.imagens?.length 
+      ? [produto.imagem_url, ...produto.imagens].filter(Boolean)
+      : produto.imagem_url ? [produto.imagem_url] : [],
+    "sku": produto.id,
+    "brand": {
+      "@type": "Brand",
+      "name": "Elatho Semijoias"
+    },
+    "category": categoriaLabel,
+    "material": "Liga metálica com banho de ouro 18k",
+    "color": produto.variacoes,
+    "offers": {
+      "@type": "Offer",
+      "url": productUrl,
+      "priceCurrency": "BRL",
+      "price": finalPrice,
+      "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      "availability": (produto.estoque ?? 0) > 0 
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock",
+      "seller": {
+        "@type": "Organization",
+        "name": "Elatho Semijoias"
+      },
+      "shippingDetails": {
+        "@type": "OfferShippingDetails",
+        "shippingRate": {
+          "@type": "MonetaryAmount",
+          "value": "0",
+          "currency": "BRL"
+        },
+        "shippingDestination": {
+          "@type": "DefinedRegion",
+          "addressCountry": "BR"
+        },
+        "deliveryTime": {
+          "@type": "ShippingDeliveryTime",
+          "handlingTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 1,
+            "maxValue": 3,
+            "unitCode": "DAY"
+          },
+          "transitTime": {
+            "@type": "QuantitativeValue",
+            "minValue": 3,
+            "maxValue": 10,
+            "unitCode": "DAY"
+          }
+        }
+      },
+      "hasMerchantReturnPolicy": {
+        "@type": "MerchantReturnPolicy",
+        "returnPolicyCategory": "https://schema.org/MerchantReturnFiniteReturnWindow",
+        "merchantReturnDays": 7,
+        "returnMethod": "https://schema.org/ReturnByMail"
+      }
+    }
+  };
+
+  // Breadcrumb Schema
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Início",
+        "item": "https://elathosemijoias.com.br"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": categoriaLabel,
+        "item": `https://elathosemijoias.com.br/#produtos`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": produto.nome,
+        "item": productUrl
+      }
+    ]
+  };
+
   return (
     <>
       <Helmet>
@@ -158,6 +250,12 @@ export default function ProdutoPage() {
         <meta name="twitter:title" content={`${produto.nome} | Elatho Semijoias`} />
         <meta name="twitter:description" content={produto.descricao || 'Semijoia exclusiva Elatho.'} />
         <meta name="twitter:image" content={produto.imagem_url || ''} />
+        <script type="application/ld+json">
+          {JSON.stringify(productSchema)}
+        </script>
+        <script type="application/ld+json">
+          {JSON.stringify(breadcrumbSchema)}
+        </script>
       </Helmet>
 
       <div className="min-h-screen bg-background">
