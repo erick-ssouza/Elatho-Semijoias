@@ -233,6 +233,17 @@ export default function Navbar() {
 
             {/* Mobile - Right */}
             <div className="flex lg:hidden items-center gap-4">
+              {/* Instagram */}
+              <a
+                href="https://instagram.com/elathosemijoias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="h-5 w-5" />
+              </a>
+
               {/* Favorites */}
               <Link
                 to="/favoritos"
@@ -240,6 +251,15 @@ export default function Navbar() {
                 aria-label="Favoritos"
               >
                 <Heart className="h-5 w-5 stroke-[1.5]" />
+              </Link>
+
+              {/* User */}
+              <Link
+                to="/auth"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Minha conta"
+              >
+                <User className="h-5 w-5 stroke-[1.5]" />
               </Link>
 
               {/* Cart */}
@@ -260,6 +280,7 @@ export default function Navbar() {
               <button
                 onClick={() => setMobileMenuOpen(true)}
                 className="p-1"
+                aria-label="Abrir menu"
               >
                 <Menu className="h-5 w-5 stroke-[1.5]" />
               </button>
