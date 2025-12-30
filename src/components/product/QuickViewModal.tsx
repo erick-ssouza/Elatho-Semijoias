@@ -30,8 +30,11 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
   const finalPrice = product.preco_promocional || product.preco;
   const hasDiscount = product.preco_promocional && product.preco_promocional < product.preco;
   const variacoes = product.variacoes || ["Dourado", "Prateado", "Rosé"];
+  const isOutOfStock = product.estoque !== null && product.estoque !== undefined && product.estoque <= 0;
 
   const handleAddToCart = () => {
+    if (isOutOfStock) return;
+    
     if (!selectedVariacao) {
       toast.error("Selecione uma variação");
       return;
@@ -112,13 +115,19 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
             </div>
 
             <div className="mt-auto pt-6 space-y-3">
-              <button
-                onClick={handleAddToCart}
-                className="btn-minimal w-full flex items-center justify-center gap-2"
-              >
-                <ShoppingBag className="h-4 w-4" />
-                Adicionar ao Carrinho
-              </button>
+              {isOutOfStock ? (
+                <div className="w-full py-3 text-center border border-border bg-muted text-muted-foreground cursor-not-allowed">
+                  <span className="text-xs uppercase tracking-[0.15em]">Produto Esgotado</span>
+                </div>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  className="btn-minimal w-full flex items-center justify-center gap-2"
+                >
+                  <ShoppingBag className="h-4 w-4" />
+                  Adicionar ao Carrinho
+                </button>
+              )}
 
               <Link
                 to={`/produto/${product.id}`}
