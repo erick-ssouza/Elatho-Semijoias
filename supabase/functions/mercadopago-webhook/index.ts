@@ -158,6 +158,44 @@ serve(async (req) => {
         } else {
           console.log("Order updated successfully:", pedido?.numero_pedido, "-> Status:", novoStatus);
 
+          // Decrementar estoque quando pagamento for aprovado
+          if (novoStatus === "confirmado" && pedido?.itens) {
+            console.log("Updating stock for confirmed order");
+            try {
+              const itens = pedido.itens as Array<{ id: string; quantidade: number }>;
+              
+              for (const item of itens) {
+                // Buscar estoque atual
+                const { data: produto, error: fetchError } = await supabase
+                  .from("produtos")
+                  .select("estoque")
+                  .eq("id", item.id)
+                  .single();
+
+                if (fetchError) {
+                  console.error(`Error fetching product ${item.id}:`, fetchError);
+                  continue;
+                }
+
+                const estoqueAtual = produto?.estoque ?? 0;
+                const novoEstoque = Math.max(0, estoqueAtual - item.quantidade);
+
+                const { error: updateError } = await supabase
+                  .from("produtos")
+                  .update({ estoque: novoEstoque })
+                  .eq("id", item.id);
+
+                if (updateError) {
+                  console.error(`Error updating stock for product ${item.id}:`, updateError);
+                } else {
+                  console.log(`Stock updated for product ${item.id}: ${estoqueAtual} -> ${novoEstoque}`);
+                }
+              }
+            } catch (stockError) {
+              console.error("Error updating stock:", stockError);
+            }
+          }
+
           // Send email notification if payment confirmed
           if (novoStatus === "confirmado" && pedido?.cliente_email) {
             try {
