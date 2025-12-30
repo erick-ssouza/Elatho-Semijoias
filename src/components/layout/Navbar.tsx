@@ -126,14 +126,14 @@ export default function Navbar() {
             : 'bg-transparent'
         }`}
       >
-        <div className="container mx-auto px-6 lg:px-12">
-          <div className="flex items-center justify-between h-24 md:h-36">
+        <div className="container mx-auto px-4 lg:px-12">
+          <div className="flex items-center justify-between h-20 md:h-24">
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center h-full">
+            <Link to="/" className="flex-shrink-0 flex items-center">
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-24 md:h-60 w-auto"
+                className="h-12 md:h-16 w-auto"
               />
             </Link>
 
@@ -385,7 +385,7 @@ export default function Navbar() {
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-40 w-auto"
+                className="h-12 w-auto"
               />
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
