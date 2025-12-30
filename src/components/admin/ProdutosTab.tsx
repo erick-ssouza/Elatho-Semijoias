@@ -36,6 +36,17 @@ const categorias = [
   { value: "conjuntos", label: "Conjuntos" },
 ];
 
+const tiposMaterial = [
+  { value: "ouro18k", label: "Banho de Ouro 18k", descricao: "Material: Liga metálica com banho de ouro 18k\nGarantia: 12 meses contra defeitos" },
+  { value: "prata925", label: "Banho de Prata 925", descricao: "Material: Liga metálica com banho de prata 925\nGarantia: 12 meses contra defeitos" },
+  { value: "ouro18k_zirconias", label: "Banho de Ouro 18k com Zircônias", descricao: "Material: Liga metálica com banho de ouro 18k\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
+  { value: "prata925_zirconias", label: "Banho de Prata 925 com Zircônias", descricao: "Material: Liga metálica com banho de prata 925\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
+  { value: "ouro_rose", label: "Banho de Ouro Rosé", descricao: "Material: Liga metálica com banho de ouro rosé\nGarantia: 12 meses contra defeitos" },
+  { value: "ouro_rose_zirconias", label: "Banho de Ouro Rosé com Zircônias", descricao: "Material: Liga metálica com banho de ouro rosé\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
+  { value: "ouro18k_perolas", label: "Banho de Ouro 18k com Pérolas", descricao: "Material: Liga metálica com banho de ouro 18k\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
+  { value: "prata925_perolas", label: "Banho de Prata 925 com Pérolas", descricao: "Material: Liga metálica com banho de prata 925\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
+];
+
 const getCategoriaLabel = (value: string) => {
   const cat = categorias.find(c => c.value === value);
   return cat ? cat.label : value;
@@ -52,6 +63,8 @@ const ProdutosTab = () => {
   const [form, setForm] = useState({
     nome: "",
     descricao: "",
+    descricaoAdicional: "",
+    tipoMaterial: "",
     preco: "",
     preco_promocional: "",
     categoria: "",
@@ -93,6 +106,8 @@ const ProdutosTab = () => {
     setForm({
       nome: "",
       descricao: "",
+      descricaoAdicional: "",
+      tipoMaterial: "",
       preco: "",
       preco_promocional: "",
       categoria: "",
@@ -105,11 +120,57 @@ const ProdutosTab = () => {
     setEditingProduto(null);
   };
 
+  const handleMaterialChange = (value: string) => {
+    const material = tiposMaterial.find(t => t.value === value);
+    if (material) {
+      setForm(prev => ({
+        ...prev,
+        tipoMaterial: value,
+        descricao: material.descricao + (prev.descricaoAdicional ? '\n' + prev.descricaoAdicional : ''),
+      }));
+    } else {
+      setForm(prev => ({ ...prev, tipoMaterial: value }));
+    }
+  };
+
+  const handleDescricaoAdicionalChange = (value: string) => {
+    const material = tiposMaterial.find(t => t.value === form.tipoMaterial);
+    const baseDescricao = material ? material.descricao : '';
+    setForm(prev => ({
+      ...prev,
+      descricaoAdicional: value,
+      descricao: baseDescricao + (value ? '\n' + value : ''),
+    }));
+  };
+
   const openEdit = (produto: Produto) => {
     setEditingProduto(produto);
+    
+    // Try to detect material type from description
+    let tipoMaterial = "";
+    let descricaoAdicional = "";
+    
+    if (produto.descricao) {
+      const matchingMaterial = tiposMaterial.find(t => produto.descricao?.startsWith(t.descricao.split('\n')[0]));
+      if (matchingMaterial) {
+        tipoMaterial = matchingMaterial.value;
+        const standardDesc = matchingMaterial.descricao;
+        if (produto.descricao.length > standardDesc.length) {
+          descricaoAdicional = produto.descricao.slice(standardDesc.length).trim();
+          if (descricaoAdicional.startsWith('\n')) {
+            descricaoAdicional = descricaoAdicional.slice(1);
+          }
+        }
+      } else {
+        descricaoAdicional = produto.descricao;
+      }
+    }
+    
     setForm({
       nome: produto.nome,
       descricao: produto.descricao || "",
+      descricaoAdicional,
+      tipoMaterial,
       preco: String(produto.preco),
       preco_promocional: produto.preco_promocional ? String(produto.preco_promocional) : "",
       categoria: produto.categoria,
@@ -250,12 +311,37 @@ const ProdutosTab = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="descricao">Descrição</Label>
+                <Label htmlFor="tipoMaterial">Tipo de Material</Label>
+                <Select value={form.tipoMaterial} onValueChange={handleMaterialChange}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o tipo de material" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tiposMaterial.map((tipo) => (
+                      <SelectItem key={tipo.value} value={tipo.value}>{tipo.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="descricaoAdicional">Descrição Adicional (opcional)</Label>
                 <Textarea
-                  id="descricao"
+                  id="descricaoAdicional"
+                  value={form.descricaoAdicional}
+                  onChange={(e) => handleDescricaoAdicionalChange(e.target.value)}
+                  rows={2}
+                  placeholder="Informações adicionais sobre o produto..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Descrição Final (gerada automaticamente)</Label>
+                <Textarea
                   value={form.descricao}
-                  onChange={(e) => setForm({ ...form, descricao: e.target.value })}
+                  readOnly
                   rows={3}
+                  className="bg-muted"
                 />
               </div>
 

@@ -49,27 +49,27 @@ export default function Sobre() {
                 </h2>
                 <div className="space-y-4 text-muted-foreground">
                   <p>
-                    A Elatho Semijoias nasceu em 2020, fruto da paixão por joias e do sonho de 
-                    democratizar o acesso a peças de qualidade. Começamos como uma pequena loja 
-                    online e hoje atendemos clientes em todo o Brasil.
+                    A <strong className="text-foreground">Elatho Semijoias</strong> nasceu do amor por peças que combinam elegância e acessibilidade.
                   </p>
                   <p>
-                    Nosso nome, Elatho, vem da fusão de "Ela" - representando todas as mulheres 
-                    que queremos empoderar - e "tho" de "tesouro". Porque acreditamos que cada 
-                    mulher merece ter seus próprios tesouros.
+                    Nosso nome vem do grego <em>"Elatho"</em>, que significa <strong className="text-foreground">"eu brilho"</strong> — e é exatamente isso que queremos: fazer você brilhar em cada momento especial.
                   </p>
                   <p>
-                    Cada peça é cuidadosamente selecionada e passa por rigoroso controle de 
-                    qualidade. Trabalhamos apenas com fornecedores certificados e utilizamos 
-                    banhos de ouro 18k de alta durabilidade.
+                    Trabalhamos com semijoias de alta qualidade, com acabamento em <strong className="text-foreground">ouro 18k</strong>, <strong className="text-foreground">prata 925</strong> e <strong className="text-foreground">banho rosé</strong>, todas com garantia de 12 meses.
+                  </p>
+                  <p>
+                    Cada peça é cuidadosamente selecionada para oferecer o melhor em design, durabilidade e preço justo.
+                  </p>
+                  <p className="text-primary font-display text-lg italic mt-6">
+                    Bem-vinda à Elatho. Elegância que você merece.
                   </p>
                 </div>
               </div>
               <div className="bg-accent/30 rounded-3xl aspect-square flex items-center justify-center">
                 <div className="text-center">
                   <Sparkles className="h-20 w-20 text-primary mx-auto mb-4" />
-                  <p className="font-display text-2xl font-bold text-gradient-gold">Desde 2020</p>
-                  <p className="text-muted-foreground">Encantando mulheres</p>
+                  <p className="font-display text-2xl font-bold text-gradient-gold">"Eu brilho"</p>
+                  <p className="text-muted-foreground">Do grego antigo</p>
                 </div>
               </div>
             </div>

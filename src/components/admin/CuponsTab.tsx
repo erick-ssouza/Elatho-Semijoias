@@ -97,7 +97,7 @@ const CuponsTab = () => {
       const cupomData = {
         codigo: formData.codigo.toUpperCase().trim(),
         tipo: formData.tipo,
-        valor: parseFloat(formData.valor),
+        valor: formData.tipo === "frete_gratis" ? 0 : parseFloat(formData.valor || "0"),
         valor_minimo: formData.valor_minimo ? parseFloat(formData.valor_minimo) : 0,
         uso_maximo: formData.uso_maximo ? parseInt(formData.uso_maximo) : null,
         validade: formData.validade ? new Date(formData.validade).toISOString() : null,
@@ -213,7 +213,7 @@ const CuponsTab = () => {
                   <Label htmlFor="tipo">Tipo de Desconto</Label>
                   <Select
                     value={formData.tipo}
-                    onValueChange={(value: "percentual" | "fixo") =>
+                    onValueChange={(value: "percentual" | "fixo" | "frete_gratis") =>
                       setFormData({ ...formData, tipo: value })
                     }
                   >
@@ -223,25 +223,28 @@ const CuponsTab = () => {
                     <SelectContent>
                       <SelectItem value="percentual">Percentual (%)</SelectItem>
                       <SelectItem value="fixo">Valor Fixo (R$)</SelectItem>
+                      <SelectItem value="frete_gratis">Frete Grátis</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="valor">
-                    {formData.tipo === "percentual" ? "Desconto (%)" : "Desconto (R$)"}
-                  </Label>
-                  <Input
-                    id="valor"
-                    type="number"
-                    step={formData.tipo === "percentual" ? "1" : "0.01"}
-                    min="0"
-                    max={formData.tipo === "percentual" ? "100" : undefined}
-                    value={formData.valor}
-                    onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
-                    required
-                  />
-                </div>
+                {formData.tipo !== "frete_gratis" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="valor">
+                      {formData.tipo === "percentual" ? "Desconto (%)" : "Desconto (R$)"}
+                    </Label>
+                    <Input
+                      id="valor"
+                      type="number"
+                      step={formData.tipo === "percentual" ? "1" : "0.01"}
+                      min="0"
+                      max={formData.tipo === "percentual" ? "100" : undefined}
+                      value={formData.valor}
+                      onChange={(e) => setFormData({ ...formData, valor: e.target.value })}
+                      required={formData.tipo !== "frete_gratis"}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -322,6 +325,8 @@ const CuponsTab = () => {
                     <TableCell>
                       {cupom.tipo === "percentual"
                         ? `${cupom.valor}%`
+                        : cupom.tipo === "frete_gratis"
+                        ? "Frete Grátis"
                         : `R$ ${Number(cupom.valor).toFixed(2)}`}
                     </TableCell>
                     <TableCell>

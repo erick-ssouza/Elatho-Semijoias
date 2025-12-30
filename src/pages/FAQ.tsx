@@ -20,7 +20,7 @@ const faqItems = [
   },
   {
     pergunta: 'Posso parcelar minha compra?',
-    resposta: 'Sim! Parcelamos suas compras em até 3x sem juros no cartão de crédito. Para pagamentos via PIX, você recebe um desconto especial de 5% no valor total da compra.'
+    resposta: 'Sim! Parcele em até 10x pelo Mercado Pago. Para pagamentos via PIX, o pagamento é processado instantaneamente.'
   },
   {
     pergunta: 'As peças têm garantia?',
@@ -43,8 +43,12 @@ const faqItems = [
     resposta: 'No momento, trabalhamos apenas com nosso catálogo padrão. Porém, estamos sempre lançando novas coleções! Siga nosso Instagram para ficar por dentro das novidades.'
   },
   {
+    pergunta: 'Como faço para rastrear meu pedido?',
+    resposta: 'Após o envio, você receberá o código de rastreio por e-mail e WhatsApp. Também pode acessar a página "Rastrear Pedido" em nosso site e informar o número do seu pedido para acompanhar o status.'
+  },
+  {
     pergunta: 'Como entro em contato com vocês?',
-    resposta: 'Você pode nos contatar via WhatsApp (11) 99999-9999, email contato@elathosemijoias.com.br ou através do formulário de contato em nosso site. Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.'
+    resposta: 'Você pode nos contatar via WhatsApp (19) 99822-9202, email elathosemijoias@gmail.com ou através do formulário de contato em nosso site. Nosso horário de atendimento é de segunda a sexta, das 9h às 18h.'
   }
 ];
 
@@ -104,7 +108,7 @@ export default function FAQ() {
                 Não encontrou o que procurava?
               </p>
               <a 
-                href="https://wa.me/5511999999999" 
+                href="https://wa.me/5519998229202" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="btn-gold inline-flex"
