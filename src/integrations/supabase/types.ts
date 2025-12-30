@@ -303,6 +303,38 @@ export type Database = {
         }
         Relationships: []
       }
+      pedidos_historico: {
+        Row: {
+          created_at: string
+          id: string
+          pedido_id: string
+          status_anterior: string | null
+          status_novo: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          pedido_id: string
+          status_anterior?: string | null
+          status_novo: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          pedido_id?: string
+          status_anterior?: string | null
+          status_novo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedidos_historico_pedido_id_fkey"
+            columns: ["pedido_id"]
+            isOneToOne: false
+            referencedRelation: "pedidos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       produtos: {
         Row: {
           categoria: string
@@ -312,6 +344,7 @@ export type Database = {
           estoque: number | null
           id: string
           imagem_url: string | null
+          imagens: Json | null
           nome: string
           preco: number
           preco_promocional: number | null
@@ -325,6 +358,7 @@ export type Database = {
           estoque?: number | null
           id?: string
           imagem_url?: string | null
+          imagens?: Json | null
           nome: string
           preco: number
           preco_promocional?: number | null
@@ -338,6 +372,7 @@ export type Database = {
           estoque?: number | null
           id?: string
           imagem_url?: string | null
+          imagens?: Json | null
           nome?: string
           preco?: number
           preco_promocional?: number | null
@@ -368,7 +403,44 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      avaliacoes_publicas: {
+        Row: {
+          cliente_nome: string | null
+          comentario: string | null
+          created_at: string | null
+          id: string | null
+          nota: number | null
+          produto_id: string | null
+          titulo: string | null
+        }
+        Insert: {
+          cliente_nome?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          id?: string | null
+          nota?: number | null
+          produto_id?: string | null
+          titulo?: string | null
+        }
+        Update: {
+          cliente_nome?: string | null
+          comentario?: string | null
+          created_at?: string | null
+          id?: string | null
+          nota?: number | null
+          produto_id?: string | null
+          titulo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_produto_id_fkey"
+            columns: ["produto_id"]
+            isOneToOne: false
+            referencedRelation: "produtos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       has_role: {
