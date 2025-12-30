@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Send, Phone, Mail, Instagram, MapPin, Clock, Loader2 } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -85,7 +86,18 @@ export default function Contato() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <Helmet>
+        <title>Contato | Elatho Semijoias</title>
+        <meta name="description" content="Entre em contato com a Elatho Semijoias. WhatsApp (19) 99822-9202, email elathosemijoias@gmail.com. Atendimento de segunda a sexta das 9h às 18h." />
+        <meta property="og:title" content="Contato | Elatho Semijoias" />
+        <meta property="og:description" content="Fale conosco via WhatsApp, email ou Instagram. Atendimento rápido e personalizado." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/contato" />
+        <meta name="twitter:card" content="summary" />
+        <link rel="canonical" href="https://elathosemijoias.com.br/contato" />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
       <Navbar />
       <main className="pt-20 md:pt-24">
         {/* Hero */}
@@ -270,5 +282,6 @@ export default function Contato() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
