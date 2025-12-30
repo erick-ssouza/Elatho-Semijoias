@@ -66,6 +66,7 @@ const FRETE_REGIOES: Record<string, number> = {
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [aceitouTermos, setAceitouTermos] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -105,10 +106,11 @@ export default function Checkout() {
   const total = Math.max(0, subtotal - desconto + frete);
 
   useEffect(() => {
-    if (items.length === 0) {
+    // Evita redirecionar para Home quando o carrinho é limpo após o pedido ser criado
+    if (items.length === 0 && !orderPlaced && !loading) {
       navigate('/');
     }
-  }, [items, navigate]);
+  }, [items.length, orderPlaced, loading, navigate]);
 
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
@@ -507,38 +509,28 @@ export default function Checkout() {
       });
 
       if (metodoPagamento === 'pix') {
+        setOrderPlaced(true);
         clearCart();
-        
-        // Se tiver QR Code automático, vai para página de PIX
-        if (pixData?.qrCodeBase64 || pixData?.qrCode) {
-          navigate('/pagamento-pix', { 
-            state: { 
-              numeroPedido,
-              total,
-              clienteNome: dadosPessoais.nome,
-              paymentId: pixData?.paymentId,
-              qrCode: pixData?.qrCode,
-              qrCodeBase64: pixData?.qrCodeBase64,
-              ticketUrl: pixData?.ticketUrl,
-              expirationDate: pixData?.expirationDate,
-            } 
-          });
-        } else {
-          // Fallback: vai direto para confirmação com PIX manual
-          navigate('/pedido-confirmado', {
-            state: {
-              numeroPedido,
-              total,
-              subtotal,
-              frete,
-              desconto,
-              metodoPagamento: 'pix',
-              itens: itensJson,
-              endereco: enderecoJson,
-              clienteNome: dadosPessoais.nome,
-            }
-          });
-        }
+
+        // Sempre redirecionar para confirmação (mesmo se o PIX automático falhar)
+        navigate(`/pedido-confirmado?numero=${encodeURIComponent(numeroPedido)}`, {
+          replace: true,
+          state: {
+            numeroPedido,
+            total,
+            subtotal,
+            frete,
+            desconto,
+            metodoPagamento: 'pix',
+            itens: itensJson,
+            endereco: enderecoJson,
+            clienteNome: dadosPessoais.nome,
+            // PIX (quando existir)
+            pixCopiaECola: pixData?.qrCode,
+            pixQrCodeBase64: pixData?.qrCodeBase64,
+            pixPaymentId: pixData?.paymentId,
+          },
+        });
       } else {
         // Cartão parcelado via Mercado Pago
         const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout-link', {
