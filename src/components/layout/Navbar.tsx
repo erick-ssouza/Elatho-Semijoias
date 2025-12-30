@@ -127,13 +127,13 @@ export default function Navbar() {
         }`}
       >
         <div className="container mx-auto px-6 lg:px-12">
-          <div className="flex items-center justify-between h-20">
+          <div className="flex items-center justify-between h-28 md:h-36">
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0">
+            <Link to="/" className="flex-shrink-0 flex items-center">
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-32 md:h-40 w-auto"
+                className="h-48 md:h-60 w-auto"
               />
             </Link>
 
@@ -385,7 +385,7 @@ export default function Navbar() {
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-28 w-auto"
+                className="h-40 w-auto"
               />
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
