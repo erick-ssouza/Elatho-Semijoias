@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import ProductCard from './ProductCard';
+import ProductFilters, { FilterState, priceRanges, colors } from './ProductFilters';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface Produto {
@@ -23,10 +24,17 @@ interface ProductGridProps {
   selectedCategory: string;
 }
 
+const initialFilters: FilterState = {
+  priceRanges: [],
+  colors: [],
+  sortBy: 'recentes',
+};
+
 export default function ProductGrid({ selectedCategory }: ProductGridProps) {
   const [produtos, setProdutos] = useState<ProductWithRating[]>([]);
+  const [filteredProdutos, setFilteredProdutos] = useState<ProductWithRating[]>([]);
   const [loading, setLoading] = useState(true);
-  const [sortBy, setSortBy] = useState('recentes');
+  const [filters, setFilters] = useState<FilterState>(initialFilters);
   const [headerVisible, setHeaderVisible] = useState(false);
   const headerRef = useRef<HTMLDivElement>(null);
 
@@ -49,6 +57,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
     return () => observer.disconnect();
   }, []);
 
+  // Fetch products
   useEffect(() => {
     const fetchProdutos = async () => {
       setLoading(true);
@@ -92,35 +101,77 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
           };
         });
 
-        let sortedData = [...produtosComRating];
-        
-        switch (sortBy) {
-          case 'menor':
-            sortedData.sort((a, b) => (a.preco_promocional || a.preco) - (b.preco_promocional || b.preco));
-            break;
-          case 'maior':
-            sortedData.sort((a, b) => (b.preco_promocional || b.preco) - (a.preco_promocional || a.preco));
-            break;
-          case 'avaliacao':
-            sortedData.sort((a, b) => {
-              if (a.mediaAvaliacoes === null && b.mediaAvaliacoes === null) return 0;
-              if (a.mediaAvaliacoes === null) return 1;
-              if (b.mediaAvaliacoes === null) return -1;
-              return b.mediaAvaliacoes - a.mediaAvaliacoes;
-            });
-            break;
-          default:
-            break;
-        }
-        
-        setProdutos(sortedData);
+        setProdutos(produtosComRating);
       }
       
       setLoading(false);
     };
 
     fetchProdutos();
-  }, [selectedCategory, sortBy]);
+  }, [selectedCategory]);
+
+  // Apply filters and sorting
+  useEffect(() => {
+    let result = [...produtos];
+
+    // Filter by price range
+    if (filters.priceRanges.length > 0) {
+      result = result.filter((produto) => {
+        const price = produto.preco_promocional || produto.preco;
+        return filters.priceRanges.some((rangeId) => {
+          const range = priceRanges.find((r) => r.id === rangeId);
+          if (!range) return false;
+          return price >= range.min && price < range.max;
+        });
+      });
+    }
+
+    // Filter by color/variation
+    if (filters.colors.length > 0) {
+      result = result.filter((produto) => {
+        if (!produto.variacoes) return false;
+        const produtoColors = produto.variacoes.map((v) => 
+          v.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        );
+        return filters.colors.some((colorId) => {
+          const colorLabel = colors.find((c) => c.id === colorId)?.label || '';
+          const normalizedColor = colorLabel.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return produtoColors.some((pc) => pc.includes(normalizedColor));
+        });
+      });
+    }
+
+    // Sort
+    switch (filters.sortBy) {
+      case 'menor':
+        result.sort((a, b) => (a.preco_promocional || a.preco) - (b.preco_promocional || b.preco));
+        break;
+      case 'maior':
+        result.sort((a, b) => (b.preco_promocional || b.preco) - (a.preco_promocional || a.preco));
+        break;
+      case 'avaliacao':
+        result.sort((a, b) => {
+          if (a.mediaAvaliacoes === null && b.mediaAvaliacoes === null) return 0;
+          if (a.mediaAvaliacoes === null) return 1;
+          if (b.mediaAvaliacoes === null) return -1;
+          return b.mediaAvaliacoes - a.mediaAvaliacoes;
+        });
+        break;
+      case 'vendidos':
+        // For now, sort by total reviews as proxy for "most sold"
+        result.sort((a, b) => b.totalAvaliacoes - a.totalAvaliacoes);
+        break;
+      default:
+        // recentes - keep original order
+        break;
+    }
+
+    setFilteredProdutos(result);
+  }, [produtos, filters]);
+
+  const handleClearFilters = () => {
+    setFilters(initialFilters);
+  };
 
   return (
     <section id="produtos" className="py-16 md:py-24">
@@ -149,7 +200,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
                 transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s',
               }}
             >
-              {produtos.length} produto{produtos.length !== 1 ? 's' : ''}
+              {filteredProdutos.length} produto{filteredProdutos.length !== 1 ? 's' : ''}
             </p>
             {/* Animated underline */}
             <div 
@@ -160,68 +211,59 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
               }}
             />
           </div>
-
-          {/* Sort - Text only with fade animation */}
-          <div 
-            className="flex items-center gap-4 text-xs uppercase tracking-[0.15em]"
-            style={{
-              opacity: headerVisible ? 1 : 0,
-              transform: headerVisible ? 'translateX(0)' : 'translateX(20px)',
-              transition: 'opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s, transform 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s',
-            }}
-          >
-            <span className="text-muted-foreground">Ordenar:</span>
-            {[
-              { value: 'recentes', label: 'Recentes' },
-              { value: 'menor', label: 'Menor Preço' },
-              { value: 'maior', label: 'Maior Preço' },
-            ].map((option, index) => (
-              <div key={option.value} className="flex items-center">
-                <button
-                  onClick={() => setSortBy(option.value)}
-                  className={`transition-colors ${
-                    sortBy === option.value
-                      ? 'text-foreground underline underline-offset-4'
-                      : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  {option.label}
-                </button>
-                {index < 2 && <span className="text-muted-foreground/30 ml-4">·</span>}
-              </div>
-            ))}
-          </div>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 md:gap-16">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i}>
-                <Skeleton className="aspect-[4/5] mb-5" />
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-3/4 mx-auto" />
-                  <Skeleton className="h-4 w-1/2 mx-auto" />
-                </div>
+        {/* Main content with filters */}
+        <div className="flex gap-12">
+          {/* Filters sidebar */}
+          <ProductFilters
+            filters={filters}
+            onFiltersChange={setFilters}
+            onClearFilters={handleClearFilters}
+            totalProducts={filteredProdutos.length}
+          />
+
+          {/* Products grid */}
+          <div className="flex-1">
+            {loading ? (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i}>
+                    <Skeleton className="aspect-[4/5] mb-5" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-3/4 mx-auto" />
+                      <Skeleton className="h-4 w-1/2 mx-auto" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
+            ) : filteredProdutos.length === 0 ? (
+              <div className="text-center py-24">
+                <p className="text-muted-foreground mb-4">Nenhum produto encontrado.</p>
+                {(filters.priceRanges.length > 0 || filters.colors.length > 0) && (
+                  <button
+                    onClick={handleClearFilters}
+                    className="text-sm underline underline-offset-4 text-foreground hover:text-muted-foreground transition-colors"
+                  >
+                    Limpar filtros
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-3 gap-10 md:gap-12">
+                {filteredProdutos.map((produto, index) => (
+                  <ProductCard 
+                    key={produto.id} 
+                    {...produto}
+                    mediaAvaliacoes={produto.mediaAvaliacoes}
+                    totalAvaliacoes={produto.totalAvaliacoes}
+                    index={index % 3}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-        ) : produtos.length === 0 ? (
-          <div className="text-center py-24">
-            <p className="text-muted-foreground">Nenhum produto encontrado.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10 md:gap-16">
-            {produtos.map((produto, index) => (
-              <ProductCard 
-                key={produto.id} 
-                {...produto}
-                mediaAvaliacoes={produto.mediaAvaliacoes}
-                totalAvaliacoes={produto.totalAvaliacoes}
-                index={index % 4}
-              />
-            ))}
-          </div>
-        )}
+        </div>
       </div>
     </section>
   );
