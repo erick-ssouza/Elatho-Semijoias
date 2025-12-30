@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ShoppingBag, User, Heart, Package, LogOut, UserCircle } from 'lucide-react';
-import logoElatho from '@/assets/logo-elatho-navbar.png';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -120,19 +119,19 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 bg-background transition-shadow duration-300 ${
-          isScrolled ? 'shadow-sm' : ''
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'bg-background' 
+            : 'bg-transparent'
         }`}
       >
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-[60px] lg:h-[70px]">
-            {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center h-full">
-              <img
-                src={logoElatho}
-                alt="Elatho Semijoias"
-                className="h-[35px] lg:h-[40px] w-auto"
-              />
+        <div className="container mx-auto px-6 lg:px-12">
+          <div className="flex items-center justify-between h-20">
+            {/* Logo - Text */}
+            <Link to="/" className="flex-shrink-0">
+              <span className="font-display text-2xl md:text-3xl tracking-wide text-foreground italic">
+                Elatho<span className="text-lg md:text-xl ml-1 not-italic font-sans font-light tracking-[0.15em] uppercase">Semijoias</span>
+              </span>
             </Link>
 
             {/* Desktop Navigation - Center */}
@@ -151,7 +150,7 @@ export default function Navbar() {
             </div>
 
             {/* Desktop Right Icons */}
-            <div className="hidden lg:flex items-center gap-4">
+            <div className="hidden lg:flex items-center gap-5">
               {/* Instagram */}
               <a
                 href="https://instagram.com/elathosemijoias"
@@ -160,7 +159,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Instagram"
               >
-                <InstagramIcon className="h-6 w-6" />
+                <InstagramIcon className="h-5 w-5" />
               </a>
 
               {/* Search Toggle */}
@@ -169,7 +168,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Buscar"
               >
-                <Search className="h-6 w-6 stroke-[1.5]" />
+                <Search className="h-5 w-5 stroke-[1.5]" />
               </button>
 
               {/* WhatsApp */}
@@ -180,7 +179,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="WhatsApp"
               >
-                <WhatsAppIcon className="h-6 w-6" />
+                <WhatsAppIcon className="h-5 w-5" />
               </a>
 
               {/* Favorites */}
@@ -189,7 +188,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Favoritos"
               >
-                <Heart className="h-6 w-6 stroke-[1.5]" />
+                <Heart className="h-5 w-5 stroke-[1.5]" />
               </Link>
 
               {/* Theme Toggle */}
@@ -233,7 +232,7 @@ export default function Navbar() {
                   className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                   aria-label="Entrar"
                 >
-                    <User className="h-6 w-6 stroke-[1.5]" />
+                  <User className="h-5 w-5 stroke-[1.5]" />
                 </Link>
               )}
 
@@ -243,7 +242,7 @@ export default function Navbar() {
                 className="relative text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Carrinho"
               >
-                  <ShoppingBag className="h-6 w-6 stroke-[1.5]" />
+                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
                 {itemCount > 0 && (
                   <span className="absolute -top-1 -right-1 bg-foreground text-background text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
                     {itemCount}
@@ -260,7 +259,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Favoritos"
               >
-                <Heart className="h-6 w-6 stroke-[1.5]" />
+                <Heart className="h-5 w-5 stroke-[1.5]" />
               </Link>
 
               {/* User */}
@@ -271,7 +270,7 @@ export default function Navbar() {
                       className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                       aria-label="Minha conta"
                     >
-                        <User className="h-6 w-6 stroke-[1.5]" />
+                      <User className="h-5 w-5 stroke-[1.5]" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
@@ -315,7 +314,7 @@ export default function Navbar() {
                 className="relative text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Carrinho"
               >
-                <ShoppingBag className="h-6 w-6 stroke-[1.5]" />
+                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
                 {itemCount > 0 && (
                   <span className="absolute -top-1.5 -right-1.5 bg-foreground text-background text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-medium">
                     {itemCount}
@@ -329,7 +328,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Abrir menu"
               >
-                <Menu className="h-6 w-6 stroke-[1.5]" />
+                <Menu className="h-5 w-5 stroke-[1.5]" />
               </button>
             </div>
           </div>
@@ -380,13 +379,11 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <img 
-                src={logoElatho} 
-                alt="Elatho Semijoias" 
-                className="h-[35px] w-auto"
-              />
+              <span className="font-display text-xl tracking-wide text-foreground italic">
+                Elatho<span className="text-sm ml-1 not-italic font-sans font-light tracking-[0.15em] uppercase">Semijoias</span>
+              </span>
               <button onClick={() => setMobileMenuOpen(false)}>
-                <X className="h-6 w-6 stroke-[1.5]" />
+                <X className="h-5 w-5 stroke-[1.5]" />
               </button>
             </div>
 
