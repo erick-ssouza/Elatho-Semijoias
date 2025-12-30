@@ -196,7 +196,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
                     {...produto}
                     mediaAvaliacoes={produto.mediaAvaliacoes}
                     totalAvaliacoes={produto.totalAvaliacoes}
-                    index={index % 3}
+                    index={index}
                   />
                 ))}
               </div>

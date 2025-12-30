@@ -68,9 +68,9 @@ export default function ProductCard({
         className="group block w-full"
         style={{
           opacity: isVisible ? 1 : 0,
-          transform: isVisible ? 'translateY(0)' : 'translateY(30px)',
-          transition: `opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)`,
-          transitionDelay: `${index * 100}ms`,
+          transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.98)',
+          transition: `opacity 0.5s ease-out, transform 0.5s ease-out`,
+          transitionDelay: `${index * 80}ms`,
         }}
       >
         {/* Image Container - 4:5 aspect ratio with hover effects */}
