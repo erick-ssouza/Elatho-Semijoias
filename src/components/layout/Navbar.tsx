@@ -232,7 +232,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile - Right */}
-            <div className="flex lg:hidden items-center gap-4">
+            <div className="flex lg:hidden items-center gap-2.5 sm:gap-3">
               {/* Instagram */}
               <a
                 href="https://instagram.com/elathosemijoias"
@@ -241,7 +241,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Instagram"
               >
-                <InstagramIcon className="h-5 w-5" />
+                <InstagramIcon className="h-[18px] w-[18px] sm:h-5 sm:w-5" />
               </a>
 
               {/* Favorites */}
@@ -250,7 +250,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Favoritos"
               >
-                <Heart className="h-5 w-5 stroke-[1.5]" />
+                <Heart className="h-[18px] w-[18px] sm:h-5 sm:w-5 stroke-[1.5]" />
               </Link>
 
               {/* User */}
@@ -259,7 +259,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Minha conta"
               >
-                <User className="h-5 w-5 stroke-[1.5]" />
+                <User className="h-[18px] w-[18px] sm:h-5 sm:w-5 stroke-[1.5]" />
               </Link>
 
               {/* Cart */}
@@ -268,9 +268,9 @@ export default function Navbar() {
                 className="relative text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Carrinho"
               >
-                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
+                <ShoppingBag className="h-[18px] w-[18px] sm:h-5 sm:w-5 stroke-[1.5]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-foreground text-background text-[9px] w-4 h-4 flex items-center justify-center rounded-full">
+                  <span className="absolute -top-1 -right-1 bg-foreground text-background text-[8px] sm:text-[9px] w-3.5 h-3.5 sm:w-4 sm:h-4 flex items-center justify-center rounded-full">
                     {itemCount}
                   </span>
                 )}
@@ -279,10 +279,10 @@ export default function Navbar() {
               {/* Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-1"
+                className="p-0.5"
                 aria-label="Abrir menu"
               >
-                <Menu className="h-5 w-5 stroke-[1.5]" />
+                <Menu className="h-[18px] w-[18px] sm:h-5 sm:w-5 stroke-[1.5]" />
               </button>
             </div>
           </div>
