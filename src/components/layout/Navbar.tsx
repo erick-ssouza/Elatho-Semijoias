@@ -134,15 +134,6 @@ export default function Navbar() {
 
             {/* Desktop Right Icons */}
             <div className="hidden lg:flex items-center gap-5">
-              {/* Search Toggle */}
-              <button
-                onClick={() => setSearchOpen(!searchOpen)}
-                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="Buscar"
-              >
-                <Search className="h-5 w-5 stroke-[1.5]" />
-              </button>
-
               {/* Instagram */}
               <a
                 href="https://instagram.com/elathosemijoias"
@@ -153,6 +144,15 @@ export default function Navbar() {
               >
                 <InstagramIcon className="h-5 w-5" />
               </a>
+
+              {/* Search Toggle */}
+              <button
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Buscar"
+              >
+                <Search className="h-5 w-5 stroke-[1.5]" />
+              </button>
 
               {/* WhatsApp */}
               <a
