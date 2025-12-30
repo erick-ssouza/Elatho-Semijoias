@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { Shield, Database, Eye, Trash2, Mail, Lock } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -5,6 +6,20 @@ import Footer from '@/components/layout/Footer';
 export default function Privacidade() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Política de Privacidade | Elatho Semijoias</title>
+        <meta name="description" content="Política de privacidade da Elatho Semijoias. Saiba como coletamos, usamos e protegemos seus dados pessoais conforme a LGPD." />
+        <link rel="canonical" href="https://elathosemijoias.com.br/privacidade" />
+        <meta property="og:title" content="Política de Privacidade | Elatho Semijoias" />
+        <meta property="og:description" content="Política de privacidade da Elatho Semijoias. Saiba como coletamos, usamos e protegemos seus dados pessoais conforme a LGPD." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/privacidade" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Política de Privacidade | Elatho Semijoias" />
+        <meta name="twitter:description" content="Política de privacidade da Elatho Semijoias. Saiba como coletamos, usamos e protegemos seus dados pessoais conforme a LGPD." />
+      </Helmet>
       <Navbar />
       <main className="pt-20 md:pt-24">
         {/* Hero */}

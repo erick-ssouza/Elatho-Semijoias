@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -146,6 +147,14 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <Helmet>
+        <title>Entrar ou Criar Conta | Elatho Semijoias</title>
+        <meta name="description" content="Acesse sua conta Elatho para gerenciar favoritos e acompanhar pedidos. Crie sua conta e aproveite benefícios exclusivos." />
+        <meta name="robots" content="noindex, nofollow" />
+        <meta property="og:title" content="Entrar ou Criar Conta | Elatho Semijoias" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+      </Helmet>
       <div className="w-full max-w-md">
         <Link to="/" className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary mb-6">
           <ArrowLeft className="h-4 w-4" />

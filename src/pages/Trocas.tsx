@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async';
 import { CheckCircle, XCircle, AlertCircle, Package } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -5,6 +6,20 @@ import Footer from '@/components/layout/Footer';
 export default function Trocas() {
   return (
     <div className="min-h-screen bg-background">
+      <Helmet>
+        <title>Trocas e Devoluções | Elatho Semijoias</title>
+        <meta name="description" content="Política de trocas e devoluções da Elatho Semijoias. Prazo de 7 dias, processo simples e atendimento personalizado." />
+        <link rel="canonical" href="https://elathosemijoias.com.br/trocas" />
+        <meta property="og:title" content="Trocas e Devoluções | Elatho Semijoias" />
+        <meta property="og:description" content="Política de trocas e devoluções da Elatho Semijoias. Prazo de 7 dias, processo simples e atendimento personalizado." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/trocas" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Elatho Semijoias" />
+        <meta property="og:locale" content="pt_BR" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content="Trocas e Devoluções | Elatho Semijoias" />
+        <meta name="twitter:description" content="Política de trocas e devoluções da Elatho Semijoias. Prazo de 7 dias, processo simples e atendimento personalizado." />
+      </Helmet>
       <Navbar />
       <main className="pt-20 md:pt-24">
         {/* Hero */}
