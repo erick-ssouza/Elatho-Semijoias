@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { TestimonialSkeleton } from '@/components/ui/skeletons';
 
 interface Depoimento {
   id: string;
@@ -96,7 +97,17 @@ export default function Testimonials() {
     return () => clearInterval(interval);
   }, [depoimentos.length, nextSlide, isPaused]);
 
-  if (loading || depoimentos.length === 0) {
+  if (loading) {
+    return (
+      <section className="py-20 md:py-32">
+        <div className="container px-6 lg:px-12">
+          <TestimonialSkeleton />
+        </div>
+      </section>
+    );
+  }
+
+  if (depoimentos.length === 0) {
     return null;
   }
 

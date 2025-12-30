@@ -7,6 +7,7 @@ import { ptBR } from "date-fns/locale";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Breadcrumbs } from "@/components/ui/breadcrumbs";
+import { OrderSkeleton } from "@/components/ui/skeletons";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
@@ -127,6 +128,12 @@ export default function MeusPedidos() {
           </form>
 
           {/* Results */}
+          {loading && searched && (
+            <div className="max-w-3xl mx-auto">
+              <OrderSkeleton count={3} />
+            </div>
+          )}
+
           {searched && !loading && (
             <div className="max-w-3xl mx-auto">
               {pedidos.length === 0 ? (
