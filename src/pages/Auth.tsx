@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,9 +43,19 @@ export default function Auth() {
 
   const { user, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
 
-  // Removed auto-redirect - let user navigate manually if already logged in
+  // Get the page user came from (for redirect after login)
+  const from = (location.state as { from?: string })?.from || '/';
+
+  // If already logged in, show logged in state
+  useEffect(() => {
+    if (user) {
+      // Already logged in - redirect to where they came from or home
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, from]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,8 +95,8 @@ export default function Auth() {
         });
       }
     } else {
-      toast({ title: 'Bem-vindo de volta!' });
-      navigate('/');
+      toast({ title: 'Login realizado com sucesso!' });
+      navigate(from, { replace: true });
     }
   };
 
@@ -206,8 +216,14 @@ export default function Auth() {
                   </div>
 
                   <Button type="submit" className="w-full btn-gold" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Entrar
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Entrando...
+                      </>
+                    ) : (
+                      'Entrar'
+                    )}
                   </Button>
                 </form>
               </TabsContent>
@@ -275,8 +291,14 @@ export default function Auth() {
                   </div>
 
                   <Button type="submit" className="w-full btn-gold" disabled={loading}>
-                    {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Criar Conta
+                    {loading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Criando conta...
+                      </>
+                    ) : (
+                      'Criar Conta'
+                    )}
                   </Button>
                 </form>
               </TabsContent>

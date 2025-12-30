@@ -17,6 +17,7 @@ import Auth from '@/pages/Auth';
 import Favoritos from '@/pages/Favoritos';
 import Rastreio from '@/pages/Rastreio';
 import MeusPedidos from '@/pages/MeusPedidos';
+import MinhaConta from '@/pages/MinhaConta';
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import ResetPassword from '@/pages/admin/ResetPassword';
@@ -43,6 +44,7 @@ export function AnimatedRoutes() {
         <Route path="/favoritos" element={<PageTransition><Favoritos /></PageTransition>} />
         <Route path="/rastreio" element={<PageTransition><Rastreio /></PageTransition>} />
         <Route path="/meus-pedidos" element={<PageTransition><MeusPedidos /></PageTransition>} />
+        <Route path="/minha-conta" element={<PageTransition><MinhaConta /></PageTransition>} />
         <Route path="/painel-elatho-2025" element={<PageTransition><AdminLogin /></PageTransition>} />
         <Route path="/painel-elatho-2025/dashboard" element={<PageTransition><AdminDashboard /></PageTransition>} />
         <Route path="/painel-elatho-2025/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />

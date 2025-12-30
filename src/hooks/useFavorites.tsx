@@ -3,15 +3,72 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
+const LOCAL_STORAGE_KEY = 'elatho_favorites';
+
+// Get favorites from localStorage
+const getLocalFavorites = (): string[] => {
+  try {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+// Save favorites to localStorage
+const setLocalFavorites = (favorites: string[]) => {
+  localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(favorites));
+};
+
 export function useFavorites() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [favorites, setFavorites] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+
+  // Sync local favorites to database when user logs in
+  const syncLocalToDatabase = useCallback(async (userId: string) => {
+    const localFavorites = getLocalFavorites();
+    if (localFavorites.length === 0) return;
+
+    setSyncing(true);
+    try {
+      // Get existing favorites from database
+      const { data: existingFavorites } = await supabase
+        .from('favoritos')
+        .select('produto_id')
+        .eq('user_id', userId);
+
+      const existingIds = new Set(existingFavorites?.map(f => f.produto_id) || []);
+
+      // Find new favorites to add
+      const newFavorites = localFavorites.filter(id => !existingIds.has(id));
+
+      if (newFavorites.length > 0) {
+        // Insert new favorites
+        const { error } = await supabase
+          .from('favoritos')
+          .insert(newFavorites.map(produto_id => ({ user_id: userId, produto_id })));
+
+        if (!error) {
+          toast({ title: `${newFavorites.length} favorito(s) sincronizado(s) com sua conta!` });
+        }
+      }
+
+      // Clear local storage after sync
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+    } catch (error) {
+      console.error('Error syncing favorites:', error);
+    } finally {
+      setSyncing(false);
+    }
+  }, [toast]);
 
   const fetchFavorites = useCallback(async () => {
     if (!user) {
-      setFavorites([]);
+      // Not logged in - use localStorage
+      setFavorites(getLocalFavorites());
       return;
     }
 
@@ -28,18 +85,29 @@ export function useFavorites() {
     }
   }, [user]);
 
+  // Initial fetch and sync on user change
   useEffect(() => {
-    fetchFavorites();
-  }, [fetchFavorites]);
+    if (user) {
+      // Sync local favorites when user logs in
+      syncLocalToDatabase(user.id).then(() => {
+        fetchFavorites();
+      });
+    } else {
+      fetchFavorites();
+    }
+  }, [user, fetchFavorites, syncLocalToDatabase]);
 
   const addFavorite = async (produtoId: string) => {
     if (!user) {
-      toast({
-        title: 'Faça login',
-        description: 'Você precisa estar logado para adicionar favoritos.',
-        variant: 'destructive',
-      });
-      return false;
+      // Not logged in - use localStorage
+      const localFavs = getLocalFavorites();
+      if (!localFavs.includes(produtoId)) {
+        const newFavs = [...localFavs, produtoId];
+        setLocalFavorites(newFavs);
+        setFavorites(newFavs);
+        toast({ title: 'Adicionado aos favoritos!' });
+      }
+      return true;
     }
 
     setLoading(true);
@@ -66,7 +134,15 @@ export function useFavorites() {
   };
 
   const removeFavorite = async (produtoId: string) => {
-    if (!user) return false;
+    if (!user) {
+      // Not logged in - use localStorage
+      const localFavs = getLocalFavorites();
+      const newFavs = localFavs.filter(id => id !== produtoId);
+      setLocalFavorites(newFavs);
+      setFavorites(newFavs);
+      toast({ title: 'Removido dos favoritos!' });
+      return true;
+    }
 
     setLoading(true);
     try {
@@ -106,6 +182,7 @@ export function useFavorites() {
   return {
     favorites,
     loading,
+    syncing,
     addFavorite,
     removeFavorite,
     toggleFavorite,

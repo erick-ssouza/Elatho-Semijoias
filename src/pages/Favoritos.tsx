@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFavorites } from '@/hooks/useFavorites';
@@ -22,16 +22,11 @@ interface Produto {
 
 export default function Favoritos() {
   const { user, loading: authLoading } = useAuth();
-  const { favorites } = useFavorites();
+  const { favorites, syncing } = useFavorites();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-    }
-  }, [user, authLoading, navigate]);
+  // No longer redirect to auth - favorites work without login now
 
   useEffect(() => {
     const fetchProdutos = async () => {
@@ -56,7 +51,7 @@ export default function Favoritos() {
     fetchProdutos();
   }, [favorites]);
 
-  if (authLoading) {
+  if (authLoading || syncing) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
