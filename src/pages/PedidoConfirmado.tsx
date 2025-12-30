@@ -11,6 +11,7 @@ import {
   MapPin,
   Clock,
   QrCode,
+  Loader2,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { QRCodeCanvas } from 'qrcode.react';
 import { generatePixEmvPayload } from '@/lib/pix';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ItemPedido {
   nome: string;
@@ -53,6 +55,19 @@ interface LocationState {
   pixPaymentId?: string;
 }
 
+interface PedidoData {
+  numeroPedido: string;
+  total: number;
+  subtotal: number;
+  frete: number;
+  desconto?: number;
+  metodoPagamento: 'pix' | 'cartao';
+  itens: ItemPedido[];
+  endereco: EnderecoPedido;
+  clienteNome: string;
+  pixCopiaECola?: string;
+}
+
 const PIX_KEY = 'elathosemijoias@gmail.com';
 const PIX_BENEFICIARIO = 'Elatho Semijoias';
 const PRAZO_ENTREGA = '7 a 15 dias úteis';
@@ -63,17 +78,71 @@ export default function PedidoConfirmado() {
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
 
-  const state = (location.state as LocationState | null) ?? null;
-
+  const locationState = (location.state as LocationState | null) ?? null;
   const numeroFromQuery = searchParams.get('numero')?.trim() || '';
-  const numeroPedido = state?.numeroPedido || numeroFromQuery;
+  const numeroPedido = locationState?.numeroPedido || numeroFromQuery;
 
   const [copiedPix, setCopiedPix] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
+  const [loading, setLoading] = useState(!locationState && !!numeroPedido);
+  const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
+  const [notFound, setNotFound] = useState(false);
+
+  // Buscar dados do pedido no backend se não tiver state
+  useEffect(() => {
+    if (locationState || !numeroPedido) return;
+
+    const fetchPedido = async () => {
+      setLoading(true);
+      setNotFound(false);
+
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('*')
+        .eq('numero_pedido', numeroPedido)
+        .maybeSingle();
+
+      if (error || !data) {
+        console.error('Erro ao buscar pedido:', error);
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      // Mapear dados do banco para o formato esperado
+      const itens = (data.itens as unknown as ItemPedido[]) || [];
+      const endereco = (data.endereco as unknown as EnderecoPedido) || {
+        cep: '',
+        rua: '',
+        numero: '',
+        bairro: '',
+        cidade: '',
+        estado: '',
+      };
+
+      setPedidoData({
+        numeroPedido: data.numero_pedido,
+        total: Number(data.total) || 0,
+        subtotal: Number(data.subtotal) || 0,
+        frete: Number(data.frete) || 0,
+        metodoPagamento: (data.metodo_pagamento as 'pix' | 'cartao') || 'pix',
+        itens,
+        endereco,
+        clienteNome: data.cliente_nome,
+      });
+
+      setLoading(false);
+    };
+
+    fetchPedido();
+  }, [numeroPedido, locationState]);
 
   useEffect(() => {
     if (!numeroPedido) navigate('/');
   }, [numeroPedido, navigate]);
+
+  // Usar state da navegação ou dados do backend
+  const state = locationState || pedidoData;
 
   const formatPrice = (price: number) => price.toFixed(2).replace('.', ',');
 
@@ -81,7 +150,7 @@ export default function PedidoConfirmado() {
 
   const pixPayload = useMemo(() => {
     // Se Mercado Pago retornou copia-e-cola, preferir.
-    if (state?.pixCopiaECola) return state.pixCopiaECola;
+    if (locationState?.pixCopiaECola) return locationState.pixCopiaECola;
 
     const amount = state?.total ?? 0;
     // Gera payload EMV (PIX) com valor exato do pedido.
@@ -92,7 +161,7 @@ export default function PedidoConfirmado() {
       amount,
       txid: numeroPedido || '***',
     });
-  }, [numeroPedido, state?.pixCopiaECola, state?.total]);
+  }, [numeroPedido, locationState?.pixCopiaECola, state?.total]);
 
   const handleCopy = async (value: string, onOk: () => void) => {
     try {
@@ -124,6 +193,55 @@ export default function PedidoConfirmado() {
   const whatsappUrl = `https://wa.me/5519998229202?text=${encodeURIComponent(whatsappMessage)}`;
 
   if (!numeroPedido) return null;
+
+  // Loading state
+  if (loading) {
+    return (
+      <>
+        <Helmet>
+          <title>Carregando... | Elatho Semijoias</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <main className="pt-20 md:pt-24">
+            <div className="container px-4 py-16 flex flex-col items-center justify-center">
+              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Carregando dados do pedido...</p>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
+
+  // Not found state
+  if (notFound) {
+    return (
+      <>
+        <Helmet>
+          <title>Pedido não encontrado | Elatho Semijoias</title>
+          <meta name="robots" content="noindex, nofollow" />
+        </Helmet>
+        <div className="min-h-screen bg-background">
+          <Navbar />
+          <main className="pt-20 md:pt-24">
+            <div className="container px-4 py-16 text-center">
+              <h1 className="text-2xl font-display font-bold mb-4">Pedido não encontrado</h1>
+              <p className="text-muted-foreground mb-6">
+                O pedido <strong>#{numeroPedido}</strong> não foi encontrado ou você não tem permissão para visualizá-lo.
+              </p>
+              <Link to="/">
+                <Button>Voltar para a loja</Button>
+              </Link>
+            </div>
+          </main>
+          <Footer />
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
