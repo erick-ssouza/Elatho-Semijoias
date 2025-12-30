@@ -128,8 +128,8 @@ export default function Navbar() {
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
             {/* Logo - Text */}
-            <Link to="/" className="flex-shrink-0">
-              <span className="font-display text-2xl md:text-3xl tracking-wide text-foreground italic">
+            <Link to="/" className="flex-shrink-0group">
+              <span className="font-display text-2xl md:text-3xl tracking-wide text-foreground italic transition-all duration-300 group-hover:text-primary group-hover:opacity-80">
                 Elatho
               </span>
             </Link>
@@ -379,9 +379,11 @@ export default function Navbar() {
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
-              <span className="font-display text-xl tracking-wide text-foreground italic">
-                Elatho
-              </span>
+              <Link to="/" onClick={() => setMobileMenuOpen(false)} className="group">
+                <span className="font-display text-xl tracking-wide text-foreground italic transition-all duration-300 group-hover:text-primary group-hover:opacity-80">
+                  Elatho
+                </span>
+              </Link>
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
               </button>
