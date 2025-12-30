@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ChevronLeft, Minus, Plus, Share2 } from 'lucide-react';
+import { Minus, Plus } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/integrations/supabase/client';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { ProductGallery } from '@/components/product/ProductGallery';
+import { ShareButtons } from '@/components/product/ShareButtons';
 import ProductReviews from '@/components/product/ProductReviews';
 import ProductReviewForm from '@/components/product/ProductReviewForm';
 
@@ -17,6 +21,7 @@ interface Produto {
   preco: number;
   preco_promocional: number | null;
   imagem_url: string | null;
+  imagens: string[] | null;
   categoria: string;
   variacoes: string[];
   estoque: number | null;
@@ -49,7 +54,11 @@ export default function ProdutoPage() {
           ? data.variacoes as string[]
           : ['Dourado', 'Prateado', 'Rosé'];
         
-        setProduto({ ...data, variacoes });
+        const imagens = Array.isArray(data.imagens) 
+          ? data.imagens as string[]
+          : [];
+        
+        setProduto({ ...data, variacoes, imagens });
         setSelectedVariacao(variacoes[0] || '');
       }
       setLoading(false);
@@ -78,20 +87,6 @@ export default function ProdutoPage() {
       title: "Adicionado ao carrinho",
       description: `${quantidade}x ${produto.nome} (${selectedVariacao})`,
     });
-  };
-
-  const handleShare = async () => {
-    if (navigator.share && produto) {
-      try {
-        await navigator.share({
-          title: produto.nome,
-          text: produto.descricao || '',
-          url: window.location.href,
-        });
-      } catch {
-        // User cancelled or error
-      }
-    }
   };
 
   if (loading) {
@@ -138,29 +133,52 @@ export default function ProdutoPage() {
   const hasDiscount = produto.preco_promocional && produto.preco_promocional < produto.preco;
   const finalPrice = produto.preco_promocional || produto.preco;
 
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      <main className="pt-20">
-        <div className="container px-6 lg:px-12 py-12">
-          {/* Breadcrumb - Minimal */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-12"
-          >
-            <ChevronLeft className="h-4 w-4 stroke-[1.5]" />
-            Voltar
-          </Link>
+  const productUrl = `https://elathosemijoias.com.br/produto/${produto.id}`;
 
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-24">
-            {/* Product Image - Clean */}
-            <div className="aspect-[4/5] bg-muted overflow-hidden">
-              <img
-                src={produto.imagem_url || '/placeholder.svg'}
-                alt={produto.nome}
-                className="w-full h-full object-cover"
+  const categoriaLabel = {
+    aneis: 'Anéis',
+    brincos: 'Brincos',
+    colares: 'Colares',
+    pulseiras: 'Pulseiras',
+  }[produto.categoria] || produto.categoria;
+
+  return (
+    <>
+      <Helmet>
+        <title>{produto.nome} | Elatho Semijoias</title>
+        <meta name="description" content={produto.descricao || `${produto.nome} - Semijoia exclusiva Elatho com acabamento em ouro 18k.`} />
+        <meta property="og:title" content={`${produto.nome} | Elatho Semijoias`} />
+        <meta property="og:description" content={produto.descricao || 'Semijoia exclusiva Elatho com acabamento premium.'} />
+        <meta property="og:image" content={produto.imagem_url || ''} />
+        <meta property="og:url" content={productUrl} />
+        <meta property="og:type" content="product" />
+        <meta property="product:price:amount" content={String(finalPrice)} />
+        <meta property="product:price:currency" content="BRL" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${produto.nome} | Elatho Semijoias`} />
+        <meta name="twitter:description" content={produto.descricao || 'Semijoia exclusiva Elatho.'} />
+        <meta name="twitter:image" content={produto.imagem_url || ''} />
+      </Helmet>
+
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="pt-20">
+          <div className="container px-6 lg:px-12 py-12">
+            {/* Breadcrumbs */}
+            <Breadcrumbs 
+              items={[
+                { label: categoriaLabel, href: `/#produtos` },
+                { label: produto.nome }
+              ]} 
+            />
+
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 mt-8">
+              {/* Product Gallery */}
+              <ProductGallery 
+                mainImage={produto.imagem_url}
+                images={produto.imagens || []}
+                productName={produto.nome}
               />
-            </div>
 
             {/* Product Info - Minimal */}
             <div className="lg:py-12 space-y-8">
@@ -234,23 +252,21 @@ export default function ProdutoPage() {
                 </div>
               </div>
 
-              {/* Add to Cart - Minimal button */}
-              <div className="flex gap-4">
-                <button 
-                  onClick={handleAddToCart}
-                  className="flex-1 btn-minimal py-4"
-                >
-                  Adicionar ao carrinho
-                </button>
-                <button
-                  onClick={handleShare}
-                  className="w-14 h-14 border border-border flex items-center justify-center hover:bg-muted transition-colors"
-                >
-                  <Share2 className="h-4 w-4 stroke-[1.5]" />
-                </button>
-              </div>
+              {/* Add to Cart */}
+              <button 
+                onClick={handleAddToCart}
+                className="w-full btn-minimal py-4"
+              >
+                Adicionar ao carrinho
+              </button>
 
-              {/* Trust badges - Text only */}
+              {/* Share Buttons */}
+              <ShareButtons 
+                productName={produto.nome}
+                productUrl={productUrl}
+              />
+
+              {/* Trust badges */}
               <div className="pt-8 border-t border-border">
                 <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs text-muted-foreground">
                   <span>Frete grátis +R$299</span>
@@ -333,5 +349,6 @@ export default function ProdutoPage() {
       </main>
       <Footer />
     </div>
+    </>
   );
 }
