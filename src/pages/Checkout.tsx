@@ -407,7 +407,7 @@ export default function Checkout() {
     
     try {
       const numeroPedido = generateOrderNumber();
-      
+
       const enderecoJson = {
         cep: endereco.cep,
         rua: endereco.rua,
@@ -417,7 +417,7 @@ export default function Checkout() {
         cidade: endereco.cidade,
         estado: endereco.estado,
       };
-      
+
       const itensJson = items.map(item => ({
         produto_id: item.id,
         nome: item.nome,
@@ -426,51 +426,31 @@ export default function Checkout() {
         preco: item.preco_promocional ?? item.preco,
       }));
 
-      const { error: pedidoError } = await supabase
-        .from('pedidos')
-        .insert({
-          numero_pedido: numeroPedido,
-          cliente_nome: dadosPessoais.nome,
-          cliente_email: dadosPessoais.email,
-          cliente_whatsapp: dadosPessoais.whatsapp,
-          cliente_cpf: dadosPessoais.cpf,
+      // Registrar pedido no backend (evita bloqueios de permissão em checkout como visitante)
+      const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
+        body: {
+          numeroPedido,
+          cliente: {
+            nome: dadosPessoais.nome,
+            email: dadosPessoais.email,
+            whatsapp: dadosPessoais.whatsapp,
+            cpf: dadosPessoais.cpf,
+          },
           endereco: enderecoJson,
           itens: itensJson,
-          subtotal: subtotal,
-          frete: frete,
-          total: total,
-        });
+          subtotal,
+          frete,
+          total,
+          cupomCodigo: cupomAplicado?.codigo,
+        },
+      });
 
-      if (pedidoError) throw pedidoError;
-
-      // Update coupon usage if applied
-      if (cupomAplicado) {
-        const { data: currentCupom } = await supabase
-          .from('cupons')
-          .select('uso_atual')
-          .eq('codigo', cupomAplicado.codigo)
-          .maybeSingle();
-        
-        if (currentCupom) {
-          await supabase
-            .from('cupons')
-            .update({ uso_atual: (currentCupom.uso_atual || 0) + 1 })
-            .eq('codigo', cupomAplicado.codigo);
-        }
+      if (orderError || !orderData?.success) {
+        throw new Error(orderData?.error || 'Erro ao registrar pedido');
       }
 
-      // Salvar cliente
-      await supabase
-        .from('clientes')
-        .upsert({
-          nome: dadosPessoais.nome,
-          email: dadosPessoais.email,
-          whatsapp: dadosPessoais.whatsapp,
-          cpf: dadosPessoais.cpf,
-        }, { onConflict: 'email' });
-
-      // Send confirmation email
-      supabase.functions.invoke('send-order-email', {
+      // Enviar email de confirmação (não bloqueia o checkout se falhar)
+      void supabase.functions.invoke('send-order-email', {
         body: {
           numeroPedido,
           clienteNome: dadosPessoais.nome,
