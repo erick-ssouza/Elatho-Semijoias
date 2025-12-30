@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Menu, X, ShoppingBag, User, Heart, Package, LogOut, UserCircle } from 'lucide-react';
-import logoElatho from '@/assets/logo-elatho-navbar.jpg';
+import logoElatho from '@/assets/logo-elatho-navbar.png';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
