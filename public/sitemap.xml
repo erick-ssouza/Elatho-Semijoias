@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+  Sitemap estático de fallback.
+  Para sitemap dinâmico com produtos, acesse:
+  https://eyvcrvqpxlldxyrfwjpn.supabase.co/functions/v1/sitemap
+-->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://elathosemijoias.com.br/</loc>
