@@ -19,28 +19,16 @@ export default function WhatsAppButton() {
       href="https://wa.me/5519998229202"
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-3"
+      className="fixed bottom-6 right-6 z-50"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      aria-label="Fale conosco pelo WhatsApp"
       style={{
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.8)',
         transition: 'opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1)',
       }}
     >
-      {/* Tooltip */}
-      <span
-        className="bg-white text-foreground text-sm px-4 py-2 rounded-full shadow-lg whitespace-nowrap"
-        style={{
-          opacity: isHovered ? 1 : 0,
-          transform: isHovered ? 'translateX(0)' : 'translateX(10px)',
-          transition: 'opacity 0.3s ease-out, transform 0.3s ease-out',
-          pointerEvents: 'none',
-        }}
-      >
-        Fale conosco
-      </span>
-
       {/* Button */}
       <div
         className="relative w-14 h-14 rounded-full flex items-center justify-center shadow-lg"
