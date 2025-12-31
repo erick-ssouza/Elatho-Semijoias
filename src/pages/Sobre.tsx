@@ -125,11 +125,11 @@ export default function Sobre() {
           <div className="container px-4">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
               <div>
-                <p className="text-4xl md:text-5xl font-display font-bold text-gradient-gold">5k+</p>
+                <p className="text-4xl md:text-5xl font-display font-bold text-gradient-gold">1k+</p>
                 <p className="text-muted-foreground mt-2">Clientes Felizes</p>
               </div>
               <div>
-                <p className="text-4xl md:text-5xl font-display font-bold text-gradient-gold">500+</p>
+                <p className="text-4xl md:text-5xl font-display font-bold text-gradient-gold">200+</p>
                 <p className="text-muted-foreground mt-2">Modelos Exclusivos</p>
               </div>
               <div>
