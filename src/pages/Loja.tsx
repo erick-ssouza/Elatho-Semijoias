@@ -27,10 +27,12 @@ const Loja = () => {
   const categoriaFromUrl = searchParams.get('categoria');
   const [selectedCategory, setSelectedCategory] = useState(categoriaFromUrl || 'todos');
   const [filters, setFilters] = useState<FilterState>(initialFilters);
+  const [scrollY, setScrollY] = useState(0);
   
   const { data: produtos, isLoading } = useAllProducts(selectedCategory);
 
   const headerRef = useRef<HTMLDivElement>(null);
+  const heroRef = useRef<HTMLElement>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -38,6 +40,21 @@ const Loja = () => {
       setSelectedCategory(categoriaFromUrl);
     }
   }, [categoriaFromUrl]);
+
+  // Parallax scroll effect like Home
+  useEffect(() => {
+    const handleScroll = () => {
+      if (heroRef.current) {
+        const rect = heroRef.current.getBoundingClientRect();
+        if (rect.bottom > 0) {
+          setScrollY(window.scrollY);
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -58,14 +75,13 @@ const Loja = () => {
     'recentes': 'recent',
     'menor': 'price-asc',
     'maior': 'price-desc',
-    'vendidos': 'recent', // fallback
+    'vendidos': 'recent',
   };
 
-  const reverseSortByMap: Record<string, string> = {
-    'recent': 'recentes',
-    'price-asc': 'menor',
-    'price-desc': 'maior',
-  };
+  // Calculate parallax values like Home
+  const textOpacity = Math.max(0, 1 - scrollY / 400);
+  const textTranslateY = scrollY * 0.2;
+  const blurAmount = Math.min(10, scrollY / 50);
 
   const filteredProdutos = useMemo(() => {
     if (!produtos) return [];
@@ -98,7 +114,7 @@ const Loja = () => {
       });
     }
 
-    // Sort products - map internal values to component values
+    // Sort products
     const sortValue = sortByMap[filters.sortBy] || filters.sortBy;
     switch (sortValue) {
       case 'price-asc':
@@ -120,7 +136,6 @@ const Loja = () => {
       case 'recent':
       case 'recentes':
       default:
-        // Already sorted by created_at desc from the query
         break;
     }
 
@@ -148,10 +163,10 @@ const Loja = () => {
       <Helmet>
         <title>Coleção Completa | Elatho Semijoias</title>
         <meta name="description" content="Explore nossa coleção completa de semijoias femininas. Anéis, brincos, colares e pulseiras com acabamento em ouro 18k. Frete grátis acima de R$299." />
-        <link rel="canonical" href="https://elathosemijoias.com.br/loja" />
+        <link rel="canonical" href="https://elathosemijoias.com.br/colecao" />
         <meta property="og:title" content="Coleção Completa | Elatho Semijoias" />
         <meta property="og:description" content="Explore nossa coleção completa de semijoias femininas com acabamento em ouro 18k." />
-        <meta property="og:url" content="https://elathosemijoias.com.br/loja" />
+        <meta property="og:url" content="https://elathosemijoias.com.br/colecao" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://elathosemijoias.com.br/og-image.jpg" />
       </Helmet>
@@ -159,67 +174,88 @@ const Loja = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-16 md:pt-20">
-          {/* Hero Banner - Luxurious style like Home */}
-          <section className="relative h-[40vh] md:h-[50vh] flex items-center justify-center overflow-hidden">
-            {/* Background Image */}
+          {/* Hero Banner - Matching Home's luxurious parallax style */}
+          <section ref={heroRef} className="relative h-[50vh] md:h-[60vh] flex items-center justify-center overflow-hidden">
+            {/* Background Image with Parallax and Progressive Blur */}
             <div 
-              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
               style={{
-                backgroundImage: 'url(https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2070&auto=format&fit=crop)',
+                backgroundImage: 'url(https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=2070&auto=format&fit=crop)',
+                transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
+                filter: `blur(${blurAmount}px)`,
               }}
             />
             
-            {/* Gradient overlay */}
+            {/* Gradient overlay - darker at top for text readability */}
             <div 
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.5) 100%)'
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
               }}
             />
             
-            {/* Vignette overlay */}
+            {/* Vignette overlay - darkens edges */}
             <div 
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.3) 100%)'
+                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)'
               }}
             />
 
-            {/* Content */}
-            <div className="container relative z-10 px-6 lg:px-12 text-center">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-4 animate-fade-in-up">
-                Coleção Exclusiva
-              </p>
-              <h1 
-                className="font-display text-4xl md:text-5xl lg:text-6xl font-normal text-white mb-4 animate-fade-in-up"
-                style={{ animationDelay: '100ms', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
-              >
-                Nossa Coleção
-              </h1>
-              <p 
-                className="text-white/80 text-lg md:text-xl max-w-xl mx-auto animate-fade-in-up"
-                style={{ animationDelay: '200ms' }}
-              >
-                Peças exclusivas com acabamento premium em ouro 18k
-              </p>
+            {/* Content with fade on scroll - matching Home style */}
+            <div 
+              className="container relative z-10 px-6 lg:px-12 will-change-transform"
+              style={{
+                opacity: textOpacity,
+                transform: `translateY(${textTranslateY}px)`,
+              }}
+            >
+              <div className="max-w-2xl mx-auto text-center">
+                {/* Subtitle with letter-spacing animation */}
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 animate-letter-spacing">
+                  Coleção Exclusiva 2025
+                </p>
+
+                {/* Title with staggered reveal */}
+                <div className="overflow-hidden mb-4">
+                  <h1 
+                    className="font-display text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] animate-reveal-text"
+                    style={{ 
+                      animationDelay: '200ms',
+                      color: '#FFFFFF',
+                      textShadow: '0 2px 10px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    Nossa Coleção
+                  </h1>
+                </div>
+                
+                <p 
+                  className="text-white/80 text-lg md:text-xl max-w-xl mx-auto animate-fade-in-up"
+                  style={{ animationDelay: '400ms' }}
+                >
+                  Peças exclusivas com acabamento premium em ouro 18k
+                </p>
+              </div>
             </div>
           </section>
 
           {/* Category Pills - Elegant golden border style */}
-          <section className="py-8 md:py-10 border-b border-border/30">
+          <section className="py-10 md:py-12 border-b border-border/30 bg-gradient-to-b from-background to-muted/20">
             <div className="container mx-auto px-4">
-              <div className="flex flex-wrap justify-center gap-3">
-                {categories.map((cat) => (
+              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+                {categories.map((cat, index) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border-2 ${
+                    className={`px-6 md:px-8 py-2.5 md:py-3 rounded-full text-sm font-medium transition-all duration-300 border-2 animate-fade-in-up ${
                       selectedCategory === cat.id
                         ? 'bg-primary border-primary text-primary-foreground shadow-lg'
                         : 'bg-transparent border-primary/40 text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground'
                     }`}
                     style={{
-                      boxShadow: selectedCategory === cat.id ? '0 4px 15px -3px rgba(212, 168, 70, 0.4)' : 'none'
+                      animationDelay: `${index * 50}ms`,
+                      boxShadow: selectedCategory === cat.id ? '0 4px 20px -3px rgba(212, 168, 70, 0.5)' : 'none'
                     }}
                   >
                     {cat.label}
@@ -230,21 +266,21 @@ const Loja = () => {
           </section>
 
           {/* Products Grid */}
-          <section className="py-8 md:py-12">
+          <section className="py-12 md:py-16">
             <div className="container mx-auto px-4">
               <div
                 ref={headerRef}
-                className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 transition-all duration-700 ${
+                className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10 transition-all duration-700 ${
                   isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
                 }`}
               >
                 <div>
-                  <h2 className="text-xl font-semibold text-foreground">
+                  <h2 className="text-2xl font-display font-semibold text-foreground">
                     {selectedCategory === 'todos' 
                       ? 'Todos os Produtos' 
                       : categories.find(c => c.id === selectedCategory)?.label || 'Produtos'}
                   </h2>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mt-1">
                     {filteredProdutos.length} {filteredProdutos.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
                   </p>
                 </div>
@@ -262,7 +298,7 @@ const Loja = () => {
                 )}
               </div>
 
-              <div className="flex flex-col lg:flex-row gap-8">
+              <div className="flex flex-col lg:flex-row gap-10">
                 {/* Filters Sidebar - Desktop */}
                 <aside className="hidden lg:block w-64 flex-shrink-0">
                   <ProductFilters
@@ -283,44 +319,51 @@ const Loja = () => {
                   />
                 </div>
 
-                {/* Products Grid */}
+                {/* Products Grid - 4 cols desktop, 3 tablet, 2 mobile */}
                 <div className="flex-1">
                   {isLoading ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
                       {Array.from({ length: 8 }).map((_, i) => (
                         <SkeletonCard key={i} />
                       ))}
                     </div>
                   ) : filteredProdutos.length > 0 ? (
-                    <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
                       {filteredProdutos.map((produto, index) => (
                         <div
                           key={produto.id}
-                          className="animate-fade-in group"
-                          style={{ animationDelay: `${index * 50}ms` }}
+                          className="animate-fade-in-up group"
+                          style={{ animationDelay: `${index * 30}ms` }}
                         >
-                          <div className="card-elegant overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                            <ProductCard
-                              id={produto.id}
-                              nome={produto.nome}
-                              preco={produto.preco}
-                              preco_promocional={produto.preco_promocional}
-                              imagem_url={produto.imagem_url}
-                              categoria={produto.categoria}
-                              variacoes={produto.variacoes}
-                              descricao={produto.descricao}
-                              mediaAvaliacoes={produto.mediaAvaliacoes}
-                            />
+                          <div className="bg-card rounded-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group-hover:shadow-primary/10">
+                            <div className="overflow-hidden">
+                              <ProductCard
+                                id={produto.id}
+                                nome={produto.nome}
+                                preco={produto.preco}
+                                preco_promocional={produto.preco_promocional}
+                                imagem_url={produto.imagem_url}
+                                categoria={produto.categoria}
+                                variacoes={produto.variacoes}
+                                descricao={produto.descricao}
+                                estoque={produto.estoque}
+                                mediaAvaliacoes={produto.mediaAvaliacoes}
+                              />
+                            </div>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-16">
-                      <p className="text-muted-foreground text-lg mb-4">
+                    <div className="text-center py-20">
+                      <p className="text-muted-foreground text-lg mb-6">
                         Nenhum produto encontrado com os filtros selecionados.
                       </p>
-                      <Button variant="outline" onClick={handleClearFilters}>
+                      <Button 
+                        variant="outline" 
+                        onClick={handleClearFilters}
+                        className="border-primary/40 hover:bg-primary hover:text-primary-foreground"
+                      >
                         Limpar filtros
                       </Button>
                     </div>
