@@ -3,6 +3,7 @@ import { AnimatePresence } from 'framer-motion';
 import { PageTransition } from './PageTransition';
 
 import Index from '@/pages/Index';
+import Loja from '@/pages/Loja';
 import Produto from '@/pages/Produto';
 import Checkout from '@/pages/Checkout';
 import PedidoConfirmado from '@/pages/PedidoConfirmado';
@@ -31,6 +32,7 @@ export function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/loja" element={<PageTransition><Loja /></PageTransition>} />
         <Route path="/produto/:id" element={<PageTransition><Produto /></PageTransition>} />
         <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
         <Route path="/pedido-confirmado" element={<PageTransition><PedidoConfirmado /></PageTransition>} />
