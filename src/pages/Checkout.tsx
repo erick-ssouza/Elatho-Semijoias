@@ -488,13 +488,22 @@ export default function Checkout() {
         throw new Error(orderData?.error || 'Erro ao registrar pedido');
       }
 
-      // Enviar email de confirmação (não bloqueia o checkout se falhar)
-      void supabase.functions.invoke('send-order-email', {
+      // Enviar APENAS notificação para o admin (pedido pendente)
+      // O email de confirmação para o cliente só será enviado após confirmar pagamento
+      void supabase.functions.invoke('send-admin-notification', {
         body: {
           numeroPedido,
           clienteNome: dadosPessoais.nome,
           clienteEmail: dadosPessoais.email,
           clienteWhatsapp: dadosPessoais.whatsapp,
+          metodoPagamento,
+          total,
+          itens: items.map(item => ({
+            nome: item.nome,
+            variacao: item.variacao,
+            quantidade: item.quantidade,
+            preco: item.preco_promocional ?? item.preco,
+          })),
           endereco: {
             rua: endereco.rua,
             numero: endereco.numero,
@@ -504,17 +513,6 @@ export default function Checkout() {
             estado: endereco.estado,
             cep: endereco.cep,
           },
-          itens: items.map(item => ({
-            nome: item.nome,
-            variacao: item.variacao,
-            quantidade: item.quantidade,
-            preco: item.preco_promocional ?? item.preco,
-          })),
-          subtotal,
-          desconto: desconto || undefined,
-          cupom: cupomAplicado?.codigo || undefined,
-          frete,
-          total,
         },
       });
 

@@ -60,23 +60,42 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
 
   const fetchPedidos = async () => {
     try {
-      // Debug: check auth session
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log("[PedidosTab] Sessão atual:", sessionData?.session?.user?.email || "NÃO AUTENTICADO");
+      console.log("[PedidosTab] Buscando pedidos via edge function...");
       
-      const { data, error } = await supabase
-        .from("pedidos")
-        .select("*")
-        .order("created_at", { ascending: false });
+      // Usar edge function que usa service role (bypass RLS)
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      
+      console.log("[PedidosTab] Token presente:", !!token);
+      
+      if (!token) {
+        console.error("[PedidosTab] Usuário não autenticado");
+        toast({ title: "Erro de autenticação", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
 
-      console.log("[PedidosTab] Pedidos retornados:", data?.length || 0, "registros");
+      const { data, error } = await supabase.functions.invoke("admin-get-pedidos", {
+        body: {},
+      });
+
+      console.log("[PedidosTab] Resultado:", { data, error });
+      
       if (error) {
-        console.error("[PedidosTab] Erro:", error);
+        console.error("[PedidosTab] Erro na edge function:", error);
         throw error;
       }
-      setPedidos(data || []);
+      
+      if (!data?.success) {
+        console.error("[PedidosTab] Resposta sem sucesso:", data);
+        throw new Error(data?.error || "Erro ao buscar pedidos");
+      }
+
+      console.log("[PedidosTab] Pedidos retornados:", data.pedidos?.length || 0, "registros");
+      setPedidos(data.pedidos || []);
     } catch (error) {
       console.error("[PedidosTab] Error fetching pedidos:", error);
+      toast({ title: "Erro ao carregar pedidos", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -168,8 +187,22 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
       onUpdate();
       toast({ title: "Status atualizado!" });
 
-      // Send email notification if customer has email
-      if (pedido.cliente_email) {
+      // Se mudou para "confirmado", enviar email de confirmação de pagamento para o cliente
+      if (newStatus === "confirmado" && previousStatus !== "confirmado" && pedido.cliente_email) {
+        try {
+          console.log("[PedidosTab] Enviando email de confirmação de pagamento...");
+          await supabase.functions.invoke("send-payment-confirmed-email", {
+            body: { pedidoId: id },
+          });
+          toast({ title: "Email de confirmação enviado ao cliente!" });
+        } catch (emailError) {
+          console.error("Error sending payment confirmation email:", emailError);
+          toast({ title: "Erro ao enviar email de confirmação", variant: "destructive" });
+        }
+      }
+
+      // Send status update email for other status changes (enviado, entregue, etc)
+      if (newStatus !== "confirmado" && pedido.cliente_email) {
         try {
           await supabase.functions.invoke("send-status-update-email", {
             body: {
