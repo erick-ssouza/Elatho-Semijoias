@@ -25,7 +25,7 @@ interface Produto {
 }
 
 const navLinks = [
-  { to: '/#produtos', label: 'SHOP' },
+  { to: '/loja', label: 'LOJA' },
   { to: '/sobre', label: 'SOBRE' },
   { to: '/contato', label: 'CONTATO' },
 ];

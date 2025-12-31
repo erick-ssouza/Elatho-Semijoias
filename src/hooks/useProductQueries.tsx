@@ -31,21 +31,24 @@ interface ProductWithRating extends ProductListItem {
   totalAvaliacoes: number;
 }
 
-// Fetch highlighted products with ratings
-export function useProducts(category?: string) {
+// Fetch products with ratings (highlighted only by default, or all products)
+export function useProducts(category?: string, onlyHighlighted: boolean = true) {
   return useQuery({
-    queryKey: ['products', 'highlighted', category || 'todos'],
+    queryKey: ['products', onlyHighlighted ? 'highlighted' : 'all', category || 'todos'],
     queryFn: async () => {
       let query = supabase
         .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao')
-        .eq('destaque', true);
+        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque');
+
+      if (onlyHighlighted) {
+        query = query.eq('destaque', true);
+      }
 
       if (category && category !== 'todos') {
         query = query.eq('categoria', category);
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -80,6 +83,11 @@ export function useProducts(category?: string) {
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 30, // 30 minutes (previously cacheTime)
   });
+}
+
+// Hook alias for fetching all products (catalog page)
+export function useAllProducts(category?: string) {
+  return useProducts(category, false);
 }
 
 // Fetch single product
