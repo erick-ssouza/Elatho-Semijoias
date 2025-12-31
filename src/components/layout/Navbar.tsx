@@ -171,17 +171,6 @@ export default function Navbar() {
                 <Search className="h-5 w-5 stroke-[1.5]" />
               </button>
 
-              {/* WhatsApp */}
-              <a
-                href="https://wa.me/5519998229202"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
-                aria-label="WhatsApp"
-              >
-                <WhatsAppIcon className="h-5 w-5" />
-              </a>
-
               {/* Favorites */}
               <Link
                 to="/favoritos"
@@ -190,9 +179,6 @@ export default function Navbar() {
               >
                 <Heart className="h-5 w-5 stroke-[1.5]" />
               </Link>
-
-              {/* Theme Toggle */}
-              <ThemeToggle />
 
               {/* User Menu */}
               {user ? (
