@@ -6,6 +6,7 @@ import Footer from '@/components/layout/Footer';
 import Hero from '@/components/home/Hero';
 import Categories from '@/components/home/Categories';
 import ProductGrid from '@/components/home/ProductGrid';
+import CollectionCTA from '@/components/home/CollectionCTA';
 import Testimonials from '@/components/home/Testimonials';
 import Features from '@/components/home/Features';
 
@@ -48,6 +49,7 @@ const Index = () => {
             onSelectCategory={setSelectedCategory} 
           />
           <ProductGrid selectedCategory={selectedCategory} />
+          <CollectionCTA />
           <Testimonials />
           <Features />
         </main>
