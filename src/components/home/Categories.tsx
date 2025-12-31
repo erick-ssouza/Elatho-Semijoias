@@ -37,14 +37,14 @@ export default function Categories({ selectedCategory, onSelectCategory }: Categ
   }, []);
 
   return (
-    <section ref={sectionRef} className="py-12 md:py-16">
-      <div className="container px-6 lg:px-12">
-        {/* Horizontal text categories with dot separators */}
-        <nav className="flex flex-wrap justify-center items-center gap-x-2 gap-y-3">
+    <section ref={sectionRef} className="py-6 md:py-12">
+      <div className="container px-4 lg:px-12">
+        {/* Horizontal scrollable on mobile, centered wrap on desktop */}
+        <nav className="flex md:flex-wrap md:justify-center items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
           {categories.map((category, index) => (
             <div 
               key={category.id} 
-              className="flex items-center"
+              className="flex-shrink-0"
               style={{
                 opacity: isVisible ? 1 : 0,
                 transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
@@ -54,7 +54,7 @@ export default function Categories({ selectedCategory, onSelectCategory }: Categ
             >
               <button
                 onClick={() => onSelectCategory(category.id)}
-                className={`px-5 py-2 rounded-full text-xs uppercase tracking-[0.15em] font-medium transition-all duration-300 border-2 ${
+                className={`px-3 py-1.5 md:px-5 md:py-2 rounded-full text-[11px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.15em] font-medium transition-all duration-300 border md:border-2 whitespace-nowrap ${
                   selectedCategory === category.id
                     ? 'bg-primary border-primary text-primary-foreground shadow-lg'
                     : 'bg-primary/90 border-primary text-primary-foreground hover:bg-primary hover:shadow-md'
