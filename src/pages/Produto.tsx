@@ -56,7 +56,7 @@ export default function ProdutoPage() {
       if (!error && data) {
         const variacoes = Array.isArray(data.variacoes) 
           ? data.variacoes as string[]
-          : ['Dourado', 'Prateado', 'Rosé'];
+          : ['Banho de Ouro 18k', 'Banho de Ródio'];
         
         const imagens = Array.isArray(data.imagens) 
           ? data.imagens as string[]

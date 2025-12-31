@@ -38,13 +38,11 @@ const categorias = [
 
 const tiposMaterial = [
   { value: "ouro18k", label: "Banho de Ouro 18k", descricao: "Material: Liga metálica com banho de ouro 18k\nGarantia: 12 meses contra defeitos" },
-  { value: "prata925", label: "Banho de Prata 925", descricao: "Material: Liga metálica com banho de prata 925\nGarantia: 12 meses contra defeitos" },
+  { value: "rodio", label: "Banho de Ródio", descricao: "Material: Liga metálica com banho de ródio\nGarantia: 12 meses contra defeitos" },
   { value: "ouro18k_zirconias", label: "Banho de Ouro 18k com Zircônias", descricao: "Material: Liga metálica com banho de ouro 18k\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
-  { value: "prata925_zirconias", label: "Banho de Prata 925 com Zircônias", descricao: "Material: Liga metálica com banho de prata 925\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
-  { value: "ouro_rose", label: "Banho de Ouro Rosé", descricao: "Material: Liga metálica com banho de ouro rosé\nGarantia: 12 meses contra defeitos" },
-  { value: "ouro_rose_zirconias", label: "Banho de Ouro Rosé com Zircônias", descricao: "Material: Liga metálica com banho de ouro rosé\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
+  { value: "rodio_zirconias", label: "Banho de Ródio com Zircônias", descricao: "Material: Liga metálica com banho de ródio\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
   { value: "ouro18k_perolas", label: "Banho de Ouro 18k com Pérolas", descricao: "Material: Liga metálica com banho de ouro 18k\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
-  { value: "prata925_perolas", label: "Banho de Prata 925 com Pérolas", descricao: "Material: Liga metálica com banho de prata 925\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
+  { value: "rodio_perolas", label: "Banho de Ródio com Pérolas", descricao: "Material: Liga metálica com banho de ródio\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
 ];
 
 const getCategoriaLabel = (value: string) => {
@@ -72,7 +70,7 @@ const ProdutosTab = () => {
     imagens: [] as string[],
     estoque: "10",
     destaque: false,
-    variacoes: "Dourado, Prateado, Rosé",
+    variacoes: "Banho de Ouro 18k, Banho de Ródio",
   });
 
   useEffect(() => {
@@ -115,7 +113,7 @@ const ProdutosTab = () => {
       imagens: [],
       estoque: "10",
       destaque: false,
-      variacoes: "Dourado, Prateado, Rosé",
+      variacoes: "Banho de Ouro 18k, Banho de Ródio",
     });
     setEditingProduto(null);
   };
@@ -397,7 +395,7 @@ const ProdutosTab = () => {
                   id="variacoes"
                   value={form.variacoes}
                   onChange={(e) => setForm({ ...form, variacoes: e.target.value })}
-                  placeholder="Dourado, Prateado, Rosé"
+                  placeholder="Banho de Ouro 18k, Banho de Ródio"
                 />
               </div>
 
