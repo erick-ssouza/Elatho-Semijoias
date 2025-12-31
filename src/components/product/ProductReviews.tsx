@@ -29,11 +29,11 @@ const ProductReviews = ({ produtoId, refreshTrigger }: ProductReviewsProps) => {
 
   const fetchReviews = async () => {
     try {
+      // Use avaliacoes_publicas view - excludes sensitive customer email data
       const { data, error } = await supabase
-        .from("avaliacoes")
+        .from("avaliacoes_publicas")
         .select("id, cliente_nome, nota, titulo, comentario, created_at")
         .eq("produto_id", produtoId)
-        .eq("aprovado", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

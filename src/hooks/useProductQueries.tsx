@@ -49,11 +49,10 @@ export function useProducts(category?: string) {
 
       if (error) throw error;
 
-      // Fetch ratings for all products
+      // Fetch ratings for all products - use public view to exclude sensitive emails
       const { data: avaliacoes } = await supabase
-        .from('avaliacoes')
-        .select('produto_id, nota')
-        .eq('aprovado', true);
+        .from('avaliacoes_publicas')
+        .select('produto_id, nota');
 
       // Calculate average ratings per product
       const ratingsMap = new Map<string, { sum: number; count: number }>();
