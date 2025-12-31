@@ -240,28 +240,32 @@ const Loja = () => {
             </div>
           </section>
 
-          {/* Category Pills - Golden background style matching Home */}
-          <section className="py-10 md:py-12 border-b border-border/30 bg-gradient-to-b from-background to-muted/20">
-            <div className="container mx-auto px-4">
-              <div className="flex flex-wrap justify-center gap-3 md:gap-4">
+          {/* Category Pills - Matching Home's horizontal scroll style */}
+          <section className="py-6 md:py-12 border-b border-border/30 bg-gradient-to-b from-background to-muted/20">
+            <div className="container px-4 lg:px-12">
+              <nav className="flex md:flex-wrap md:justify-center items-center gap-2 md:gap-3 overflow-x-auto scrollbar-hide pb-2 md:pb-0 -mx-4 px-4 md:mx-0 md:px-0">
                 {categories.map((cat, index) => (
-                  <button
+                  <div 
                     key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-6 md:px-8 py-2.5 md:py-3 rounded-full text-sm font-medium transition-all duration-300 border-2 animate-fade-in-up ${
-                      selectedCategory === cat.id
-                        ? 'bg-primary border-primary text-primary-foreground shadow-lg'
-                        : 'bg-primary/90 border-primary text-primary-foreground hover:bg-primary hover:shadow-md'
-                    }`}
-                    style={{
-                      animationDelay: `${index * 50}ms`,
-                      boxShadow: selectedCategory === cat.id ? '0 4px 20px -3px rgba(212, 168, 70, 0.5)' : 'none'
-                    }}
+                    className="flex-shrink-0 animate-fade-in-up"
+                    style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    {cat.label}
-                  </button>
+                    <button
+                      onClick={() => setSelectedCategory(cat.id)}
+                      className={`px-3 py-1.5 md:px-5 md:py-2 rounded-full text-[11px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.15em] font-medium transition-all duration-300 border md:border-2 whitespace-nowrap ${
+                        selectedCategory === cat.id
+                          ? 'bg-primary border-primary text-primary-foreground shadow-lg'
+                          : 'bg-primary/90 border-primary text-primary-foreground hover:bg-primary hover:shadow-md'
+                      }`}
+                      style={{
+                        boxShadow: selectedCategory === cat.id ? '0 4px 20px -3px rgba(212, 168, 70, 0.5)' : 'none'
+                      }}
+                    >
+                      {cat.label}
+                    </button>
+                  </div>
                 ))}
-              </div>
+              </nav>
             </div>
           </section>
 
