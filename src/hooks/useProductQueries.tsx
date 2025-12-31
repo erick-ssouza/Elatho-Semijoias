@@ -24,6 +24,7 @@ interface ProductListItem {
   categoria: string;
   variacoes: string[] | null;
   descricao: string | null;
+  estoque: number | null;
 }
 
 interface ProductWithRating extends ProductListItem {
