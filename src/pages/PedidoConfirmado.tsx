@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -13,13 +13,12 @@ import {
   QrCode,
   Loader2,
   BadgeCheck,
+  Timer,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { QRCodeCanvas } from 'qrcode.react';
-import { generatePixEmvPayload } from '@/lib/pix';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ItemPedido {
@@ -50,10 +49,11 @@ interface LocationState {
   endereco: EnderecoPedido;
   clienteNome: string;
 
-  // PIX (opcional)
+  // PIX do Mercado Pago
   pixCopiaECola?: string;
   pixQrCodeBase64?: string;
   pixPaymentId?: string;
+  pixExpirationDate?: string;
 }
 
 interface PedidoData {
@@ -71,10 +71,6 @@ interface PedidoData {
   status?: string;
 }
 
-const PIX_KEY = '33764535865';
-const PIX_KEY_FORMATTED = '337.645.358-65';
-const PIX_BENEFICIARIO = 'Erica C. M. Bortolin';
-const PIX_BANCO = 'Banco do Brasil';
 const PRAZO_ENTREGA = '7 a 15 dias úteis';
 
 export default function PedidoConfirmado() {
@@ -88,7 +84,6 @@ export default function PedidoConfirmado() {
   const numeroPedido = locationState?.numeroPedido || numeroFromQuery;
 
   const [copiedPix, setCopiedPix] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(false);
   const [loading, setLoading] = useState(!locationState && !!numeroPedido);
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
   const [notFound, setNotFound] = useState(false);
@@ -205,20 +200,10 @@ export default function PedidoConfirmado() {
 
   const isPix = (state?.metodoPagamento || 'pix') === 'pix';
 
-  const pixPayload = useMemo(() => {
-    // Se Mercado Pago retornou copia-e-cola, preferir.
-    if (locationState?.pixCopiaECola) return locationState.pixCopiaECola;
-
-    const amount = state?.total ?? 0;
-    // Gera payload EMV (PIX) com valor exato do pedido.
-    return generatePixEmvPayload({
-      pixKey: PIX_KEY,
-      merchantName: PIX_BENEFICIARIO,
-      merchantCity: 'SAO PAULO',
-      amount,
-      txid: numeroPedido || '***',
-    });
-  }, [numeroPedido, locationState?.pixCopiaECola, state?.total]);
+  // Dados PIX do Mercado Pago
+  const pixCopiaECola = locationState?.pixCopiaECola || '';
+  const pixQrCodeBase64 = locationState?.pixQrCodeBase64 || '';
+  const hasPixFromMercadoPago = !!pixCopiaECola && !!pixQrCodeBase64;
 
   const handleCopy = async (value: string, onOk: () => void) => {
     try {
@@ -235,15 +220,9 @@ export default function PedidoConfirmado() {
   };
 
   const handleCopyPix = () =>
-    handleCopy(pixPayload, () => {
+    handleCopy(pixCopiaECola, () => {
       setCopiedPix(true);
       setTimeout(() => setCopiedPix(false), 2500);
-    });
-
-  const handleCopyKey = () =>
-    handleCopy(PIX_KEY_FORMATTED, () => {
-      setCopiedKey(true);
-      setTimeout(() => setCopiedKey(false), 2500);
     });
 
   const whatsappMessage = `Olá! Segue comprovante do pedido #${numeroPedido}`;
@@ -342,8 +321,8 @@ export default function PedidoConfirmado() {
                 </section>
               )}
 
-              {/* Pagamento PIX - Aguardando */}
-              {isPix && paymentStatus !== 'approved' && (
+              {/* Pagamento PIX - Aguardando (com QR Code do Mercado Pago) */}
+              {isPix && paymentStatus !== 'approved' && hasPixFromMercadoPago && (
                 <section className="card-elegant p-6 border-2 border-primary/30 bg-primary/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
@@ -359,57 +338,43 @@ export default function PedidoConfirmado() {
                   </div>
 
                   <div className="grid md:grid-cols-[280px_1fr] gap-5 items-start">
+                    {/* QR Code do Mercado Pago */}
                     <div className="bg-card rounded-xl border border-border p-4 flex items-center justify-center">
-                      <QRCodeCanvas
-                        value={pixPayload}
-                        size={232}
-                        includeMargin
-                        level="M"
+                      <img 
+                        src={`data:image/png;base64,${pixQrCodeBase64}`}
+                        alt="QR Code PIX"
+                        className="w-[232px] h-[232px]"
                       />
                     </div>
 
                     <div className="space-y-4">
-                      <div className="p-4 bg-background rounded-lg border border-border">
-                        <p className="text-sm text-muted-foreground mb-1">Chave PIX (CPF)</p>
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-mono font-semibold break-all">{PIX_KEY_FORMATTED}</p>
-                          <Button variant="outline" size="sm" onClick={handleCopyKey} className="gap-2">
-                            {copiedKey ? (
-                              <>
-                                <Check className="h-4 w-4" />
-                                Copiado
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="h-4 w-4" />
-                                Copiar chave PIX
-                              </>
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-
-                      <div className="p-4 bg-background rounded-lg border border-border">
-                        <p className="text-sm text-muted-foreground mb-1">Titular</p>
-                        <p className="font-semibold">{PIX_BENEFICIARIO}</p>
-                        <p className="text-sm text-muted-foreground">{PIX_BANCO}</p>
-                      </div>
-
                       {typeof state?.total === 'number' && (
                         <div className="p-4 bg-background rounded-lg border border-border">
-                          <p className="text-sm text-muted-foreground mb-1">Valor</p>
+                          <p className="text-sm text-muted-foreground mb-1">Valor a pagar</p>
                           <p className="text-2xl font-bold text-primary">R$ {formatPrice(state.total)}</p>
                         </div>
                       )}
 
                       <div className="p-4 bg-background rounded-lg border border-border">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Timer className="h-4 w-4 text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground">
+                            O QR Code expira em 30 minutos
+                          </p>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          Após o pagamento, a confirmação é automática via Mercado Pago.
+                        </p>
+                      </div>
+
+                      <div className="p-4 bg-background rounded-lg border border-border">
                         <p className="text-sm text-muted-foreground mb-2">
-                          Escaneie o QR Code ou copie o código para pagar no app do seu banco:
+                          Ou copie o código PIX:
                         </p>
 
                         <div className="flex gap-2">
                           <input
-                            value={pixPayload}
+                            value={pixCopiaECola}
                             readOnly
                             aria-label="Código PIX copia e cola"
                             className="flex-1 px-3 py-2 bg-muted text-xs rounded border border-border font-mono truncate"
@@ -423,7 +388,7 @@ export default function PedidoConfirmado() {
                             ) : (
                               <>
                                 <Copy className="h-4 w-4" />
-                                Copiar código
+                                Copiar
                               </>
                             )}
                           </Button>
@@ -431,10 +396,44 @@ export default function PedidoConfirmado() {
                       </div>
 
                       <p className="text-sm text-muted-foreground">
-                        Após o pagamento, envie o comprovante pelo WhatsApp.
+                        O pagamento é processado automaticamente. Você receberá a confirmação na tela.
                       </p>
                     </div>
                   </div>
+                </section>
+              )}
+
+              {/* Fallback: PIX sem QR Code automático (erro na API) */}
+              {isPix && paymentStatus !== 'approved' && !hasPixFromMercadoPago && (
+                <section className="card-elegant p-6 border-2 border-amber-500/30 bg-amber-500/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                      <Clock className="h-6 w-6 text-amber-600" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-display font-bold">Pagamento Pendente</h2>
+                      <p className="text-muted-foreground">Entre em contato para finalizar o pagamento</p>
+                    </div>
+                  </div>
+
+                  {typeof state?.total === 'number' && (
+                    <div className="p-4 bg-background rounded-lg border border-border mb-4">
+                      <p className="text-sm text-muted-foreground mb-1">Valor do pedido</p>
+                      <p className="text-2xl font-bold text-primary">R$ {formatPrice(state.total)}</p>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Houve um problema ao gerar o QR Code PIX automático. 
+                    Por favor, entre em contato pelo WhatsApp para receber os dados de pagamento.
+                  </p>
+
+                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                    <Button className="w-full gap-2">
+                      <MessageCircle className="h-5 w-5" />
+                      Solicitar dados de pagamento via WhatsApp
+                    </Button>
+                  </a>
                 </section>
               )}
 
@@ -478,18 +477,18 @@ export default function PedidoConfirmado() {
                     </div>
 
                     {/* Totais */}
-                    <div className="space-y-2 pt-4 border-t border-border">
-                      <div className="flex justify-between text-sm">
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
                         <span>R$ {formatPrice(state.subtotal)}</span>
                       </div>
-                      {typeof state.desconto === 'number' && state.desconto > 0 && (
-                        <div className="flex justify-between text-sm text-success">
+                      {(state.desconto ?? 0) > 0 && (
+                        <div className="flex justify-between text-success">
                           <span>Desconto</span>
-                          <span>-R$ {formatPrice(state.desconto)}</span>
+                          <span>- R$ {formatPrice(state.desconto!)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-sm">
+                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Frete</span>
                         <span>{state.frete > 0 ? `R$ ${formatPrice(state.frete)}` : 'Grátis'}</span>
                       </div>
@@ -498,68 +497,76 @@ export default function PedidoConfirmado() {
                         <span className="text-primary">R$ {formatPrice(state.total)}</span>
                       </div>
                     </div>
-
-                    {/* Endereço */}
-                    <div className="pt-4 border-t border-border">
-                      <h3 className="text-base font-display font-bold mb-3 flex items-center gap-2">
-                        <MapPin className="h-5 w-5 text-primary" />
-                        Endereço de Entrega
-                      </h3>
-
-                      <div className="text-muted-foreground">
-                        <p className="font-medium text-foreground">{state.clienteNome}</p>
-                        <p>{state.endereco.rua}, {state.endereco.numero}</p>
-                        {state.endereco.complemento && <p>{state.endereco.complemento}</p>}
-                        <p>{state.endereco.bairro}</p>
-                        <p>{state.endereco.cidade} - {state.endereco.estado}</p>
-                        <p>CEP: {state.endereco.cep}</p>
-                      </div>
-
-                      <div className="mt-4 p-3 bg-muted/50 rounded-lg flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground">Prazo estimado: {PRAZO_ENTREGA}</span>
-                      </div>
-                    </div>
                   </div>
                 )}
               </section>
 
-              {/* Próximos passos (PIX) */}
-              {isPix && (
-                <aside className="card-elegant p-6 animate-fade-in-up" style={{ animationDelay: '240ms' }}>
+              {/* Endereço de entrega */}
+              {state?.endereco && (
+                <section className="card-elegant p-6 animate-fade-in-up" style={{ animationDelay: '240ms' }}>
+                  <h2 className="text-lg font-display font-bold mb-4 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-primary" />
+                    Endereço de Entrega
+                  </h2>
+                  <address className="not-italic text-muted-foreground">
+                    <p>{state.endereco.rua}, {state.endereco.numero}</p>
+                    {state.endereco.complemento && <p>{state.endereco.complemento}</p>}
+                    <p>{state.endereco.bairro}</p>
+                    <p>{state.endereco.cidade} - {state.endereco.estado}</p>
+                    <p>CEP: {state.endereco.cep}</p>
+                  </address>
+                  <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+                    <Clock className="h-4 w-4" />
+                    <span>Prazo de entrega: {PRAZO_ENTREGA}</span>
+                  </div>
+                </section>
+              )}
+
+              {/* Próximos passos */}
+              {isPix && paymentStatus !== 'approved' && (
+                <section className="card-elegant p-6 animate-fade-in-up" style={{ animationDelay: '320ms' }}>
                   <h2 className="text-lg font-display font-bold mb-4">Próximos Passos</h2>
-                  <ol className="space-y-4">
+                  <ol className="space-y-3 text-muted-foreground">
                     <li className="flex items-start gap-3">
-                      <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">1</span>
-                      <span>Efetue o pagamento via PIX</span>
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+                        1
+                      </span>
+                      <span>Escaneie o QR Code ou copie o código PIX acima</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
-                      <span>Envie o comprovante pelo WhatsApp</span>
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+                        2
+                      </span>
+                      <span>Realize o pagamento no app do seu banco</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
-                      <span>Aguarde a confirmação e código de rastreio</span>
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+                        3
+                      </span>
+                      <span>A confirmação é automática - você receberá um aviso aqui na tela</span>
+                    </li>
+                    <li className="flex items-start gap-3">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+                        4
+                      </span>
+                      <span>Seu pedido será preparado e enviado</span>
                     </li>
                   </ol>
-                </aside>
+                </section>
               )}
 
               {/* Ações */}
-              <div className="space-y-3 animate-fade-in-up" style={{ animationDelay: '320ms' }}>
-                {isPix && (
-                  <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="block">
-                    <Button className="w-full bg-success text-success-foreground hover:bg-success/90 gap-2 text-lg py-6">
-                      <MessageCircle className="h-5 w-5" />
-                      Enviar comprovante no WhatsApp
-                    </Button>
-                  </a>
-                )}
-
-                <Link to="/" className="block">
+              <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
                   <Button variant="outline" className="w-full gap-2">
-                    <Home className="h-4 w-4" />
-                    Continuar comprando
+                    <MessageCircle className="h-5 w-5" />
+                    Falar no WhatsApp
+                  </Button>
+                </a>
+                <Link to="/" className="flex-1">
+                  <Button className="w-full gap-2">
+                    <Home className="h-5 w-5" />
+                    Continuar Comprando
                   </Button>
                 </Link>
               </div>

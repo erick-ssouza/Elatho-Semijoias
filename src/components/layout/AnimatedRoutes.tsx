@@ -7,7 +7,6 @@ import Loja from '@/pages/Loja';
 import Produto from '@/pages/Produto';
 import Checkout from '@/pages/Checkout';
 import PedidoConfirmado from '@/pages/PedidoConfirmado';
-import PagamentoPix from '@/pages/PagamentoPix';
 import Sobre from '@/pages/Sobre';
 import FAQ from '@/pages/FAQ';
 import Trocas from '@/pages/Trocas';
@@ -36,7 +35,6 @@ export function AnimatedRoutes() {
         <Route path="/produto/:id" element={<PageTransition><Produto /></PageTransition>} />
         <Route path="/checkout" element={<PageTransition><Checkout /></PageTransition>} />
         <Route path="/pedido-confirmado" element={<PageTransition><PedidoConfirmado /></PageTransition>} />
-        <Route path="/pagamento-pix" element={<PageTransition><PagamentoPix /></PageTransition>} />
         <Route path="/sobre" element={<PageTransition><Sobre /></PageTransition>} />
         <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
         <Route path="/trocas" element={<PageTransition><Trocas /></PageTransition>} />
