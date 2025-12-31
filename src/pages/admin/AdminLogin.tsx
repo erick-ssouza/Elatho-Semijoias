@@ -12,7 +12,6 @@ type ViewMode = "login" | "forgot";
 
 // Allowed admin emails - only these can access the admin panel
 const ALLOWED_ADMIN_EMAILS = [
-  "admin@elatho.com",
   "elathosemijoias@gmail.com",
 ];
 
