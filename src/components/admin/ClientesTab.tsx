@@ -43,23 +43,39 @@ const ClientesTab = () => {
 
   const fetchClientes = async () => {
     try {
-      // Debug: check auth session
-      const { data: sessionData } = await supabase.auth.getSession();
-      console.log("[ClientesTab] Sessão atual:", sessionData?.session?.user?.email || "NÃO AUTENTICADO");
+      console.log("[ClientesTab] Buscando clientes via edge function...");
       
-      const { data, error } = await supabase
-        .from("clientes")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData?.session?.access_token;
+      
+      if (!token) {
+        console.error("[ClientesTab] Usuário não autenticado");
+        toast({ title: "Erro de autenticação", variant: "destructive" });
+        setLoading(false);
+        return;
+      }
 
-      console.log("[ClientesTab] Clientes retornados:", data?.length || 0, "registros");
+      const { data, error } = await supabase.functions.invoke("admin-get-clientes", {
+        body: {},
+      });
+
+      console.log("[ClientesTab] Resultado:", { data, error });
+      
       if (error) {
-        console.error("[ClientesTab] Erro:", error);
+        console.error("[ClientesTab] Erro na edge function:", error);
         throw error;
       }
-      setClientes(data || []);
+      
+      if (!data?.success) {
+        console.error("[ClientesTab] Resposta sem sucesso:", data);
+        throw new Error(data?.error || "Erro ao buscar clientes");
+      }
+
+      console.log("[ClientesTab] Clientes retornados:", data.clientes?.length || 0, "registros");
+      setClientes(data.clientes || []);
     } catch (error) {
       console.error("[ClientesTab] Error fetching clientes:", error);
+      toast({ title: "Erro ao carregar clientes", variant: "destructive" });
     } finally {
       setLoading(false);
     }

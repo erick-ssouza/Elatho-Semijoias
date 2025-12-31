@@ -13,6 +13,7 @@ async function requireAdmin(req: Request) {
 
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
+    console.log("[admin-get-pedidos] No Authorization header");
     return { ok: false as const, status: 401, body: { success: false, error: "Unauthorized" } };
   }
 
@@ -22,8 +23,11 @@ async function requireAdmin(req: Request) {
 
   const { data: userRes, error: userErr } = await authClient.auth.getUser();
   if (userErr || !userRes?.user) {
+    console.log("[admin-get-pedidos] User not found:", userErr);
     return { ok: false as const, status: 401, body: { success: false, error: "Unauthorized" } };
   }
+
+  console.log("[admin-get-pedidos] User:", userRes.user.email);
 
   const adminClient = createClient(supabaseUrl, serviceKey);
   const { data: role, error: roleErr } = await adminClient
@@ -34,9 +38,11 @@ async function requireAdmin(req: Request) {
     .maybeSingle();
 
   if (roleErr || !role) {
+    console.log("[admin-get-pedidos] Not an admin:", roleErr, role);
     return { ok: false as const, status: 403, body: { success: false, error: "Forbidden" } };
   }
 
+  console.log("[admin-get-pedidos] Admin verified");
   return { ok: true as const, adminClient };
 }
 
