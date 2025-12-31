@@ -876,7 +876,7 @@ export default function Checkout() {
                       <h3 className="font-medium text-primary mb-3">💳 Formas de Pagamento</h3>
                       <div className="space-y-2 text-sm text-muted-foreground">
                         <p><strong>PIX:</strong> Pagamento instantâneo com QR Code</p>
-                        <p><strong>Cartão:</strong> Parcelamos em até 3x sem juros via WhatsApp</p>
+                        <p><strong>Cartão:</strong> Parcele em até 10x no cartão via Mercado Pago</p>
                       </div>
                     </div>
 
