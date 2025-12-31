@@ -31,9 +31,8 @@ const priceRanges = [
 ];
 
 const colors = [
-  { id: 'dourado', label: 'Dourado' },
-  { id: 'prateado', label: 'Prateado' },
-  { id: 'rose', label: 'Rosé' },
+  { id: 'ouro18k', label: 'Banho de Ouro 18k' },
+  { id: 'rodio', label: 'Banho de Ródio' },
 ];
 
 const sortOptions = [

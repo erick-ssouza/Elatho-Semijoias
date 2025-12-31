@@ -35,7 +35,7 @@ export default function Hero() {
   const blurAmount = Math.min(10, scrollY / 50);
 
   return (
-    <section ref={sectionRef} className="relative h-screen flex items-center justify-center overflow-hidden">
+    <section ref={sectionRef} className="relative h-[50vh] md:h-[60vh] flex items-center justify-center overflow-hidden">
       {/* Background Image - Gold and Silver Jewelry with Parallax and Progressive Blur */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"

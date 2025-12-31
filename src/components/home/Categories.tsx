@@ -54,26 +54,17 @@ export default function Categories({ selectedCategory, onSelectCategory }: Categ
             >
               <button
                 onClick={() => onSelectCategory(category.id)}
-                className={`text-xs uppercase tracking-[0.2em] transition-all duration-300 ${
+                className={`px-5 py-2 rounded-full text-xs uppercase tracking-[0.15em] font-medium transition-all duration-300 border-2 ${
                   selectedCategory === category.id
-                    ? 'text-foreground underline underline-offset-8'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-primary border-primary text-primary-foreground shadow-lg'
+                    : 'bg-primary/90 border-primary text-primary-foreground hover:bg-primary hover:shadow-md'
                 }`}
+                style={{
+                  boxShadow: selectedCategory === category.id ? '0 4px 20px -3px rgba(212, 168, 70, 0.5)' : 'none'
+                }}
               >
                 {category.name}
               </button>
-              {index < categories.length - 1 && (
-                <span 
-                  className="text-muted-foreground/50 mx-4"
-                  style={{
-                    opacity: isVisible ? 1 : 0,
-                    transition: 'opacity 0.4s ease-out',
-                    transitionDelay: `${index * 80 + 200}ms`,
-                  }}
-                >
-                  ·
-                </span>
-              )}
             </div>
           ))}
         </nav>
