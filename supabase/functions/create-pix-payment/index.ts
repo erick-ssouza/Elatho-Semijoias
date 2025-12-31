@@ -84,13 +84,14 @@ serve(async (req) => {
 
     if (!response.ok) {
       console.error("Mercado Pago error:", JSON.stringify(data));
+      // Return 200 with success: false so frontend can handle gracefully (fallback to manual PIX)
       return new Response(
         JSON.stringify({ 
           success: false,
           error: "Failed to create payment", 
           details: data.message || data.cause?.[0]?.description || "Unknown error" 
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
