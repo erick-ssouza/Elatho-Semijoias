@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import { Eye } from 'lucide-react';
+import { Eye, Heart } from 'lucide-react';
 import { QuickViewModal } from '@/components/product/QuickViewModal';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProductCardProps {
   id: string;
@@ -32,6 +35,31 @@ export default function ProductCard({
   const [isVisible, setIsVisible] = useState(false);
   const [quickViewOpen, setQuickViewOpen] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const { favorites, loading: favLoading, addFavorite, removeFavorite } = useFavorites();
+  
+  const isFavorited = favorites.includes(id);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: 'Faça login',
+        description: 'Você precisa estar logado para adicionar favoritos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    if (isFavorited) {
+      await removeFavorite(id);
+    } else {
+      await addFavorite(id);
+    }
+  };
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -101,11 +129,23 @@ export default function ProductCard({
             </div>
           )}
           
+          {/* Favorite Button - Top Left */}
+          <button
+            onClick={handleToggleFavorite}
+            disabled={favLoading}
+            className={`absolute top-3 left-3 p-2 bg-background/80 hover:bg-background rounded-full transition-all duration-300 z-10 ${
+              isFavorited ? 'text-red-500' : 'text-foreground/70 hover:text-foreground'
+            }`}
+            aria-label={isFavorited ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+          >
+            <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+          </button>
+
           {/* Quick View Button */}
           {!isOutOfStock && (
             <button
               onClick={handleQuickView}
-              className="absolute top-4 right-4 p-2.5 bg-background/90 hover:bg-background text-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10"
+              className="absolute top-3 right-3 p-2 bg-background/80 hover:bg-background rounded-full text-foreground/70 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-10"
               aria-label="Visualização rápida"
             >
               <Eye className="h-4 w-4" />
