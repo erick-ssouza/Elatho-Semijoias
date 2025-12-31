@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, LogOut, Package, ShoppingCart, Users, MessageSquare, Star, TrendingUp, Ticket, ThumbsUp } from "lucide-react";
+import { Loader2, LogOut, Package, ShoppingCart, Users, Star, TrendingUp, Ticket, ThumbsUp } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from "recharts";
 import { format, subDays, subWeeks, subMonths, startOfDay, startOfWeek, startOfMonth, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -14,7 +14,7 @@ import PedidosTab from "@/components/admin/PedidosTab";
 import ProdutosTab from "@/components/admin/ProdutosTab";
 import ClientesTab from "@/components/admin/ClientesTab";
 import DepoimentosTab from "@/components/admin/DepoimentosTab";
-import MensagensTab from "@/components/admin/MensagensTab";
+
 import CuponsTab from "@/components/admin/CuponsTab";
 import AvaliacoesTab from "@/components/admin/AvaliacoesTab";
 
@@ -22,7 +22,6 @@ interface Metrics {
   totalPedidos: number;
   pedidosPendentes: number;
   totalClientes: number;
-  mensagensNaoLidas: number;
 }
 
 interface ChartData {
@@ -45,7 +44,6 @@ const AdminDashboard = () => {
     totalPedidos: 0,
     pedidosPendentes: 0,
     totalClientes: 0,
-    mensagensNaoLidas: 0,
   });
   const [chartData, setChartData] = useState<ChartData[]>([]);
   const [salesData, setSalesData] = useState<SalesData[]>([]);
@@ -73,25 +71,21 @@ const AdminDashboard = () => {
 
   const fetchMetrics = async () => {
     try {
-      const [pedidosRes, clientesRes, mensagensRes] = await Promise.all([
+      const [pedidosRes, clientesRes] = await Promise.all([
         supabase.from("pedidos").select("status"),
         supabase.from("clientes").select("id", { count: "exact", head: true }),
-        supabase.from("mensagens").select("lida"),
       ]);
 
       const pedidos = pedidosRes.data || [];
       const totalClientes = clientesRes.count || 0;
-      const mensagens = mensagensRes.data || [];
 
       const totalPedidos = pedidos.length;
       const pedidosPendentes = pedidos.filter((p) => p.status === "pendente").length;
-      const mensagensNaoLidas = mensagens.filter((m) => !m.lida).length;
 
       setMetrics({
         totalPedidos,
         pedidosPendentes,
         totalClientes,
-        mensagensNaoLidas,
       });
 
       const statusCount: Record<string, number> = {};
@@ -237,7 +231,7 @@ const AdminDashboard = () => {
 
       <main className="container mx-auto px-4 py-8">
         {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium">Total de Pedidos</CardTitle>
@@ -268,17 +262,6 @@ const AdminDashboard = () => {
             <CardContent>
               <div className="text-2xl font-bold">
                 {loadingMetrics ? <Loader2 className="w-4 h-4 animate-spin" /> : metrics.totalClientes}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Mensagens Não Lidas</CardTitle>
-              <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-red-600">
-                {loadingMetrics ? <Loader2 className="w-4 h-4 animate-spin" /> : metrics.mensagensNaoLidas}
               </div>
             </CardContent>
           </Card>
@@ -415,7 +398,7 @@ const AdminDashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="pedidos" className="space-y-4">
-          <TabsList className="grid grid-cols-7 w-full max-w-4xl">
+          <TabsList className="grid grid-cols-6 w-full max-w-4xl">
             <TabsTrigger value="pedidos" className="flex items-center gap-2">
               <ShoppingCart className="w-4 h-4" />
               <span className="hidden sm:inline">Pedidos</span>
@@ -440,10 +423,6 @@ const AdminDashboard = () => {
               <Star className="w-4 h-4" />
               <span className="hidden sm:inline">Depoimentos</span>
             </TabsTrigger>
-            <TabsTrigger value="mensagens" className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">Mensagens</span>
-            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="pedidos">
@@ -463,9 +442,6 @@ const AdminDashboard = () => {
           </TabsContent>
           <TabsContent value="depoimentos">
             <DepoimentosTab />
-          </TabsContent>
-          <TabsContent value="mensagens">
-            <MensagensTab onUpdate={fetchMetrics} />
           </TabsContent>
         </Tabs>
       </main>

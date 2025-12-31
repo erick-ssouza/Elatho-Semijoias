@@ -65,7 +65,8 @@ const FRETE_REGIOES: Record<string, number> = {
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
-  const [loading, setLoading] = useState(false);
+  const [loadingPix, setLoadingPix] = useState(false);
+  const [loadingCartao, setLoadingCartao] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [aceitouTermos, setAceitouTermos] = useState(false);
@@ -102,15 +103,20 @@ export default function Checkout() {
   // Frete grátis: somente se subtotal > 299 OU se cupom de frete grátis foi aplicado
   const freteGratisPorCupom = cupomAplicado?.tipo === 'frete_gratis';
   const freteGratisPorValor = subtotal > 299;
-  const frete = (freteGratisPorValor || freteGratisPorCupom) ? 0 : (FRETE_REGIOES[endereco.estado] || 0);
+  const temCepValido = endereco.estado && FRETE_REGIOES[endereco.estado] !== undefined;
+  const frete = temCepValido 
+    ? ((freteGratisPorValor || freteGratisPorCupom) ? 0 : (FRETE_REGIOES[endereco.estado] || 0))
+    : 0;
   const total = Math.max(0, subtotal - desconto + frete);
 
+  const isLoading = loadingPix || loadingCartao;
+  
   useEffect(() => {
     // Evita redirecionar para Home quando o carrinho é limpo após o pedido ser criado
-    if (items.length === 0 && !orderPlaced && !loading) {
+    if (items.length === 0 && !orderPlaced && !isLoading) {
       navigate('/');
     }
-  }, [items.length, orderPlaced, loading, navigate]);
+  }, [items.length, orderPlaced, isLoading, navigate]);
 
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
@@ -405,7 +411,11 @@ export default function Checkout() {
       return;
     }
 
-    setLoading(true);
+    if (metodoPagamento === 'pix') {
+      setLoadingPix(true);
+    } else {
+      setLoadingCartao(true);
+    }
     
     try {
       const numeroPedido = generateOrderNumber();
@@ -565,7 +575,8 @@ export default function Checkout() {
         variant: 'destructive',
       });
     } finally {
-      setLoading(false);
+      setLoadingPix(false);
+      setLoadingCartao(false);
     }
   };
 
@@ -913,9 +924,9 @@ export default function Checkout() {
                         <Button 
                           onClick={() => handleFinalizarPedido('pix')} 
                           className="btn-gold gap-2"
-                          disabled={loading || !aceitouTermos}
+                          disabled={isLoading || !aceitouTermos}
                         >
-                          {loading ? (
+                          {loadingPix ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>
@@ -928,9 +939,9 @@ export default function Checkout() {
                           onClick={() => handleFinalizarPedido('cartao')} 
                           variant="outline"
                           className="gap-2 border-primary text-primary hover:bg-primary/5"
-                          disabled={loading || !aceitouTermos}
+                          disabled={isLoading || !aceitouTermos}
                         >
-                          {loading ? (
+                          {loadingCartao ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>
@@ -1028,10 +1039,12 @@ export default function Checkout() {
                   )}
                   <div className="flex justify-between text-sm">
                     <span className="text-muted-foreground">Frete</span>
-                    <span className={frete === 0 ? 'text-green-600 font-medium' : ''}>
-                      {frete === 0 
-                        ? (freteGratisPorCupom ? 'R$ 0,00 (cupom aplicado)' : 'Grátis') 
-                        : `R$ ${formatPrice(frete)}`}
+                    <span className={frete === 0 && temCepValido ? 'text-green-600 font-medium' : ''}>
+                      {!temCepValido
+                        ? 'Aguardando CEP'
+                        : frete === 0 
+                          ? (freteGratisPorCupom ? 'R$ 0,00 (cupom)' : 'Grátis') 
+                          : `R$ ${formatPrice(frete)}`}
                     </span>
                   </div>
                   <div className="flex justify-between text-lg font-display font-bold pt-2 border-t border-border">

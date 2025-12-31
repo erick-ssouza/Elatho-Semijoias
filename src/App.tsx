@@ -9,6 +9,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import BackgroundLayout from "@/components/layout/BackgroundLayout";
 import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import ScrollToTopButton from "@/components/layout/ScrollToTopButton";
+import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { AnimatedRoutes } from "@/components/layout/AnimatedRoutes";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
+              <ScrollToTop />
               <BackgroundLayout>
                 <AnimatedRoutes />
                 <WhatsAppButton />
