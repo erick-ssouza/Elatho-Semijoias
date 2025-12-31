@@ -8,7 +8,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Crown, ArrowLeft } from "lucide-react";
 
-type ViewMode = "login" | "signup" | "forgot";
+type ViewMode = "login" | "forgot";
+
+// Allowed admin emails - only these can access the admin panel
+const ALLOWED_ADMIN_EMAILS = [
+  "admin@elatho.com",
+  "elathosemijoias@gmail.com",
+];
+
+const isEmailAllowed = (email: string): boolean => {
+  return ALLOWED_ADMIN_EMAILS.includes(email.toLowerCase().trim());
+};
 
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
@@ -37,26 +47,18 @@ const AdminLogin = () => {
         });
         setViewMode("login");
         setEmail("");
-      } else if (viewMode === "signup") {
-        // Sign up flow
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/painel-elatho-2025`,
-          },
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Conta criada!",
-          description: "Agora você pode fazer login. Aguarde enquanto o admin configura suas permissões.",
-        });
-        setViewMode("login");
-        setPassword("");
       } else {
-        // Login flow
+        // Login flow - check if email is allowed first
+        if (!isEmailAllowed(email)) {
+          toast({
+            title: "Acesso negado",
+            description: "Este email não está autorizado a acessar o painel administrativo.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
         const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
@@ -94,9 +96,7 @@ const AdminLogin = () => {
     } catch (error: any) {
       const errorTitle = viewMode === "forgot" 
         ? "Erro ao enviar email" 
-        : viewMode === "signup" 
-          ? "Erro no cadastro" 
-          : "Erro no login";
+        : "Erro no login";
       
       toast({
         title: errorTitle,
@@ -112,8 +112,6 @@ const AdminLogin = () => {
     switch (viewMode) {
       case "forgot":
         return "Recuperar Senha";
-      case "signup":
-        return "Criar Conta";
       default:
         return "Painel Administrativo";
     }
@@ -123,8 +121,6 @@ const AdminLogin = () => {
     switch (viewMode) {
       case "forgot":
         return "Digite seu email para receber o link de recuperação";
-      case "signup":
-        return "Crie sua conta de administrador";
       default:
         return "Acesse com suas credenciais de administrador";
     }
@@ -135,8 +131,6 @@ const AdminLogin = () => {
       switch (viewMode) {
         case "forgot":
           return "Enviando...";
-        case "signup":
-          return "Criando conta...";
         default:
           return "Entrando...";
       }
@@ -144,8 +138,6 @@ const AdminLogin = () => {
     switch (viewMode) {
       case "forgot":
         return "Enviar Link";
-      case "signup":
-        return "Criar conta";
       default:
         return "Entrar";
     }
@@ -198,31 +190,12 @@ const AdminLogin = () => {
           
           <div className="mt-4 space-y-2 text-center">
             {viewMode === "login" && (
-              <>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("forgot")}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
-                >
-                  Esqueceu sua senha?
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewMode("signup")}
-                  className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
-                >
-                  Não tem conta? Cadastre-se
-                </button>
-              </>
-            )}
-            {viewMode === "signup" && (
               <button
                 type="button"
-                onClick={() => setViewMode("login")}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 w-full"
+                onClick={() => setViewMode("forgot")}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors block w-full"
               >
-                <ArrowLeft className="w-3 h-3" />
-                Voltar para login
+                Esqueceu sua senha?
               </button>
             )}
             {viewMode === "forgot" && (

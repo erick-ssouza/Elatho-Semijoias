@@ -25,6 +25,7 @@ serve(async (req) => {
 
   try {
     const accessToken = Deno.env.get("MERCADO_PAGO_ACCESS_TOKEN");
+    const siteUrl = Deno.env.get("SITE_URL") || "https://eyvcrvqpxlldxyrfwjpn.lovableproject.com";
     
     if (!accessToken) {
       throw new Error("MERCADO_PAGO_ACCESS_TOKEN not configured");
@@ -77,9 +78,9 @@ serve(async (req) => {
           installments: 10, // Até 10x
         },
         back_urls: {
-          success: `https://eyvcrvqpxlldxyrfwjpn.lovableproject.com/pedido-confirmado?pedido=${numeroPedido}`,
-          failure: `https://eyvcrvqpxlldxyrfwjpn.lovableproject.com/checkout`,
-          pending: `https://eyvcrvqpxlldxyrfwjpn.lovableproject.com/pedido-confirmado?pedido=${numeroPedido}`,
+          success: `${siteUrl}/pedido-confirmado?pedido=${numeroPedido}`,
+          failure: `${siteUrl}/checkout`,
+          pending: `${siteUrl}/pedido-confirmado?pedido=${numeroPedido}`,
         },
         auto_return: "approved",
         external_reference: numeroPedido,
