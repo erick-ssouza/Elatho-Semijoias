@@ -71,8 +71,10 @@ interface PedidoData {
   status?: string;
 }
 
-const PIX_KEY = 'elathosemijoias@gmail.com';
-const PIX_BENEFICIARIO = 'Elatho Semijoias';
+const PIX_KEY = '33764535865';
+const PIX_KEY_FORMATTED = '337.645.358-65';
+const PIX_BENEFICIARIO = 'Erica C. M. Bortolin';
+const PIX_BANCO = 'Banco do Brasil';
 const PRAZO_ENTREGA = '7 a 15 dias úteis';
 
 export default function PedidoConfirmado() {
@@ -239,7 +241,7 @@ export default function PedidoConfirmado() {
     });
 
   const handleCopyKey = () =>
-    handleCopy(PIX_KEY, () => {
+    handleCopy(PIX_KEY_FORMATTED, () => {
       setCopiedKey(true);
       setTimeout(() => setCopiedKey(false), 2500);
     });
@@ -368,9 +370,9 @@ export default function PedidoConfirmado() {
 
                     <div className="space-y-4">
                       <div className="p-4 bg-background rounded-lg border border-border">
-                        <p className="text-sm text-muted-foreground mb-1">Chave PIX (Email)</p>
+                        <p className="text-sm text-muted-foreground mb-1">Chave PIX (CPF)</p>
                         <div className="flex items-center justify-between gap-2">
-                          <p className="font-mono font-semibold break-all">{PIX_KEY}</p>
+                          <p className="font-mono font-semibold break-all">{PIX_KEY_FORMATTED}</p>
                           <Button variant="outline" size="sm" onClick={handleCopyKey} className="gap-2">
                             {copiedKey ? (
                               <>
@@ -380,11 +382,17 @@ export default function PedidoConfirmado() {
                             ) : (
                               <>
                                 <Copy className="h-4 w-4" />
-                                Copiar
+                                Copiar chave PIX
                               </>
                             )}
                           </Button>
                         </div>
+                      </div>
+
+                      <div className="p-4 bg-background rounded-lg border border-border">
+                        <p className="text-sm text-muted-foreground mb-1">Titular</p>
+                        <p className="font-semibold">{PIX_BENEFICIARIO}</p>
+                        <p className="text-sm text-muted-foreground">{PIX_BANCO}</p>
                       </div>
 
                       {typeof state?.total === 'number' && (
