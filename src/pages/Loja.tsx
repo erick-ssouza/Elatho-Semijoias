@@ -159,33 +159,68 @@ const Loja = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="pt-16 md:pt-20">
-          {/* Hero Section */}
-          <section className="relative py-12 md:py-16 bg-gradient-to-b from-primary/5 to-background">
-            <div className="container mx-auto px-4">
-              <div className="text-center max-w-2xl mx-auto">
-                <h1 className="text-3xl md:text-4xl lg:text-5xl font-display font-bold text-foreground mb-4">
-                  Nossa Coleção
-                </h1>
-                <p className="text-muted-foreground text-lg">
-                  Explore todas as nossas peças exclusivas com acabamento premium em ouro 18k
-                </p>
-              </div>
+          {/* Hero Banner - Luxurious style like Home */}
+          <section className="relative h-[40vh] md:h-[50vh] flex items-center justify-center overflow-hidden">
+            {/* Background Image */}
+            <div 
+              className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: 'url(https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?q=80&w=2070&auto=format&fit=crop)',
+              }}
+            />
+            
+            {/* Gradient overlay */}
+            <div 
+              className="absolute inset-0"
+              style={{
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.5) 100%)'
+              }}
+            />
+            
+            {/* Vignette overlay */}
+            <div 
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.3) 100%)'
+              }}
+            />
+
+            {/* Content */}
+            <div className="container relative z-10 px-6 lg:px-12 text-center">
+              <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-4 animate-fade-in-up">
+                Coleção Exclusiva
+              </p>
+              <h1 
+                className="font-display text-4xl md:text-5xl lg:text-6xl font-normal text-white mb-4 animate-fade-in-up"
+                style={{ animationDelay: '100ms', textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}
+              >
+                Nossa Coleção
+              </h1>
+              <p 
+                className="text-white/80 text-lg md:text-xl max-w-xl mx-auto animate-fade-in-up"
+                style={{ animationDelay: '200ms' }}
+              >
+                Peças exclusivas com acabamento premium em ouro 18k
+              </p>
             </div>
           </section>
 
-          {/* Category Pills */}
-          <section className="py-6 border-b border-border/50">
+          {/* Category Pills - Elegant golden border style */}
+          <section className="py-8 md:py-10 border-b border-border/30">
             <div className="container mx-auto px-4">
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-3">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                    className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 border-2 ${
                       selectedCategory === cat.id
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground'
+                        ? 'bg-primary border-primary text-primary-foreground shadow-lg'
+                        : 'bg-transparent border-primary/40 text-foreground hover:border-primary hover:bg-primary hover:text-primary-foreground'
                     }`}
+                    style={{
+                      boxShadow: selectedCategory === cat.id ? '0 4px 15px -3px rgba(212, 168, 70, 0.4)' : 'none'
+                    }}
                   >
                     {cat.label}
                   </button>
@@ -261,20 +296,22 @@ const Loja = () => {
                       {filteredProdutos.map((produto, index) => (
                         <div
                           key={produto.id}
-                          className="animate-fade-in"
+                          className="animate-fade-in group"
                           style={{ animationDelay: `${index * 50}ms` }}
                         >
-                          <ProductCard
-                            id={produto.id}
-                            nome={produto.nome}
-                            preco={produto.preco}
-                            preco_promocional={produto.preco_promocional}
-                            imagem_url={produto.imagem_url}
-                            categoria={produto.categoria}
-                            variacoes={produto.variacoes}
-                            descricao={produto.descricao}
-                            mediaAvaliacoes={produto.mediaAvaliacoes}
-                          />
+                          <div className="card-elegant overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                            <ProductCard
+                              id={produto.id}
+                              nome={produto.nome}
+                              preco={produto.preco}
+                              preco_promocional={produto.preco_promocional}
+                              imagem_url={produto.imagem_url}
+                              categoria={produto.categoria}
+                              variacoes={produto.variacoes}
+                              descricao={produto.descricao}
+                              mediaAvaliacoes={produto.mediaAvaliacoes}
+                            />
+                          </div>
                         </div>
                       ))}
                     </div>
