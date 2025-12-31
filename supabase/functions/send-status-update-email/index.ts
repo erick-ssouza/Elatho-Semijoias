@@ -63,7 +63,8 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const data: StatusUpdateRequest = await req.json();
-    console.log("Status update data received:", data);
+    // Log only order number and status, no PII
+    console.log("Status update for order:", data.numeroPedido, "->", data.novoStatus);
 
     const { numeroPedido, clienteNome, clienteEmail, novoStatus, codigoRastreio } = data;
 
@@ -175,7 +176,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    console.log("Sending status update email to:", clienteEmail);
+    console.log("Sending status update email for order:", numeroPedido);
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [clienteEmail],

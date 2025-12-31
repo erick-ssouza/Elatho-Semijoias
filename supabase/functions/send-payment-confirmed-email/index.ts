@@ -165,7 +165,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    console.log("Sending confirmation email to:", pedido.cliente_email);
+    console.log("Sending confirmation email for order:", pedido.numero_pedido);
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [pedido.cliente_email],

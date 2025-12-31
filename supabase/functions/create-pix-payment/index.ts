@@ -30,7 +30,8 @@ serve(async (req) => {
 
     const { numeroPedido, clienteNome, clienteEmail, clienteCpf, total, descricao }: PaymentRequest = await req.json();
 
-    console.log("Creating PIX payment for order:", numeroPedido, "Total:", total);
+    // Log only order number, no PII
+    console.log("Creating PIX payment for order:", numeroPedido);
 
     // Validate required fields
     if (!numeroPedido || !clienteNome || !clienteEmail || !total) {
@@ -48,14 +49,14 @@ serve(async (req) => {
       ? `${supabaseUrl}/functions/v1/mercadopago-webhook`
       : undefined;
 
-    console.log("Webhook URL configured:", webhookUrl);
+    console.log("Webhook configured:", !!webhookUrl);
 
     // Create PIX payment via Mercado Pago API
     const paymentBody = {
       transaction_amount: total,
       description: descricao || `Pedido ${numeroPedido} - Elatho Semijoias`,
       payment_method_id: "pix",
-      external_reference: numeroPedido, // IMPORTANTE: usado pelo webhook para identificar o pedido
+      external_reference: numeroPedido,
       payer: {
         email: clienteEmail,
         first_name: clienteNome.split(' ')[0],
@@ -65,10 +66,11 @@ serve(async (req) => {
           number: cpfNumbers,
         } : undefined,
       },
-      notification_url: webhookUrl, // URL do webhook para receber notificações
+      notification_url: webhookUrl,
     };
 
-    console.log("Payment request body:", JSON.stringify(paymentBody));
+    // Log only non-sensitive info
+    console.log("Payment request - Amount:", total, "Order:", numeroPedido);
 
     const response = await fetch("https://api.mercadopago.com/v1/payments", {
       method: "POST",

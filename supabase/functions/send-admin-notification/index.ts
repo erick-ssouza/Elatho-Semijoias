@@ -43,6 +43,7 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const data: AdminNotificationRequest = await req.json();
+    // Log only order number, no PII
     console.log("Admin notification for order:", data.numeroPedido);
 
     const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
@@ -161,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    console.log("Sending admin notification to:", ADMIN_EMAIL);
+    console.log("Sending admin notification");
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [ADMIN_EMAIL],

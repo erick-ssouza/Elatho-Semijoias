@@ -23,11 +23,11 @@ async function requireAdmin(req: Request) {
 
   const { data: userRes, error: userErr } = await authClient.auth.getUser();
   if (userErr || !userRes?.user) {
-    console.log("[admin-get-clientes] User not found:", userErr);
+    console.log("[admin-get-clientes] Auth failed");
     return { ok: false as const, status: 401, body: { success: false, error: "Unauthorized" } };
   }
 
-  console.log("[admin-get-clientes] User:", userRes.user.email);
+  console.log("[admin-get-clientes] User authenticated, checking admin role");
 
   const adminClient = createClient(supabaseUrl, serviceKey);
   const { data: role, error: roleErr } = await adminClient
