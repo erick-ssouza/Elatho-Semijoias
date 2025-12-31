@@ -166,6 +166,16 @@ export default function Checkout() {
     return digit === parseInt(numbers[10]);
   };
 
+  // Schema for ViaCEP response validation
+  const viaCepSchema = z.object({
+    cep: z.string().optional(),
+    logradouro: z.string().optional(),
+    bairro: z.string().optional(),
+    localidade: z.string().optional(),
+    uf: z.string().length(2).optional(),
+    erro: z.boolean().optional(),
+  });
+
   const buscarCEP = async (cep: string) => {
     const cepNumbers = cep.replace(/\D/g, '');
     if (cepNumbers.length !== 8) return;
@@ -173,7 +183,20 @@ export default function Checkout() {
     setCepLoading(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cepNumbers}/json/`);
-      const data = await response.json();
+      const rawData = await response.json();
+      
+      // Validate ViaCEP response
+      const parseResult = viaCepSchema.safeParse(rawData);
+      if (!parseResult.success) {
+        toast({
+          title: 'Erro ao buscar CEP',
+          description: 'Resposta inválida do serviço de CEP.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      const data = parseResult.data;
       
       if (data.erro) {
         toast({
@@ -184,12 +207,25 @@ export default function Checkout() {
         return;
       }
 
+      // Validate state is a valid Brazilian UF
+      const validUFs = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
+      const uf = data.uf?.toUpperCase() || '';
+      
+      if (uf && !validUFs.includes(uf)) {
+        toast({
+          title: 'Estado inválido',
+          description: 'O estado retornado pelo CEP é inválido.',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       setEndereco(prev => ({
         ...prev,
-        rua: data.logradouro || '',
-        bairro: data.bairro || '',
-        cidade: data.localidade || '',
-        estado: data.uf || '',
+        rua: (data.logradouro || '').slice(0, 200),
+        bairro: (data.bairro || '').slice(0, 100),
+        cidade: (data.localidade || '').slice(0, 100),
+        estado: uf.slice(0, 2),
       }));
       
       setErrors(prev => ({ ...prev, cep: '' }));

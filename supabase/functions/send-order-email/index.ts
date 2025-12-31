@@ -49,7 +49,8 @@ const handler = async (req: Request): Promise<Response> => {
 
   try {
     const orderData: OrderEmailRequest = await req.json();
-    console.log("Order data received:", orderData.numeroPedido);
+    // Log only order number, no PII
+    console.log("Order email for:", orderData.numeroPedido);
 
     const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
 
@@ -171,7 +172,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Enviar email para o cliente
-    console.log("Sending email to customer:", orderData.clienteEmail);
+    console.log("Sending customer email for order:", orderData.numeroPedido);
     const { data: customerEmailData, error: customerEmailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [orderData.clienteEmail],
@@ -292,7 +293,7 @@ const handler = async (req: Request): Promise<Response> => {
     `;
 
     // Enviar email para o admin
-    console.log("Sending email to admin:", adminEmailAddress);
+    console.log("Sending admin email for order:", orderData.numeroPedido);
     const { data: adminEmailData, error: adminEmailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [adminEmailAddress],

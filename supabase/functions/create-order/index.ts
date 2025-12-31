@@ -6,6 +6,28 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Simple in-memory rate limiting (per IP, 5 requests per minute)
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const RATE_LIMIT_MAX_REQUESTS = 5;
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+  
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return true;
+  }
+  
+  record.count++;
+  return false;
+}
+
 interface CreateOrderRequest {
   numeroPedido: string;
   cliente: {
@@ -44,6 +66,19 @@ serve(async (req) => {
   }
 
   try {
+    // Rate limiting check
+    const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                     req.headers.get("x-real-ip") || 
+                     "unknown";
+    
+    if (isRateLimited(clientIP)) {
+      console.log("Rate limit exceeded for IP");
+      return new Response(
+        JSON.stringify({ success: false, error: "Muitas requisições. Tente novamente em 1 minuto." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -54,6 +89,9 @@ serve(async (req) => {
     const numeroPedido = body?.numeroPedido?.trim();
     const clienteNome = body?.cliente?.nome?.trim();
     const clienteEmail = body?.cliente?.email?.trim();
+
+    // Log only order number, no PII
+    console.log("Processing order:", numeroPedido);
 
     if (!numeroPedido || !clienteNome || !clienteEmail) {
       return new Response(
@@ -69,7 +107,7 @@ serve(async (req) => {
       );
     }
 
-    // 1) Criar/atualizar cliente
+    // 1) Criar/atualizar cliente (no sensitive data in logs)
     const { error: clienteError } = await supabase
       .from("clientes")
       .upsert(
@@ -83,7 +121,7 @@ serve(async (req) => {
       );
 
     if (clienteError) {
-      console.error("Cliente upsert error:", clienteError);
+      console.error("Cliente upsert error:", clienteError.code);
       return new Response(
         JSON.stringify({ success: false, error: "Erro ao salvar dados do cliente." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -108,7 +146,7 @@ serve(async (req) => {
     });
 
     if (pedidoError) {
-      console.error("Pedido insert error:", pedidoError);
+      console.error("Pedido insert error:", pedidoError.code);
       return new Response(
         JSON.stringify({ success: false, error: "Erro ao registrar pedido." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -132,22 +170,23 @@ serve(async (req) => {
           .eq("id", cupom.id);
 
         if (cupomUpdateError) {
-          console.error("Cupom update error:", cupomUpdateError);
+          console.error("Cupom update error:", cupomUpdateError.code);
         }
       } else if (cupomSelectError) {
-        console.error("Cupom select error:", cupomSelectError);
+        console.error("Cupom select error:", cupomSelectError.code);
       }
     }
+
+    console.log("Order created successfully:", numeroPedido);
 
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    console.error("Error creating order:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    console.error("Error creating order");
     return new Response(
-      JSON.stringify({ success: false, error: errorMessage }),
+      JSON.stringify({ success: false, error: "Erro interno" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

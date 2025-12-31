@@ -88,7 +88,7 @@ serve(async (req) => {
     // Mercado Pago sends different types of notifications
     const { type, data, action } = body;
 
-    console.log("Webhook type:", type, "Action:", action, "Data ID:", data?.id);
+    console.log("Processing webhook - Type:", type, "Data ID:", data?.id);
 
     // We're interested in payment notifications
     if (type === "payment" || action?.includes("payment")) {
@@ -256,7 +256,7 @@ serve(async (req) => {
           // Send email notification if payment confirmed
           if (novoStatus === "confirmado" && pedido?.cliente_email) {
             try {
-              console.log("Sending confirmation email to:", pedido.cliente_email);
+              console.log("Sending confirmation email for order:", pedido.numero_pedido);
               await supabase.functions.invoke("send-status-update-email", {
                 body: {
                   to: pedido.cliente_email,
