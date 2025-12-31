@@ -253,6 +253,17 @@ export default function Navbar() {
 
             {/* Mobile - Right */}
             <div className="flex lg:hidden items-center gap-4">
+              {/* Instagram */}
+              <a
+                href="https://instagram.com/elathosemijoias"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-foreground/80 hover:text-foreground transition-colors duration-300"
+                aria-label="Instagram"
+              >
+                <InstagramIcon className="h-5 w-5" />
+              </a>
+
               {/* Favorites */}
               <Link
                 to="/favoritos"
