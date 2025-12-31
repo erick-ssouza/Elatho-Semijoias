@@ -71,10 +71,17 @@ const AdminDashboard = () => {
 
   const fetchMetrics = async () => {
     try {
+      // Debug: check auth session
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("[AdminDashboard] Sessão atual:", sessionData?.session?.user?.email || "NÃO AUTENTICADO");
+      
       const [pedidosRes, clientesRes] = await Promise.all([
         supabase.from("pedidos").select("status"),
         supabase.from("clientes").select("id", { count: "exact", head: true }),
       ]);
+
+      console.log("[AdminDashboard] Pedidos para métricas:", pedidosRes.data?.length || 0, "| Erro:", pedidosRes.error);
+      console.log("[AdminDashboard] Clientes count:", clientesRes.count, "| Erro:", clientesRes.error);
 
       const pedidos = pedidosRes.data || [];
       const totalClientes = clientesRes.count || 0;
@@ -108,7 +115,7 @@ const AdminDashboard = () => {
         }))
       );
     } catch (error) {
-      console.error("Error fetching metrics:", error);
+      console.error("[AdminDashboard] Error fetching metrics:", error);
     } finally {
       setLoadingMetrics(false);
     }
