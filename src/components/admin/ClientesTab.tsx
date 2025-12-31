@@ -43,15 +43,23 @@ const ClientesTab = () => {
 
   const fetchClientes = async () => {
     try {
+      // Debug: check auth session
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("[ClientesTab] Sessão atual:", sessionData?.session?.user?.email || "NÃO AUTENTICADO");
+      
       const { data, error } = await supabase
         .from("clientes")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      console.log("[ClientesTab] Clientes retornados:", data?.length || 0, "registros");
+      if (error) {
+        console.error("[ClientesTab] Erro:", error);
+        throw error;
+      }
       setClientes(data || []);
     } catch (error) {
-      console.error("Error fetching clientes:", error);
+      console.error("[ClientesTab] Error fetching clientes:", error);
     } finally {
       setLoading(false);
     }

@@ -60,15 +60,23 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
 
   const fetchPedidos = async () => {
     try {
+      // Debug: check auth session
+      const { data: sessionData } = await supabase.auth.getSession();
+      console.log("[PedidosTab] Sessão atual:", sessionData?.session?.user?.email || "NÃO AUTENTICADO");
+      
       const { data, error } = await supabase
         .from("pedidos")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      console.log("[PedidosTab] Pedidos retornados:", data?.length || 0, "registros");
+      if (error) {
+        console.error("[PedidosTab] Erro:", error);
+        throw error;
+      }
       setPedidos(data || []);
     } catch (error) {
-      console.error("Error fetching pedidos:", error);
+      console.error("[PedidosTab] Error fetching pedidos:", error);
     } finally {
       setLoading(false);
     }
