@@ -27,7 +27,7 @@ async function requireAdmin(req: Request) {
     return { ok: false as const, status: 401, body: { success: false, error: "Unauthorized" } };
   }
 
-  console.log("[admin-get-pedidos] User:", userRes.user.email);
+  console.log("[admin-get-pedidos] User ID:", userRes.user.id);
 
   const adminClient = createClient(supabaseUrl, serviceKey);
   const { data: role, error: roleErr } = await adminClient

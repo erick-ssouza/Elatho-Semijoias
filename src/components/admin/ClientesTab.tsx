@@ -81,15 +81,24 @@ const ClientesTab = () => {
     }
   };
 
+  // Escape special characters for Postgres ILIKE patterns
+  const escapePostgresLike = (value: string): string => {
+    return value.replace(/[%_\\]/g, '\\$&');
+  };
+
   const viewClientePedidos = async (cliente: Cliente) => {
     setSelectedCliente(cliente);
     setLoadingPedidos(true);
 
     try {
+      // Sanitize inputs to prevent SQL injection via special characters
+      const sanitizedNome = escapePostgresLike(cliente.nome);
+      const sanitizedEmail = cliente.email || '';
+      
       const { data, error } = await supabase
         .from("pedidos")
         .select("id, numero_pedido, total, status, created_at")
-        .or(`cliente_nome.ilike.%${cliente.nome}%,cliente_email.eq.${cliente.email}`)
+        .or(`cliente_nome.ilike.%${sanitizedNome}%,cliente_email.eq.${sanitizedEmail}`)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
