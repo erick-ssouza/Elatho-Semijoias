@@ -85,13 +85,33 @@ serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("Mercado Pago error:", JSON.stringify(data));
-      // Return 200 with success: false so frontend can handle gracefully (fallback to manual PIX)
+      console.error("Mercado Pago API error - Status:", response.status);
+      console.error("Mercado Pago error response:", JSON.stringify(data, null, 2));
+      
+      // Extract detailed error information
+      const errorCode = data.cause?.[0]?.code || data.status || response.status;
+      const errorDescription = data.cause?.[0]?.description || data.message || "Unknown error";
+      const errorMessage = data.message || "Erro ao criar pagamento PIX";
+      
+      // Detailed error message for debugging
+      let userFriendlyError = errorMessage;
+      
+      // Handle specific Mercado Pago error codes
+      if (errorCode === 13253 || errorMessage.includes("without key enabled for QR")) {
+        userFriendlyError = "A conta do Mercado Pago não possui chave PIX cadastrada. Cadastre uma chave PIX no painel do Mercado Pago.";
+      } else if (errorCode === 2002 || errorDescription.includes("invalid")) {
+        userFriendlyError = "Dados inválidos enviados para o Mercado Pago. Verifique email e CPF.";
+      } else if (response.status === 401) {
+        userFriendlyError = "Token de acesso do Mercado Pago inválido ou expirado.";
+      }
+      
       return new Response(
         JSON.stringify({ 
           success: false,
-          error: "Failed to create payment", 
-          details: data.message || data.cause?.[0]?.description || "Unknown error" 
+          error: userFriendlyError,
+          errorCode: errorCode,
+          errorDetails: errorDescription,
+          rawError: data
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
