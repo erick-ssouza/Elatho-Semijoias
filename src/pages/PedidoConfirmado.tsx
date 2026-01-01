@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -14,6 +14,7 @@ import {
   Loader2,
   BadgeCheck,
   Timer,
+  RefreshCw,
 } from 'lucide-react';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -73,6 +74,12 @@ interface PedidoData {
 
 const PRAZO_ENTREGA = '7 a 15 dias úteis';
 
+// Helper function to check if payment is confirmed
+const isPaymentConfirmed = (status?: string | null, paymentStatus?: string | null): boolean => {
+  const confirmedStatuses = ['confirmado', 'pago', 'approved', 'enviado', 'entregue'];
+  return confirmedStatuses.includes(status || '') || confirmedStatuses.includes(paymentStatus || '');
+};
+
 export default function PedidoConfirmado() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -88,24 +95,86 @@ export default function PedidoConfirmado() {
   const [pedidoData, setPedidoData] = useState<PedidoData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string | null>(null);
+  const [orderStatus, setOrderStatus] = useState<string | null>(null);
   const [pedidoId, setPedidoId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastChecked, setLastChecked] = useState<Date>(new Date());
 
-  // Buscar dados do pedido no backend se não tiver state
-  useEffect(() => {
-    if (locationState || !numeroPedido) return;
+  // Function to fetch order status from database
+  const fetchOrderStatus = useCallback(async () => {
+    if (!numeroPedido) return null;
 
-    const fetchPedido = async () => {
-      setLoading(true);
-      setNotFound(false);
-
+    try {
       const { data, error } = await supabase
         .from('pedidos')
-        .select('*')
+        .select('id, numero_pedido, status, payment_status, itens, total, subtotal, frete, endereco, metodo_pagamento, cliente_nome')
         .eq('numero_pedido', numeroPedido)
         .maybeSingle();
 
       if (error || !data) {
         console.error('Erro ao buscar pedido:', error);
+        return null;
+      }
+
+      return data;
+    } catch (err) {
+      console.error('Erro ao buscar status:', err);
+      return null;
+    }
+  }, [numeroPedido]);
+
+  // Manual refresh function
+  const handleRefreshStatus = useCallback(async () => {
+    setIsRefreshing(true);
+    const data = await fetchOrderStatus();
+    
+    if (data) {
+      setOrderStatus(data.status);
+      setPaymentStatus(data.payment_status);
+      setLastChecked(new Date());
+      setPedidoId(data.id);
+      
+      // Update pedidoData with fresh data
+      setPedidoData(prev => prev ? {
+        ...prev,
+        status: data.status || undefined,
+        paymentStatus: data.payment_status || undefined,
+      } : null);
+
+      if (isPaymentConfirmed(data.status, data.payment_status)) {
+        toast({
+          title: '🎉 Pagamento Confirmado!',
+          description: 'Seu pagamento foi processado com sucesso.',
+        });
+      }
+    }
+    
+    setIsRefreshing(false);
+  }, [fetchOrderStatus, toast]);
+
+  // Buscar dados do pedido no backend se não tiver state
+  useEffect(() => {
+    const fetchPedido = async () => {
+      // If we have locationState, still fetch fresh status from DB
+      if (locationState) {
+        const freshData = await fetchOrderStatus();
+        if (freshData) {
+          setOrderStatus(freshData.status);
+          setPaymentStatus(freshData.payment_status);
+          setPedidoId(freshData.id);
+          setLastChecked(new Date());
+        }
+        return;
+      }
+
+      if (!numeroPedido) return;
+
+      setLoading(true);
+      setNotFound(false);
+
+      const data = await fetchOrderStatus();
+
+      if (!data) {
         setNotFound(true);
         setLoading(false);
         return;
@@ -124,6 +193,7 @@ export default function PedidoConfirmado() {
 
       setPedidoId(data.id);
       setPaymentStatus(data.payment_status);
+      setOrderStatus(data.status);
       setPedidoData({
         numeroPedido: data.numero_pedido,
         total: Number(data.total) || 0,
@@ -136,12 +206,13 @@ export default function PedidoConfirmado() {
         paymentStatus: data.payment_status || undefined,
         status: data.status || undefined,
       });
+      setLastChecked(new Date());
 
       setLoading(false);
     };
 
     fetchPedido();
-  }, [numeroPedido, locationState]);
+  }, [numeroPedido, locationState, fetchOrderStatus]);
 
   // Realtime subscription para atualização do status de pagamento
   useEffect(() => {
@@ -163,15 +234,21 @@ export default function PedidoConfirmado() {
           console.log('[Realtime] Atualização recebida:', payload);
           const newData = payload.new as { payment_status?: string; status?: string; id?: string };
           
+          // Update both status fields
+          if (newData.status) {
+            setOrderStatus(newData.status);
+          }
           if (newData.payment_status) {
             setPaymentStatus(newData.payment_status);
-            
-            if (newData.payment_status === 'approved') {
-              toast({
-                title: '🎉 Pagamento Confirmado!',
-                description: 'Seu pagamento PIX foi aprovado com sucesso.',
-              });
-            }
+          }
+          setLastChecked(new Date());
+          
+          // Check if payment is now confirmed
+          if (isPaymentConfirmed(newData.status, newData.payment_status)) {
+            toast({
+              title: '🎉 Pagamento Confirmado!',
+              description: 'Seu pagamento foi processado com sucesso.',
+            });
           }
           
           if (newData.id) {
@@ -188,6 +265,24 @@ export default function PedidoConfirmado() {
       supabase.removeChannel(channel);
     };
   }, [numeroPedido, toast]);
+
+  // Auto-refresh every 30 seconds while payment is pending
+  useEffect(() => {
+    const isPending = !isPaymentConfirmed(orderStatus, paymentStatus);
+    if (!isPending || !numeroPedido) return;
+
+    console.log('[Auto-refresh] Iniciando polling a cada 30s...');
+    
+    const interval = setInterval(() => {
+      console.log('[Auto-refresh] Verificando status...');
+      handleRefreshStatus();
+    }, 30000); // 30 seconds
+
+    return () => {
+      console.log('[Auto-refresh] Parando polling');
+      clearInterval(interval);
+    };
+  }, [orderStatus, paymentStatus, numeroPedido, handleRefreshStatus]);
 
   useEffect(() => {
     if (!numeroPedido) navigate('/');
@@ -307,7 +402,7 @@ export default function PedidoConfirmado() {
               </header>
 
               {/* Status do Pagamento em tempo real */}
-              {isPix && paymentStatus === 'approved' && (
+              {isPix && isPaymentConfirmed(orderStatus, paymentStatus) && (
                 <section className="card-elegant p-6 border-2 border-success/50 bg-success/10 animate-fade-in-up">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-success/20 flex items-center justify-center">
@@ -315,27 +410,43 @@ export default function PedidoConfirmado() {
                     </div>
                     <div>
                       <h2 className="text-xl font-display font-bold text-success">Pagamento Confirmado!</h2>
-                      <p className="text-muted-foreground">Seu pagamento PIX foi aprovado com sucesso.</p>
+                      <p className="text-muted-foreground">Seu pagamento foi aprovado com sucesso.</p>
                     </div>
                   </div>
                 </section>
               )}
 
               {/* Pagamento PIX - Aguardando (com QR Code do Mercado Pago) */}
-              {isPix && paymentStatus !== 'approved' && hasPixFromMercadoPago && (
+              {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && hasPixFromMercadoPago && (
                 <section className="card-elegant p-6 border-2 border-primary/30 bg-primary/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div className="flex items-center gap-2">
                       <span className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                         <QrCode className="h-5 w-5" />
                       </span>
                       <h2 className="text-xl font-display font-bold">Pague via PIX</h2>
                     </div>
-                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30">
-                      <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                      <span className="text-sm font-medium text-amber-600">Aguardando pagamento</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30">
+                        <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                        <span className="text-sm font-medium text-amber-600">Aguardando pagamento</span>
+                      </div>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleRefreshStatus} 
+                        disabled={isRefreshing}
+                        className="gap-2"
+                      >
+                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        Verificar
+                      </Button>
                     </div>
                   </div>
+
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} (atualiza a cada 30s)
+                  </p>
 
                   <div className="grid md:grid-cols-[280px_1fr] gap-5 items-start">
                     {/* QR Code do Mercado Pago */}
@@ -404,17 +515,33 @@ export default function PedidoConfirmado() {
               )}
 
               {/* Fallback: PIX sem QR Code automático (erro na API) */}
-              {isPix && paymentStatus !== 'approved' && !hasPixFromMercadoPago && (
+              {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && !hasPixFromMercadoPago && (
                 <section className="card-elegant p-6 border-2 border-amber-500/30 bg-amber-500/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
-                      <Clock className="h-6 w-6 text-amber-600" />
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full bg-amber-500/20 flex items-center justify-center">
+                        <Clock className="h-6 w-6 text-amber-600" />
+                      </div>
+                      <div>
+                        <h2 className="text-xl font-display font-bold">Pagamento Pendente</h2>
+                        <p className="text-muted-foreground">Entre em contato para finalizar o pagamento</p>
+                      </div>
                     </div>
-                    <div>
-                      <h2 className="text-xl font-display font-bold">Pagamento Pendente</h2>
-                      <p className="text-muted-foreground">Entre em contato para finalizar o pagamento</p>
-                    </div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleRefreshStatus} 
+                      disabled={isRefreshing}
+                      className="gap-2"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                      Verificar Status
+                    </Button>
                   </div>
+
+                  <p className="text-xs text-muted-foreground mb-4">
+                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} (atualiza a cada 30s)
+                  </p>
 
                   {typeof state?.total === 'number' && (
                     <div className="p-4 bg-background rounded-lg border border-border mb-4">
