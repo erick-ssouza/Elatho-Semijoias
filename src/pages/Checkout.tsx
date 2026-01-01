@@ -99,7 +99,7 @@ export default function Checkout() {
   const navigate = useNavigate();
 
   const subtotal = getSubtotal();
-  const desconto = cupomAplicado?.desconto || 0;
+  const descontoCupom = cupomAplicado?.desconto || 0;
   // Frete grátis: somente se subtotal > 299 OU se cupom de frete grátis foi aplicado
   const freteGratisPorCupom = cupomAplicado?.tipo === 'frete_gratis';
   const freteGratisPorValor = subtotal > 299;
@@ -107,7 +107,16 @@ export default function Checkout() {
   const frete = temCepValido 
     ? ((freteGratisPorValor || freteGratisPorCupom) ? 0 : (FRETE_REGIOES[endereco.estado] || 0))
     : 0;
-  const total = Math.max(0, subtotal - desconto + frete);
+  
+  // Calcular total base (sem desconto PIX)
+  const totalBase = Math.max(0, subtotal - descontoCupom + frete);
+  
+  // Desconto PIX de 5% calculado separadamente (aplicado apenas no momento do pagamento)
+  const descontoPix = totalBase * 0.05;
+  const totalComPix = totalBase - descontoPix;
+  
+  // Total exibido (sem desconto PIX até o step 3)
+  const total = totalBase;
 
   const isLoading = loadingPix || loadingCartao;
   
@@ -477,7 +486,9 @@ export default function Checkout() {
       let paymentId: string | undefined;
       let pixData: { paymentId?: string; qrCode?: string; qrCodeBase64?: string; ticketUrl?: string; expirationDate?: string; success?: boolean; error?: string } | null = null;
 
-      // Para PIX, gerar o pagamento ANTES de criar o pedido para ter o paymentId
+      // Para PIX, aplicar desconto de 5% e gerar o pagamento ANTES de criar o pedido
+      const totalFinal = metodoPagamento === 'pix' ? totalComPix : totalBase;
+      
       if (metodoPagamento === 'pix') {
         const { data, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
           body: {
@@ -485,7 +496,7 @@ export default function Checkout() {
             clienteNome: dadosPessoais.nome,
             clienteEmail: dadosPessoais.email,
             clienteCpf: dadosPessoais.cpf,
-            total,
+            total: totalFinal,
             descricao: `Pedido ${numeroPedido} - Elatho Semijoias`,
           },
         });
@@ -516,7 +527,7 @@ export default function Checkout() {
         }
       }
 
-      // Registrar pedido no backend
+      // Registrar pedido no backend com o total final (com desconto PIX se aplicável)
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
         body: {
           numeroPedido,
@@ -530,7 +541,7 @@ export default function Checkout() {
           itens: itensJson,
           subtotal,
           frete,
-          total,
+          total: totalFinal,
           cupomCodigo: cupomAplicado?.codigo,
           metodoPagamento,
           paymentId,
@@ -550,7 +561,7 @@ export default function Checkout() {
           clienteEmail: dadosPessoais.email,
           clienteWhatsapp: dadosPessoais.whatsapp,
           metodoPagamento,
-          total,
+          total: totalFinal,
           itens: items.map(item => ({
             nome: item.nome,
             variacao: item.variacao,
@@ -571,17 +582,18 @@ export default function Checkout() {
 
       if (metodoPagamento === 'pix') {
         setOrderPlaced(true);
-        clearCart();
+        // NÃO limpar carrinho aqui - será limpo apenas após pagamento confirmado
 
-        // Sempre redirecionar para confirmação (mesmo se o PIX automático falhar)
+        // Redirecionar para confirmação
         navigate(`/pedido-confirmado?numero=${encodeURIComponent(numeroPedido)}`, {
           replace: true,
           state: {
             numeroPedido,
-            total,
+            total: totalFinal,
             subtotal,
             frete,
-            desconto,
+            desconto: descontoCupom,
+            descontoPix: descontoPix,
             metodoPagamento: 'pix',
             itens: itensJson,
             endereco: enderecoJson,
@@ -592,6 +604,9 @@ export default function Checkout() {
             pixPaymentId: pixData?.paymentId,
           },
         });
+        
+        // Limpar carrinho após navegação bem-sucedida
+        clearCart();
       } else {
         // Cartão parcelado via Mercado Pago
         const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout-link', {
@@ -599,7 +614,7 @@ export default function Checkout() {
             numeroPedido,
             clienteNome: dadosPessoais.nome,
             clienteEmail: dadosPessoais.email,
-            total,
+            total: totalFinal,
             itens: items.map(item => ({
               nome: item.nome,
               quantidade: item.quantidade,
@@ -612,9 +627,12 @@ export default function Checkout() {
           throw new Error(checkoutData?.details || 'Erro ao gerar link de pagamento');
         }
 
+        setOrderPlaced(true);
+        
+        // Limpar carrinho apenas após sucesso e antes de redirecionar
         clearCart();
         
-        // Redirect to Mercado Pago checkout
+        // Redirecionar diretamente para o Mercado Pago (sem delay, sem intermediário)
         window.location.href = checkoutData.checkoutUrl;
       }
 
@@ -926,8 +944,8 @@ export default function Checkout() {
                     <div className="p-4 rounded-xl bg-champagne/30 border border-primary/20">
                       <h3 className="font-medium text-primary mb-3">💳 Formas de Pagamento</h3>
                       <div className="space-y-2 text-sm text-muted-foreground">
-                        <p><strong>PIX:</strong> Pagamento instantâneo com QR Code</p>
-                        <p><strong>Cartão:</strong> Parcele em até 10x no cartão via Mercado Pago</p>
+                        <p><strong>PIX (5% de desconto):</strong> Pagamento instantâneo com QR Code - <span className="text-green-600 font-medium">R$ {formatPrice(totalComPix)}</span></p>
+                        <p><strong>Cartão:</strong> Parcele em até 10x no cartão via Mercado Pago - R$ {formatPrice(totalBase)}</p>
                       </div>
                     </div>
 
@@ -974,15 +992,18 @@ export default function Checkout() {
                       <div className="grid sm:grid-cols-2 gap-3">
                         <Button 
                           onClick={() => handleFinalizarPedido('pix')} 
-                          className="btn-gold gap-2"
+                          className="btn-gold gap-2 flex-col h-auto py-3"
                           disabled={isLoading || !aceitouTermos}
                         >
                           {loadingPix ? (
                             <Loader2 className="h-4 w-4 animate-spin" />
                           ) : (
                             <>
-                              <CreditCard className="h-4 w-4" />
-                              Pagar com PIX
+                              <div className="flex items-center gap-2">
+                                <CreditCard className="h-4 w-4" />
+                                Pagar com PIX (5% off)
+                              </div>
+                              <span className="text-xs opacity-90">R$ {formatPrice(totalComPix)}</span>
                             </>
                           )}
                         </Button>
@@ -1050,7 +1071,7 @@ export default function Checkout() {
                         <span className="text-sm font-medium text-green-700">{cupomAplicado.codigo}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm text-green-600">-R$ {formatPrice(desconto)}</span>
+                        <span className="text-sm text-green-600">-R$ {formatPrice(descontoCupom)}</span>
                         <button onClick={removerCupom} className="text-red-500 hover:text-red-700">
                           <X className="w-4 h-4" />
                         </button>
@@ -1085,7 +1106,7 @@ export default function Checkout() {
                   {cupomAplicado && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto ({cupomAplicado.codigo})</span>
-                      <span>-R$ {formatPrice(desconto)}</span>
+                      <span>-R$ {formatPrice(descontoCupom)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-sm">
@@ -1098,10 +1119,22 @@ export default function Checkout() {
                           : `R$ ${formatPrice(frete)}`}
                     </span>
                   </div>
+                  {step === 3 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Desconto PIX (5%)</span>
+                      <span>-R$ {formatPrice(descontoPix)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-display font-bold pt-2 border-t border-border">
                     <span>Total</span>
                     <span className="text-primary">R$ {formatPrice(total)}</span>
                   </div>
+                  {step === 3 && (
+                    <div className="flex justify-between text-sm text-green-600 bg-green-50 p-2 rounded-lg -mx-2">
+                      <span className="font-medium">Total no PIX</span>
+                      <span className="font-bold">R$ {formatPrice(totalComPix)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
