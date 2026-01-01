@@ -491,8 +491,25 @@ export default function Checkout() {
         });
 
         if (pixError || !data?.success) {
-          // Fallback: continuar sem QR automático (PIX manual)
-          console.warn('PIX automático falhou, usando fallback manual:', data?.error || pixError);
+          // Mostrar erro real ao invés de fallback silencioso
+          console.error('Erro ao criar pagamento PIX:', {
+            error: data?.error,
+            errorCode: data?.errorCode,
+            errorDetails: data?.errorDetails,
+            rawError: data?.rawError,
+            pixError
+          });
+          
+          // Exibir erro detalhado para o usuário
+          const errorMsg = data?.error || pixError?.message || 'Erro desconhecido ao criar pagamento PIX';
+          toast({
+            title: 'Erro no pagamento PIX',
+            description: errorMsg,
+            variant: 'destructive',
+          });
+          
+          setLoadingPix(false);
+          return; // Não continuar sem PIX válido
         } else {
           pixData = data;
           paymentId = data.paymentId;
