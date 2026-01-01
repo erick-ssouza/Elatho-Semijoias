@@ -94,7 +94,7 @@ export default function Checkout() {
     estado: '',
   });
 
-  const { items, getSubtotal, clearCart } = useCart();
+  const { items, getSubtotal } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -604,9 +604,6 @@ export default function Checkout() {
             pixPaymentId: pixData?.paymentId,
           },
         });
-        
-        // Limpar carrinho após navegação bem-sucedida
-        clearCart();
       } else {
         // Cartão parcelado via Mercado Pago
         const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout-link', {
@@ -628,9 +625,6 @@ export default function Checkout() {
         }
 
         setOrderPlaced(true);
-        
-        // Limpar carrinho apenas após sucesso e antes de redirecionar
-        clearCart();
         
         // Redirecionar diretamente para o Mercado Pago (sem delay, sem intermediário)
         window.location.href = checkoutData.checkoutUrl;
@@ -989,10 +983,10 @@ export default function Checkout() {
                     </div>
                   ) : (
                     <>
-                      <div className="grid sm:grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-3">
                         <Button 
                           onClick={() => handleFinalizarPedido('pix')} 
-                          className="btn-gold gap-2 flex-col h-auto py-3"
+                          className="w-full btn-gold gap-2 flex-col h-auto py-3"
                           disabled={isLoading || !aceitouTermos}
                         >
                           {loadingPix ? (
@@ -1010,7 +1004,7 @@ export default function Checkout() {
                         <Button 
                           onClick={() => handleFinalizarPedido('cartao')} 
                           variant="outline"
-                          className="gap-2 border-primary text-primary hover:bg-primary/5"
+                          className="w-full gap-2"
                           disabled={isLoading || !aceitouTermos}
                         >
                           {loadingCartao ? (

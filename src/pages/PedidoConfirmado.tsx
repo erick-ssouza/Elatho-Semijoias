@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useLocation, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import {
@@ -21,6 +21,7 @@ import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCart } from '@/contexts/CartContext';
 
 interface ItemPedido {
   nome: string;
@@ -100,6 +101,23 @@ export default function PedidoConfirmado() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date>(new Date());
 
+  const { items: cartItems, clearCart } = useCart();
+  const cartClearedRef = useRef(false);
+
+  const maybeClearCartOnConfirmed = useCallback(
+    (status?: string | null, paymentStatusArg?: string | null) => {
+      if (cartClearedRef.current) return;
+      if (!isPaymentConfirmed(status, paymentStatusArg)) return;
+
+      if (cartItems.length > 0) {
+        clearCart();
+      }
+
+      cartClearedRef.current = true;
+    },
+    [cartItems.length, clearCart]
+  );
+
   // Function to fetch order status from database
   const fetchOrderStatus = useCallback(async () => {
     if (!numeroPedido) return null;
@@ -127,19 +145,25 @@ export default function PedidoConfirmado() {
   const handleRefreshStatus = useCallback(async () => {
     setIsRefreshing(true);
     const data = await fetchOrderStatus();
-    
+
     if (data) {
       setOrderStatus(data.status);
       setPaymentStatus(data.payment_status);
       setLastChecked(new Date());
       setPedidoId(data.id);
-      
+
       // Update pedidoData with fresh data
-      setPedidoData(prev => prev ? {
-        ...prev,
-        status: data.status || undefined,
-        paymentStatus: data.payment_status || undefined,
-      } : null);
+      setPedidoData(prev =>
+        prev
+          ? {
+              ...prev,
+              status: data.status || undefined,
+              paymentStatus: data.payment_status || undefined,
+            }
+          : null
+      );
+
+      maybeClearCartOnConfirmed(data.status, data.payment_status);
 
       if (isPaymentConfirmed(data.status, data.payment_status)) {
         toast({
@@ -148,9 +172,9 @@ export default function PedidoConfirmado() {
         });
       }
     }
-    
+
     setIsRefreshing(false);
-  }, [fetchOrderStatus, toast]);
+  }, [fetchOrderStatus, maybeClearCartOnConfirmed, toast]);
 
   // Buscar dados do pedido no backend se não tiver state
   useEffect(() => {
@@ -163,6 +187,7 @@ export default function PedidoConfirmado() {
           setPaymentStatus(freshData.payment_status);
           setPedidoId(freshData.id);
           setLastChecked(new Date());
+          maybeClearCartOnConfirmed(freshData.status, freshData.payment_status);
         }
         return;
       }
@@ -207,12 +232,13 @@ export default function PedidoConfirmado() {
         status: data.status || undefined,
       });
       setLastChecked(new Date());
+      maybeClearCartOnConfirmed(data.status, data.payment_status);
 
       setLoading(false);
     };
 
     fetchPedido();
-  }, [numeroPedido, locationState, fetchOrderStatus]);
+  }, [numeroPedido, locationState, fetchOrderStatus, maybeClearCartOnConfirmed]);
 
   // Realtime subscription para atualização do status de pagamento
   useEffect(() => {
@@ -233,7 +259,7 @@ export default function PedidoConfirmado() {
         (payload) => {
           console.log('[Realtime] Atualização recebida:', payload);
           const newData = payload.new as { payment_status?: string; status?: string; id?: string };
-          
+
           // Update both status fields
           if (newData.status) {
             setOrderStatus(newData.status);
@@ -242,7 +268,9 @@ export default function PedidoConfirmado() {
             setPaymentStatus(newData.payment_status);
           }
           setLastChecked(new Date());
-          
+
+          maybeClearCartOnConfirmed(newData.status ?? null, newData.payment_status ?? null);
+
           // Check if payment is now confirmed
           if (isPaymentConfirmed(newData.status, newData.payment_status)) {
             toast({
@@ -250,7 +278,7 @@ export default function PedidoConfirmado() {
               description: 'Seu pagamento foi processado com sucesso.',
             });
           }
-          
+
           if (newData.id) {
             setPedidoId(newData.id);
           }
