@@ -11,8 +11,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { ProductGallery } from '@/components/product/ProductGallery';
 import { ShareButtons } from '@/components/product/ShareButtons';
-import ProductReviews from '@/components/product/ProductReviews';
-import ProductReviewForm from '@/components/product/ProductReviewForm';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
@@ -36,8 +34,7 @@ export default function ProdutoPage() {
   const [loading, setLoading] = useState(true);
   const [selectedVariacao, setSelectedVariacao] = useState<string>('');
   const [quantidade, setQuantidade] = useState(1);
-  const [reviewRefresh, setReviewRefresh] = useState(0);
-  const [activeTab, setActiveTab] = useState<'descricao' | 'cuidados' | 'avaliacoes'>('descricao');
+  const [activeTab, setActiveTab] = useState<'descricao' | 'cuidados'>('descricao');
   const { addItem } = useCart();
   const { toast } = useToast();
   const { addProduct, getProductsExcluding } = useRecentlyViewed();
@@ -408,11 +405,10 @@ export default function ProdutoPage() {
               {[
                 { id: 'descricao', label: 'Descrição' },
                 { id: 'cuidados', label: 'Cuidados' },
-                { id: 'avaliacoes', label: 'Avaliações' },
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as 'descricao' | 'cuidados' | 'avaliacoes')}
+                  onClick={() => setActiveTab(tab.id as 'descricao' | 'cuidados')}
                   className={`text-sm uppercase tracking-[0.15em] pb-2 transition-all duration-300 ${
                     activeTab === tab.id
                       ? 'text-foreground border-b border-foreground'
@@ -447,23 +443,6 @@ export default function ProdutoPage() {
                   <li>Retire para dormir e praticar exercícios</li>
                   <li>Evite exposição a produtos químicos</li>
                 </ul>
-              </div>
-            )}
-
-            {activeTab === 'avaliacoes' && (
-              <div className="grid lg:grid-cols-2 gap-12">
-                <div>
-                  <h3 className="text-lg font-display mb-6">Avaliações</h3>
-                  <ProductReviews produtoId={produto.id} refreshTrigger={reviewRefresh} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-display mb-6">Deixe sua avaliação</h3>
-                  <ProductReviewForm 
-                    produtoId={produto.id} 
-                    produtoNome={produto.nome}
-                    onSuccess={() => setReviewRefresh((prev) => prev + 1)}
-                  />
-                </div>
               </div>
             )}
           </div>

@@ -150,7 +150,7 @@ export function useTestimonials() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('depoimentos')
-        .select('*')
+        .select('id, cliente_nome, texto, nota, resposta_admin, created_at')
         .eq('aprovado', true)
         .order('created_at', { ascending: false });
 
