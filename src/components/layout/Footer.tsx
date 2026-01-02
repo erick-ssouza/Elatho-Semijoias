@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { Instagram, MessageCircle } from 'lucide-react';
+import logoElatho from '@/assets/logo-elatho-new.png';
 
 export default function Footer() {
   const [isVisible, setIsVisible] = useState(false);
@@ -63,10 +64,13 @@ export default function Footer() {
         >
           <Link 
             to="/" 
-            className="font-display text-4xl md:text-[36px]"
-            style={{ color: '#FFFFFF' }}
+            className="inline-block"
           >
-            Elatho
+            <img 
+              src={logoElatho} 
+              alt="Elatho Semijoias" 
+              className="h-10 md:h-12 w-auto mx-auto brightness-0 invert"
+            />
           </Link>
           <p 
             className="font-display italic text-sm mt-2"
