@@ -63,6 +63,14 @@ const FRETE_REGIOES: Record<string, number> = {
   PA: 24.90, AM: 24.90, AP: 24.90, RR: 24.90, AC: 24.90, RO: 24.90, TO: 24.90, // Norte
 };
 
+const CHECKOUT_STORAGE_KEY = 'elatho_checkout_data';
+
+interface CheckoutStorageData {
+  dadosPessoais: DadosPessoais;
+  endereco: Endereco;
+  step: number;
+}
+
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const [loadingPix, setLoadingPix] = useState(false);
@@ -98,6 +106,30 @@ export default function Checkout() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
+  // Restaurar dados do checkout do localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(CHECKOUT_STORAGE_KEY);
+      if (stored) {
+        const data: CheckoutStorageData = JSON.parse(stored);
+        if (data.dadosPessoais) setDadosPessoais(data.dadosPessoais);
+        if (data.endereco) setEndereco(data.endereco);
+        if (data.step && data.step > 1) setStep(data.step);
+      }
+    } catch (e) {
+      console.error('Erro ao restaurar dados do checkout:', e);
+    }
+  }, []);
+
+  // Salvar dados do checkout no localStorage quando mudarem
+  useEffect(() => {
+    const hasData = dadosPessoais.nome || dadosPessoais.email || endereco.cep;
+    if (hasData) {
+      const data: CheckoutStorageData = { dadosPessoais, endereco, step };
+      localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(data));
+    }
+  }, [dadosPessoais, endereco, step]);
+
   const subtotal = getSubtotal();
   const descontoCupom = cupomAplicado?.desconto || 0;
   // Frete grátis: somente se subtotal > 299 OU se cupom de frete grátis foi aplicado
@@ -126,6 +158,11 @@ export default function Checkout() {
       navigate('/');
     }
   }, [items.length, orderPlaced, isLoading, navigate]);
+
+  // Limpar dados do checkout após pagamento aprovado
+  const clearCheckoutData = () => {
+    localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+  };
 
   const formatPrice = (price: number) => {
     return price.toFixed(2).replace('.', ',');
@@ -582,7 +619,8 @@ export default function Checkout() {
 
       if (metodoPagamento === 'pix') {
         setOrderPlaced(true);
-        // NÃO limpar carrinho aqui - será limpo apenas após pagamento confirmado
+        // Limpar dados do checkout (mas NÃO o carrinho - será limpo após pagamento confirmado)
+        clearCheckoutData();
 
         // Redirecionar para confirmação
         navigate(`/pedido-confirmado?numero=${encodeURIComponent(numeroPedido)}`, {
@@ -625,6 +663,8 @@ export default function Checkout() {
         }
 
         setOrderPlaced(true);
+        // Limpar dados do checkout (mas NÃO o carrinho)
+        clearCheckoutData();
         
         // Redirecionar diretamente para o Mercado Pago (sem delay, sem intermediário)
         window.location.href = checkoutData.checkoutUrl;

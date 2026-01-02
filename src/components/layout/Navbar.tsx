@@ -14,6 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import logoElatho from '@/assets/logo-elatho-new.png';
 
 interface Produto {
   id: string;
@@ -127,11 +128,13 @@ export default function Navbar() {
       >
         <div className="container mx-auto px-6 lg:px-12">
           <div className="flex items-center justify-between h-20">
-            {/* Logo - Text */}
-            <Link to="/" className="flex-shrink-0group">
-              <span className="font-display text-2xl md:text-3xl tracking-wide text-foreground italic transition-all duration-300 group-hover:text-primary group-hover:opacity-80">
-                Elatho
-              </span>
+            {/* Logo - Image */}
+            <Link to="/" className="flex-shrink-0 group">
+              <img 
+                src={logoElatho} 
+                alt="Elatho Semijoias" 
+                className="h-10 md:h-12 w-auto transition-opacity duration-300 group-hover:opacity-80"
+              />
             </Link>
 
             {/* Desktop Navigation - Center */}
@@ -377,9 +380,11 @@ export default function Navbar() {
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border">
               <Link to="/" onClick={() => setMobileMenuOpen(false)} className="group">
-                <span className="font-display text-xl tracking-wide text-foreground italic transition-all duration-300 group-hover:text-primary group-hover:opacity-80">
-                  Elatho
-                </span>
+                <img 
+                  src={logoElatho} 
+                  alt="Elatho Semijoias" 
+                  className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80"
+                />
               </Link>
               <button onClick={() => setMobileMenuOpen(false)}>
                 <X className="h-5 w-5 stroke-[1.5]" />
