@@ -1,13 +1,26 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { useTestimonials } from '@/hooks/useProductQueries';
 import { TestimonialSkeleton } from '@/components/ui/skeletons';
+import TestimonialForm from './TestimonialForm';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+
+interface Depoimento {
+  id: string;
+  cliente_nome: string;
+  texto: string;
+  nota: number;
+  resposta_admin: string | null;
+  created_at: string;
+}
 
 export default function Testimonials() {
   const { data: depoimentos = [], isLoading: loading } = useTestimonials();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [showAll, setShowAll] = useState(false);
   
   // Touch/swipe state
   const touchStartX = useRef<number | null>(null);
@@ -71,6 +84,21 @@ export default function Testimonials() {
     return () => clearInterval(interval);
   }, [depoimentos.length, nextSlide, isPaused]);
 
+  const displayedDepoimentos = showAll ? depoimentos : depoimentos.slice(0, 6);
+
+  const renderStars = (nota: number) => (
+    <div className="flex gap-0.5 mb-3">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <Star
+          key={star}
+          className={`h-4 w-4 ${
+            star <= nota ? 'fill-primary text-primary' : 'text-muted-foreground/30'
+          }`}
+        />
+      ))}
+    </div>
+  );
+
   if (loading) {
     return (
       <section className="py-20 md:py-32">
@@ -81,90 +109,71 @@ export default function Testimonials() {
     );
   }
 
-  if (depoimentos.length === 0) {
-    return null;
-  }
-
-  const currentDepoimento = depoimentos[currentIndex];
-
   return (
-    <section className="py-20 md:py-32">
+    <section className="py-20 md:py-32 bg-muted/30">
       <div className="container px-6 lg:px-12">
-        <div 
-          className="max-w-3xl mx-auto text-center rounded-lg animate-fade-in touch-pan-y cursor-pointer"
-          style={{
-            backgroundColor: '#FFFFFF',
-            padding: '60px 40px',
-            boxShadow: '0 2px 20px rgba(0,0,0,0.05)'
-          }}
-          onMouseEnter={() => setIsPaused(true)}
-          onMouseLeave={() => setIsPaused(false)}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
-          {/* Large decorative quote */}
-          <span 
-            className="text-6xl md:text-8xl font-display leading-none select-none"
-            style={{ color: '#CCCCCC' }}
-          >
-            "
-          </span>
+        <h2 className="font-display text-3xl md:text-4xl text-center mb-4">
+          O que nossas clientes dizem
+        </h2>
+        <p className="text-muted-foreground text-center mb-12 max-w-lg mx-auto">
+          Avaliações reais de quem já experimentou nossas semijoias
+        </p>
 
-          {/* Testimonial content with transition */}
-          <div 
-            className="transition-opacity duration-300 ease-in-out"
-            style={{ opacity: isTransitioning ? 0 : 1 }}
-          >
-            {/* Testimonial text */}
-            <blockquote 
-              className="font-display text-xl md:text-2xl lg:text-3xl font-normal italic leading-relaxed -mt-8 mb-8"
-              style={{ color: '#1A1A1A' }}
-            >
-              {currentDepoimento.texto}
-            </blockquote>
+        <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
+          {/* Depoimentos em Grid */}
+          <div className="lg:col-span-2">
+            {depoimentos.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <p>Seja a primeira a avaliar!</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid md:grid-cols-2 gap-6">
+                  {displayedDepoimentos.map((depoimento: Depoimento) => (
+                    <div
+                      key={depoimento.id}
+                      className="bg-card border border-border rounded-lg p-6 animate-fade-in"
+                    >
+                      {renderStars(depoimento.nota)}
+                      <p className="text-foreground mb-4 leading-relaxed">
+                        "{depoimento.texto}"
+                      </p>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium">{depoimento.cliente_nome}</span>
+                        <span className="text-muted-foreground">
+                          {format(new Date(depoimento.created_at), "dd 'de' MMMM", { locale: ptBR })}
+                        </span>
+                      </div>
+                      {depoimento.resposta_admin && (
+                        <div className="mt-4 pt-4 border-t border-border">
+                          <p className="text-sm text-muted-foreground">
+                            <span className="font-medium text-primary">Resposta da Elatho:</span>{' '}
+                            {depoimento.resposta_admin}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
 
-            {/* Author */}
-            <p 
-              className="text-xs uppercase tracking-[0.2em]"
-              style={{ color: '#666666' }}
-            >
-              — {currentDepoimento.cliente_nome}
-            </p>
+                {depoimentos.length > 6 && !showAll && (
+                  <div className="text-center mt-8">
+                    <button
+                      onClick={() => setShowAll(true)}
+                      className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      Ver mais avaliações ({depoimentos.length - 6} restantes)
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          {/* Navigation */}
-          {depoimentos.length > 1 && (
-            <div className="flex items-center justify-center gap-8 mt-12">
-              <button
-                onClick={prevSlide}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronLeft className="h-5 w-5 stroke-[1]" />
-              </button>
-              
-              <div className="flex items-center gap-2">
-                {depoimentos.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => changeSlide(i)}
-                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                      i === currentIndex
-                        ? 'bg-foreground'
-                        : 'bg-border hover:bg-muted-foreground'
-                    }`}
-                  />
-                ))}
-              </div>
-
-              <button
-                onClick={nextSlide}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <ChevronRight className="h-5 w-5 stroke-[1]" />
-              </button>
-            </div>
-          )}
+          {/* Formulário */}
+          <div className="lg:col-span-1">
+            <TestimonialForm />
+          </div>
         </div>
       </div>
     </section>
