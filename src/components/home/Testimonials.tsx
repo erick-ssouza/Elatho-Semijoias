@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Star, Quote } from 'lucide-react';
 import { useTestimonials } from '@/hooks/useProductQueries';
 import { TestimonialSkeleton } from '@/components/ui/skeletons';
 import TestimonialForm from './TestimonialForm';
@@ -20,20 +20,19 @@ export default function Testimonials() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [showAll, setShowAll] = useState(false);
   
   // Touch/swipe state
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
 
   const changeSlide = useCallback((newIndex: number) => {
-    if (isTransitioning) return;
+    if (isTransitioning || depoimentos.length === 0) return;
     setIsTransitioning(true);
     setTimeout(() => {
       setCurrentIndex(newIndex);
       setIsTransitioning(false);
     }, 300);
-  }, [isTransitioning]);
+  }, [isTransitioning, depoimentos.length]);
 
   const nextSlide = useCallback(() => {
     if (depoimentos.length === 0) return;
@@ -41,6 +40,7 @@ export default function Testimonials() {
   }, [currentIndex, depoimentos.length, changeSlide]);
 
   const prevSlide = useCallback(() => {
+    if (depoimentos.length === 0) return;
     changeSlide((currentIndex - 1 + depoimentos.length) % depoimentos.length);
   }, [currentIndex, depoimentos.length, changeSlide]);
 
@@ -71,6 +71,7 @@ export default function Testimonials() {
 
     touchStartX.current = null;
     touchEndX.current = null;
+    setTimeout(() => setIsPaused(false), 3000);
   };
 
   // Auto-play every 5 seconds
@@ -84,14 +85,12 @@ export default function Testimonials() {
     return () => clearInterval(interval);
   }, [depoimentos.length, nextSlide, isPaused]);
 
-  const displayedDepoimentos = showAll ? depoimentos : depoimentos.slice(0, 6);
-
   const renderStars = (nota: number) => (
-    <div className="flex gap-0.5 mb-3">
+    <div className="flex gap-1 justify-center mb-4">
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`h-4 w-4 ${
+          className={`h-5 w-5 ${
             star <= nota ? 'fill-primary text-primary' : 'text-muted-foreground/30'
           }`}
         />
@@ -109,6 +108,8 @@ export default function Testimonials() {
     );
   }
 
+  const currentDepoimento = depoimentos[currentIndex] as Depoimento | undefined;
+
   return (
     <section className="py-20 md:py-32 bg-muted/30">
       <div className="container px-6 lg:px-12">
@@ -119,61 +120,96 @@ export default function Testimonials() {
           Avaliações reais de quem já experimentou nossas semijoias
         </p>
 
-        <div className="grid lg:grid-cols-3 gap-8 lg:gap-12">
-          {/* Depoimentos em Grid */}
-          <div className="lg:col-span-2">
-            {depoimentos.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                <p>Seja a primeira a avaliar!</p>
-              </div>
-            ) : (
-              <>
-                <div className="grid md:grid-cols-2 gap-6">
-                  {displayedDepoimentos.map((depoimento: Depoimento) => (
-                    <div
-                      key={depoimento.id}
-                      className="bg-card border border-border rounded-lg p-6 animate-fade-in"
-                    >
-                      {renderStars(depoimento.nota)}
-                      <p className="text-foreground mb-4 leading-relaxed">
-                        "{depoimento.texto}"
-                      </p>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="font-medium">{depoimento.cliente_nome}</span>
-                        <span className="text-muted-foreground">
-                          {format(new Date(depoimento.created_at), "dd 'de' MMMM", { locale: ptBR })}
-                        </span>
+        {/* Carousel */}
+        <div className="max-w-3xl mx-auto mb-16">
+          {depoimentos.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>Seja a primeira a avaliar!</p>
+            </div>
+          ) : (
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsPaused(true)}
+              onMouseLeave={() => setIsPaused(false)}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              {/* Navigation Arrows */}
+              {depoimentos.length > 1 && (
+                <>
+                  <button
+                    onClick={prevSlide}
+                    className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-muted transition-colors"
+                    aria-label="Depoimento anterior"
+                  >
+                    <ChevronLeft className="h-5 w-5" />
+                  </button>
+                  <button
+                    onClick={nextSlide}
+                    className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 z-10 w-10 h-10 flex items-center justify-center rounded-full bg-background border border-border shadow-md hover:bg-muted transition-colors"
+                    aria-label="Próximo depoimento"
+                  >
+                    <ChevronRight className="h-5 w-5" />
+                  </button>
+                </>
+              )}
+
+              {/* Card */}
+              <div 
+                className={`bg-card border border-border rounded-xl p-8 md:p-12 text-center transition-opacity duration-300 ${
+                  isTransitioning ? 'opacity-0' : 'opacity-100'
+                }`}
+              >
+                {currentDepoimento && (
+                  <>
+                    <Quote className="h-10 w-10 text-primary/30 mx-auto mb-6" />
+                    <p className="text-lg md:text-xl italic text-foreground mb-6 leading-relaxed">
+                      "{currentDepoimento.texto}"
+                    </p>
+                    <p className="font-medium text-foreground mb-2">
+                      {currentDepoimento.cliente_nome}
+                    </p>
+                    {renderStars(currentDepoimento.nota)}
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(currentDepoimento.created_at), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                    </p>
+                    {currentDepoimento.resposta_admin && (
+                      <div className="mt-6 pt-6 border-t border-border">
+                        <p className="text-sm text-muted-foreground italic">
+                          <span className="font-medium text-primary not-italic">Resposta da Elatho:</span>{' '}
+                          {currentDepoimento.resposta_admin}
+                        </p>
                       </div>
-                      {depoimento.resposta_admin && (
-                        <div className="mt-4 pt-4 border-t border-border">
-                          <p className="text-sm text-muted-foreground">
-                            <span className="font-medium text-primary">Resposta da Elatho:</span>{' '}
-                            {depoimento.resposta_admin}
-                          </p>
-                        </div>
-                      )}
-                    </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Pagination Dots */}
+              {depoimentos.length > 1 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  {depoimentos.map((_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => changeSlide(index)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${
+                        index === currentIndex 
+                          ? 'bg-primary w-6' 
+                          : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+                      }`}
+                      aria-label={`Ir para depoimento ${index + 1}`}
+                    />
                   ))}
                 </div>
+              )}
+            </div>
+          )}
+        </div>
 
-                {depoimentos.length > 6 && !showAll && (
-                  <div className="text-center mt-8">
-                    <button
-                      onClick={() => setShowAll(true)}
-                      className="text-sm uppercase tracking-[0.15em] text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      Ver mais avaliações ({depoimentos.length - 6} restantes)
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-
-          {/* Formulário */}
-          <div className="lg:col-span-1">
-            <TestimonialForm />
-          </div>
+        {/* Form */}
+        <div className="max-w-md mx-auto">
+          <TestimonialForm />
         </div>
       </div>
     </section>
