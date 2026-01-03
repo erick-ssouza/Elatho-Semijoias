@@ -69,7 +69,7 @@ export default function Footer() {
             <img 
               src={logoElatho} 
               alt="Elatho Semijoias" 
-              className="h-[72px] md:h-[84px] w-auto mx-auto brightness-0 invert"
+              className="h-[180px] md:h-[210px] w-auto mx-auto brightness-0 invert"
             />
           </Link>
           <p 
