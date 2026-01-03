@@ -52,10 +52,10 @@ export default function Footer() {
         style={{ backgroundColor: '#D4AF37' }}
       />
 
-      <div className="container px-6 lg:px-12 pt-16 pb-10">
+      <div className="container px-6 lg:px-12 pt-10 pb-10">
         {/* Logo & Tagline */}
         <div 
-          className="text-center mb-14"
+          className="text-center mb-10"
           style={{
             opacity: isVisible ? 1 : 0,
             transform: isVisible ? 'translateY(0)' : 'translateY(20px)',
@@ -73,7 +73,7 @@ export default function Footer() {
             />
           </Link>
           <p 
-            className="font-display italic text-sm mt-2"
+            className="font-display italic text-sm mt-3"
             style={{ color: '#999999' }}
           >
             Elegância que você merece
