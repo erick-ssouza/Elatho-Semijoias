@@ -133,7 +133,7 @@ export default function Navbar() {
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-10 md:h-12 w-auto transition-opacity duration-300 group-hover:opacity-80"
+                className="h-12 md:h-14 w-auto transition-opacity duration-300 group-hover:opacity-80"
               />
             </Link>
 
@@ -383,7 +383,7 @@ export default function Navbar() {
                 <img 
                   src={logoElatho} 
                   alt="Elatho Semijoias" 
-                  className="h-8 w-auto transition-opacity duration-300 group-hover:opacity-80"
+                  className="h-10 w-auto transition-opacity duration-300 group-hover:opacity-80"
                 />
               </Link>
               <button onClick={() => setMobileMenuOpen(false)}>

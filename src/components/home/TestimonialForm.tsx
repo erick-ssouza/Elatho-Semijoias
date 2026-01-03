@@ -2,9 +2,6 @@ import { useState } from 'react';
 import { Star, Loader2, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 
 export default function TestimonialForm() {
   const [nome, setNome] = useState('');
@@ -53,7 +50,7 @@ export default function TestimonialForm() {
         description: 'Obrigada! Sua avaliação será publicada após aprovação.',
       });
 
-      // Reset form after 3 seconds
+      // Reset form after 5 seconds
       setTimeout(() => {
         setNome('');
         setTexto('');
@@ -74,11 +71,11 @@ export default function TestimonialForm() {
 
   if (submitted) {
     return (
-      <div className="bg-card border border-border rounded-lg p-8 text-center animate-fade-in">
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Check className="h-8 w-8 text-primary" />
+      <div className="text-center py-12 animate-fade-in">
+        <div className="w-16 h-16 bg-[#B8860B]/10 rounded-full flex items-center justify-center mx-auto mb-6">
+          <Check className="h-8 w-8 text-[#B8860B]" />
         </div>
-        <h3 className="text-xl font-display mb-2">Obrigada!</h3>
+        <h3 className="font-display text-2xl mb-2">Obrigada!</h3>
         <p className="text-muted-foreground">
           Sua avaliação foi enviada e será publicada após aprovação.
         </p>
@@ -87,16 +84,23 @@ export default function TestimonialForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-card border border-border rounded-lg p-6 md:p-8">
-      <h3 className="text-xl font-display mb-6">Deixe sua avaliação</h3>
+    <div className="text-center">
+      {/* Title with ornament */}
+      <h3 className="font-display text-2xl md:text-3xl mb-3">
+        Deixe sua avaliação
+      </h3>
+      <div className="w-12 h-[1px] bg-[#B8860B] mx-auto mb-10" />
 
-      <div className="space-y-4">
-        {/* Nome */}
-        <div>
-          <label htmlFor="nome" className="block text-sm font-medium mb-2">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        {/* Name Input - Underline style */}
+        <div className="text-left">
+          <label 
+            htmlFor="nome" 
+            className="block text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3"
+          >
             Seu nome
           </label>
-          <Input
+          <input
             id="nome"
             type="text"
             value={nome}
@@ -104,13 +108,16 @@ export default function TestimonialForm() {
             placeholder="Como você gostaria de ser identificada?"
             maxLength={100}
             required
+            className="w-full bg-transparent border-0 border-b border-border/60 px-0 py-3 text-foreground placeholder:text-muted-foreground/40 focus:border-[#B8860B] focus:ring-0 focus:outline-none transition-colors"
           />
         </div>
 
-        {/* Estrelas */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Sua nota</label>
-          <div className="flex gap-1">
+        {/* Star Rating */}
+        <div className="text-left">
+          <label className="block text-xs uppercase tracking-[0.15em] text-muted-foreground mb-4">
+            Sua nota
+          </label>
+          <div className="flex gap-2 justify-start">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
                 key={star}
@@ -118,13 +125,13 @@ export default function TestimonialForm() {
                 onClick={() => setNota(star)}
                 onMouseEnter={() => setHoveredStar(star)}
                 onMouseLeave={() => setHoveredStar(null)}
-                className="p-1 transition-transform hover:scale-110"
+                className="p-1 transition-transform hover:scale-110 focus:outline-none"
               >
                 <Star
-                  className={`h-7 w-7 transition-colors ${
+                  className={`h-8 w-8 transition-colors ${
                     star <= (hoveredStar ?? nota)
-                      ? 'fill-primary text-primary'
-                      : 'text-muted-foreground/30'
+                      ? 'fill-[#B8860B] text-[#B8860B]'
+                      : 'text-[#B8860B]/30 stroke-[1.5]'
                   }`}
                 />
               </button>
@@ -132,12 +139,15 @@ export default function TestimonialForm() {
           </div>
         </div>
 
-        {/* Texto */}
-        <div>
-          <label htmlFor="texto" className="block text-sm font-medium mb-2">
+        {/* Text Input - Underline style */}
+        <div className="text-left">
+          <label 
+            htmlFor="texto" 
+            className="block text-xs uppercase tracking-[0.15em] text-muted-foreground mb-3"
+          >
             Sua experiência
           </label>
-          <Textarea
+          <textarea
             id="texto"
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
@@ -145,32 +155,34 @@ export default function TestimonialForm() {
             rows={4}
             maxLength={500}
             required
+            className="w-full bg-transparent border-0 border-b border-border/60 px-0 py-3 text-foreground placeholder:text-muted-foreground/40 focus:border-[#B8860B] focus:ring-0 focus:outline-none transition-colors resize-none"
           />
-          <p className="text-xs text-muted-foreground mt-1 text-right">
+          <p className="text-xs text-muted-foreground/50 mt-2 text-right">
             {texto.length}/500
           </p>
         </div>
 
-        {/* Botão */}
-        <Button
+        {/* Submit Button */}
+        <button
           type="submit"
-          className="w-full bg-gradient-gold hover:opacity-90"
           disabled={loading}
+          className="w-full bg-[#B8860B] hover:bg-[#9A7209] text-white py-4 rounded-lg font-medium transition-colors duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            <span className="flex items-center justify-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" />
               Enviando...
-            </>
+            </span>
           ) : (
             'Enviar avaliação'
           )}
-        </Button>
+        </button>
 
-        <p className="text-xs text-muted-foreground text-center">
+        {/* Disclaimer */}
+        <p className="text-xs text-muted-foreground/50 italic">
           Sua avaliação será publicada após aprovação da nossa equipe.
         </p>
-      </div>
-    </form>
+      </form>
+    </div>
   );
 }
