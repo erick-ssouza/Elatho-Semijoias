@@ -133,7 +133,7 @@ export default function Navbar() {
               <img 
                 src={logoElatho} 
                 alt="Elatho Semijoias" 
-                className="h-[144px] md:h-[168px] w-auto transition-opacity duration-300 group-hover:opacity-80"
+                className="h-[100px] md:h-[168px] w-auto transition-opacity duration-300 group-hover:opacity-80"
               />
             </Link>
 
@@ -241,7 +241,7 @@ export default function Navbar() {
             </div>
 
             {/* Mobile - Right */}
-            <div className="flex lg:hidden items-center gap-4">
+            <div className="flex lg:hidden items-center gap-5">
               {/* Instagram */}
               <a
                 href="https://instagram.com/elathosemijoias"
@@ -250,7 +250,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Instagram"
               >
-                <InstagramIcon className="h-5 w-5" />
+                <InstagramIcon className="h-4 w-4" />
               </a>
 
               {/* Favorites */}
@@ -259,7 +259,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Favoritos"
               >
-                <Heart className="h-5 w-5 stroke-[1.5]" />
+                <Heart className="h-4 w-4 stroke-[1.5]" />
               </Link>
 
               {/* User */}
@@ -270,7 +270,7 @@ export default function Navbar() {
                       className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                       aria-label="Minha conta"
                     >
-                      <User className="h-5 w-5 stroke-[1.5]" />
+                      <User className="h-4 w-4 stroke-[1.5]" />
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48 bg-background border border-border">
@@ -304,7 +304,7 @@ export default function Navbar() {
                   className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                   aria-label="Entrar"
                 >
-                  <User className="h-5 w-5 stroke-[1.5]" />
+                  <User className="h-4 w-4 stroke-[1.5]" />
                 </Link>
               )}
 
@@ -314,9 +314,9 @@ export default function Navbar() {
                 className="relative text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Carrinho"
               >
-                <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
+                <ShoppingBag className="h-4 w-4 stroke-[1.5]" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 bg-foreground text-background text-[9px] w-4 h-4 flex items-center justify-center rounded-full font-medium">
+                  <span className="absolute -top-1 -right-1 bg-foreground text-background text-[8px] w-3.5 h-3.5 flex items-center justify-center rounded-full font-medium">
                     {itemCount}
                   </span>
                 )}
@@ -328,7 +328,7 @@ export default function Navbar() {
                 className="text-foreground/80 hover:text-foreground transition-colors duration-300"
                 aria-label="Abrir menu"
               >
-                <Menu className="h-5 w-5 stroke-[1.5]" />
+                <Menu className="h-4 w-4 stroke-[1.5]" />
               </button>
             </div>
           </div>
