@@ -78,9 +78,9 @@ serve(async (req) => {
           installments: 10, // Até 10x
         },
         back_urls: {
-          success: `${siteUrl}/pedido-confirmado?pedido=${numeroPedido}`,
-          failure: `${siteUrl}/checkout`,
-          pending: `${siteUrl}/pedido-confirmado?pedido=${numeroPedido}`,
+          success: `${siteUrl}/pedido-confirmado?numero=${numeroPedido}&from=mp&status=success`,
+          failure: `${siteUrl}/checkout?step=review&return=mp&status=failure&numero=${numeroPedido}`,
+          pending: `${siteUrl}/pedido-confirmado?numero=${numeroPedido}&from=mp&status=pending`,
         },
         auto_return: "approved",
         external_reference: numeroPedido,

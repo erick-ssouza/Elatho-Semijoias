@@ -88,7 +88,7 @@ export default function PedidoConfirmado() {
   const [searchParams] = useSearchParams();
 
   const locationState = (location.state as LocationState | null) ?? null;
-  const numeroFromQuery = searchParams.get('numero')?.trim() || '';
+  const numeroFromQuery = (searchParams.get('numero') || searchParams.get('pedido') || '').trim();
   const numeroPedido = locationState?.numeroPedido || numeroFromQuery;
 
   const [copiedPix, setCopiedPix] = useState(false);
@@ -108,6 +108,13 @@ export default function PedidoConfirmado() {
     (status?: string | null, paymentStatusArg?: string | null) => {
       if (cartClearedRef.current) return;
       if (!isPaymentConfirmed(status, paymentStatusArg)) return;
+
+      // Limpar dados persistidos do checkout somente quando o pagamento estiver confirmado
+      try {
+        localStorage.removeItem('elatho_checkout_data');
+      } catch {
+        // ignore
+      }
 
       if (cartItems.length > 0) {
         clearCart();
@@ -712,6 +719,14 @@ export default function PedidoConfirmado() {
 
               {/* Ações */}
               <div className="flex flex-col sm:flex-row gap-4 animate-fade-in-up" style={{ animationDelay: '400ms' }}>
+                {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && (
+                  <Link to="/checkout?step=review&return=pix" className="flex-1">
+                    <Button variant="secondary" className="w-full gap-2">
+                      <Package className="h-5 w-5" />
+                      Voltar para revisão
+                    </Button>
+                  </Link>
+                )}
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="flex-1">
                   <Button variant="outline" className="w-full gap-2">
                     <MessageCircle className="h-5 w-5" />
