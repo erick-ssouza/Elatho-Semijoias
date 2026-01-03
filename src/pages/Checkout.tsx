@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, Check, User, MapPin, CreditCard, Loader2, Ticket, X } from 'lucide-react';
 import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
@@ -65,11 +65,60 @@ const FRETE_REGIOES: Record<string, number> = {
 
 const CHECKOUT_STORAGE_KEY = 'elatho_checkout_data';
 
-interface CheckoutStorageData {
+type CheckoutStepKey = 'personal' | 'address' | 'review' | 'payment';
+
+interface CheckoutStorageDataV2 {
+  version: 2;
+  step: CheckoutStepKey;
   dadosPessoais: DadosPessoais;
   endereco: Endereco;
-  step: number;
+  paymentMethod?: 'pix' | 'cartao';
+  numeroPedido?: string;
+  updatedAt: string;
 }
+
+const stepNumberToKey = (n: number): CheckoutStepKey =>
+  n === 2 ? 'address' : n === 3 ? 'review' : 'personal';
+
+const stepKeyToNumber = (k?: string | null): number =>
+  k === 'address' ? 2 : k === 'review' || k === 'payment' ? 3 : 1;
+
+const readCheckoutStorage = (): CheckoutStorageDataV2 | null => {
+  try {
+    const stored = localStorage.getItem(CHECKOUT_STORAGE_KEY);
+    if (!stored) return null;
+
+    const parsed = JSON.parse(stored) as any;
+
+    // Backward compatibility (older shape used: { dadosPessoais, endereco, step:number })
+    if (typeof parsed?.step === 'number') {
+      return {
+        version: 2,
+        step: stepNumberToKey(parsed.step),
+        dadosPessoais: parsed.dadosPessoais ?? { nome: '', email: '', whatsapp: '', cpf: '' },
+        endereco:
+          parsed.endereco ??
+          ({
+            cep: '',
+            rua: '',
+            numero: '',
+            complemento: '',
+            bairro: '',
+            cidade: '',
+            estado: '',
+          } as Endereco),
+        paymentMethod: parsed.paymentMethod,
+        numeroPedido: parsed.numeroPedido,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+
+    if (parsed?.version === 2) return parsed as CheckoutStorageDataV2;
+    return null;
+  } catch {
+    return null;
+  }
+};
 
 export default function Checkout() {
   const [step, setStep] = useState(1);
@@ -105,30 +154,62 @@ export default function Checkout() {
   const { items, getSubtotal } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // Restaurar dados do checkout do localStorage
+  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao' | null>(null);
+
+  // Restaurar dados do checkout do localStorage + aplicar step de retorno via URL
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(CHECKOUT_STORAGE_KEY);
-      if (stored) {
-        const data: CheckoutStorageData = JSON.parse(stored);
-        if (data.dadosPessoais) setDadosPessoais(data.dadosPessoais);
-        if (data.endereco) setEndereco(data.endereco);
-        if (data.step && data.step > 1) setStep(data.step);
-      }
-    } catch (e) {
-      console.error('Erro ao restaurar dados do checkout:', e);
+    const stored = readCheckoutStorage();
+    if (stored) {
+      if (stored.dadosPessoais) setDadosPessoais(stored.dadosPessoais);
+      if (stored.endereco) setEndereco(stored.endereco);
+      if (stored.paymentMethod) setPaymentMethod(stored.paymentMethod);
+      setStep(stepKeyToNumber(stored.step));
     }
-  }, []);
+
+    const params = new URLSearchParams(location.search);
+    const stepParam = params.get('step');
+    const returnProvider = params.get('return');
+    const status = params.get('status');
+
+    if (stepParam) {
+      setStep(stepKeyToNumber(stepParam));
+    }
+
+    // Retorno do Mercado Pago (cancelado/falha) deve cair direto na revisão
+    if (returnProvider === 'mp') {
+      setStep(3);
+      if (status === 'failure') {
+        toast({
+          title: 'Pagamento não concluído',
+          description: 'Revise seu pedido e tente novamente quando quiser.',
+        });
+      }
+    }
+
+    // Retorno do PIX (navegação interna)
+    if (returnProvider === 'pix') {
+      setStep(3);
+    }
+  }, [location.search, toast]);
 
   // Salvar dados do checkout no localStorage quando mudarem
   useEffect(() => {
     const hasData = dadosPessoais.nome || dadosPessoais.email || endereco.cep;
-    if (hasData) {
-      const data: CheckoutStorageData = { dadosPessoais, endereco, step };
-      localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(data));
-    }
-  }, [dadosPessoais, endereco, step]);
+    if (!hasData) return;
+
+    const data: CheckoutStorageDataV2 = {
+      version: 2,
+      step: stepNumberToKey(step),
+      dadosPessoais,
+      endereco,
+      paymentMethod: paymentMethod ?? undefined,
+      updatedAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(data));
+  }, [dadosPessoais, endereco, step, paymentMethod]);
 
   const subtotal = getSubtotal();
   const descontoCupom = cupomAplicado?.desconto || 0;
@@ -159,9 +240,22 @@ export default function Checkout() {
     }
   }, [items.length, orderPlaced, isLoading, navigate]);
 
-  // Limpar dados do checkout após pagamento aprovado
-  const clearCheckoutData = () => {
-    localStorage.removeItem(CHECKOUT_STORAGE_KEY);
+  // Dados do checkout são limpos apenas após pagamento confirmado (na tela de confirmação)
+  // ou quando o cliente limpa o carrinho explicitamente.
+
+  // Persistência (usada antes de redirecionar para pagamentos externos)
+  const persistCheckoutData = (overrides: Partial<CheckoutStorageDataV2> = {}) => {
+    const payload: CheckoutStorageDataV2 = {
+      version: 2,
+      step: stepNumberToKey(step),
+      dadosPessoais,
+      endereco,
+      paymentMethod: paymentMethod ?? undefined,
+      updatedAt: new Date().toISOString(),
+      ...overrides,
+    };
+
+    localStorage.setItem(CHECKOUT_STORAGE_KEY, JSON.stringify(payload));
   };
 
   const formatPrice = (price: number) => {
@@ -493,12 +587,14 @@ export default function Checkout() {
       return;
     }
 
+    setPaymentMethod(metodoPagamento);
+
     if (metodoPagamento === 'pix') {
       setLoadingPix(true);
     } else {
       setLoadingCartao(true);
     }
-    
+
     try {
       const numeroPedido = generateOrderNumber();
 
@@ -525,7 +621,7 @@ export default function Checkout() {
 
       // Para PIX, aplicar desconto de 5% e gerar o pagamento ANTES de criar o pedido
       const totalFinal = metodoPagamento === 'pix' ? totalComPix : totalBase;
-      
+
       if (metodoPagamento === 'pix') {
         const { data, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
           body: {
@@ -539,25 +635,23 @@ export default function Checkout() {
         });
 
         if (pixError || !data?.success) {
-          // Mostrar erro real ao invés de fallback silencioso
           console.error('Erro ao criar pagamento PIX:', {
             error: data?.error,
             errorCode: data?.errorCode,
             errorDetails: data?.errorDetails,
             rawError: data?.rawError,
-            pixError
+            pixError,
           });
-          
-          // Exibir erro detalhado para o usuário
+
           const errorMsg = data?.error || pixError?.message || 'Erro desconhecido ao criar pagamento PIX';
           toast({
             title: 'Erro no pagamento PIX',
             description: errorMsg,
             variant: 'destructive',
           });
-          
+
           setLoadingPix(false);
-          return; // Não continuar sem PIX válido
+          return;
         } else {
           pixData = data;
           paymentId = data.paymentId;
@@ -590,7 +684,6 @@ export default function Checkout() {
       }
 
       // Enviar APENAS notificação para o admin (pedido pendente)
-      // O email de confirmação para o cliente só será enviado após confirmar pagamento
       void supabase.functions.invoke('send-admin-notification', {
         body: {
           numeroPedido,
@@ -617,14 +710,19 @@ export default function Checkout() {
         },
       });
 
+      // Manter dados do checkout até o pagamento ser aprovado.
+      // (Importante para retorno do PIX / Mercado Pago sem perder campos)
+      persistCheckoutData({
+        step: 'review',
+        paymentMethod: metodoPagamento,
+        numeroPedido,
+      });
+
       if (metodoPagamento === 'pix') {
         setOrderPlaced(true);
-        // Limpar dados do checkout (mas NÃO o carrinho - será limpo após pagamento confirmado)
-        clearCheckoutData();
 
-        // Redirecionar para confirmação
         navigate(`/pedido-confirmado?numero=${encodeURIComponent(numeroPedido)}`, {
-          replace: true,
+          replace: false,
           state: {
             numeroPedido,
             total: totalFinal,
@@ -636,7 +734,6 @@ export default function Checkout() {
             itens: itensJson,
             endereco: enderecoJson,
             clienteNome: dadosPessoais.nome,
-            // PIX (quando existir)
             pixCopiaECola: pixData?.qrCode,
             pixQrCodeBase64: pixData?.qrCodeBase64,
             pixPaymentId: pixData?.paymentId,
@@ -663,10 +760,8 @@ export default function Checkout() {
         }
 
         setOrderPlaced(true);
-        // Limpar dados do checkout (mas NÃO o carrinho)
-        clearCheckoutData();
-        
-        // Redirecionar diretamente para o Mercado Pago (sem delay, sem intermediário)
+
+        // Redirecionar diretamente para o Mercado Pago (sem limpar dados do checkout)
         window.location.href = checkoutData.checkoutUrl;
       }
 

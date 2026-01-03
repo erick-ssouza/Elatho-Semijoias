@@ -85,7 +85,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
     );
   };
 
-  const clearCart = () => setItems([]);
+  const clearCart = () => {
+    setItems([]);
+    // Cliente clicou para limpar carrinho: limpar também dados persistidos do checkout
+    try {
+      localStorage.removeItem('elatho_checkout_data');
+    } catch {
+      // ignore
+    }
+  };
 
   const getSubtotal = () =>
     items.reduce((sum, item) => {
