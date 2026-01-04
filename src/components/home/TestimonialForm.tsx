@@ -15,19 +15,22 @@ export default function TestimonialForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nome.trim() || !texto.trim()) {
+    const trimmedNome = nome.trim();
+    const trimmedTexto = texto.trim();
+
+    if (!trimmedNome || trimmedNome.length < 2 || trimmedNome.length > 100) {
       toast({
-        title: 'Preencha todos os campos',
-        description: 'Nome e avaliação são obrigatórios.',
+        title: 'Nome inválido',
+        description: 'O nome deve ter entre 2 e 100 caracteres.',
         variant: 'destructive',
       });
       return;
     }
 
-    if (texto.trim().length < 10) {
+    if (!trimmedTexto || trimmedTexto.length < 10 || trimmedTexto.length > 500) {
       toast({
-        title: 'Avaliação muito curta',
-        description: 'Por favor, escreva um pouco mais sobre sua experiência.',
+        title: 'Avaliação inválida',
+        description: 'O texto deve ter entre 10 e 500 caracteres.',
         variant: 'destructive',
       });
       return;
@@ -35,14 +38,19 @@ export default function TestimonialForm() {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('depoimentos').insert({
-        cliente_nome: nome.trim(),
-        texto: texto.trim(),
-        nota,
-        aprovado: false,
+      const { data, error } = await supabase.functions.invoke('submit-testimonial', {
+        body: {
+          cliente_nome: trimmedNome,
+          texto: trimmedTexto,
+          nota,
+        },
       });
 
       if (error) throw error;
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       setSubmitted(true);
       toast({
@@ -57,11 +65,10 @@ export default function TestimonialForm() {
         setNota(5);
         setSubmitted(false);
       }, 5000);
-    } catch (error) {
-      console.error('Error submitting testimonial:', error);
+    } catch (error: any) {
       toast({
         title: 'Erro ao enviar avaliação',
-        description: 'Tente novamente mais tarde.',
+        description: error.message || 'Tente novamente mais tarde.',
         variant: 'destructive',
       });
     } finally {
