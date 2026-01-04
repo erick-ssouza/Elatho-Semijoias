@@ -33,13 +33,15 @@ interface ProductWithRating extends ProductListItem {
 }
 
 // Fetch products with ratings (highlighted only by default, or all products)
+// Excludes out-of-stock products (estoque <= 0) from public catalog
 export function useProducts(category?: string, onlyHighlighted: boolean = true) {
   return useQuery({
     queryKey: ['products', onlyHighlighted ? 'highlighted' : 'all', category || 'todos'],
     queryFn: async () => {
       let query = supabase
         .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque');
+        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque')
+        .gt('estoque', 0); // Only show products with stock > 0
 
       if (onlyHighlighted) {
         query = query.eq('destaque', true);
@@ -123,7 +125,7 @@ export function useProduct(id: string | undefined) {
   });
 }
 
-// Fetch related products
+// Fetch related products (only in-stock)
 export function useRelatedProducts(categoria: string, excludeId: string) {
   return useQuery({
     queryKey: ['products', 'related', categoria, excludeId],
@@ -133,6 +135,7 @@ export function useRelatedProducts(categoria: string, excludeId: string) {
         .select('id, nome, preco, preco_promocional, imagem_url, categoria')
         .eq('categoria', categoria)
         .neq('id', excludeId)
+        .gt('estoque', 0) // Only show in-stock products
         .limit(4);
 
       if (error) throw error;

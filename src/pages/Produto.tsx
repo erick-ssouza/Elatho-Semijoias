@@ -13,6 +13,7 @@ import { ProductGallery } from '@/components/product/ProductGallery';
 import { ShareButtons } from '@/components/product/ShareButtons';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
+import { RingSizeSelector } from '@/components/product/RingSizeSelector';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 
 interface Produto {
@@ -26,6 +27,9 @@ interface Produto {
   categoria: string;
   variacoes: string[];
   estoque: number | null;
+  tipo_tamanho: string | null;
+  faixa_tamanho: string | null;
+  tamanhos_disponiveis: string[] | null;
 }
 
 export default function ProdutoPage() {
@@ -33,6 +37,7 @@ export default function ProdutoPage() {
   const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedVariacao, setSelectedVariacao] = useState<string>('');
+  const [selectedTamanho, setSelectedTamanho] = useState<string>('');
   const [quantidade, setQuantidade] = useState(1);
   const [activeTab, setActiveTab] = useState<'descricao' | 'cuidados'>('descricao');
   const { addItem } = useCart();
@@ -58,9 +63,25 @@ export default function ProdutoPage() {
         const imagens = Array.isArray(data.imagens) 
           ? data.imagens as string[]
           : [];
+
+        const tamanhosDisponiveis = Array.isArray(data.tamanhos_disponiveis)
+          ? data.tamanhos_disponiveis as string[]
+          : null;
         
-        setProduto({ ...data, variacoes, imagens });
+        setProduto({ 
+          ...data, 
+          variacoes, 
+          imagens,
+          tipo_tamanho: data.tipo_tamanho || null,
+          faixa_tamanho: data.faixa_tamanho || null,
+          tamanhos_disponiveis: tamanhosDisponiveis,
+        });
         setSelectedVariacao(variacoes[0] || '');
+        
+        // Auto-select first available size for rings with P/M/G
+        if (data.tipo_tamanho === 'pmg' && tamanhosDisponiveis && tamanhosDisponiveis.length > 0) {
+          setSelectedTamanho(tamanhosDisponiveis[0]);
+        }
         
         // Track recently viewed
         addProduct({
@@ -83,8 +104,30 @@ export default function ProdutoPage() {
 
   const isOutOfStock = produto && (produto.estoque !== null && produto.estoque !== undefined && produto.estoque <= 0);
 
+  // Check if ring requires size selection but none selected
+  const isRingWithSizes = produto?.categoria === 'aneis' && produto?.tipo_tamanho === 'pmg';
+  const needsSizeSelection = isRingWithSizes && !selectedTamanho;
+
   const handleAddToCart = () => {
     if (!produto || !selectedVariacao || isOutOfStock) return;
+    
+    // For rings with P/M/G sizes, require size selection
+    if (isRingWithSizes && !selectedTamanho) {
+      toast({
+        title: "Selecione um tamanho",
+        description: "Por favor, escolha o tamanho do anel antes de adicionar ao carrinho.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Build variation string including size for rings
+    let variacaoFinal = selectedVariacao;
+    if (isRingWithSizes && selectedTamanho) {
+      variacaoFinal = `${selectedVariacao} - Tam. ${selectedTamanho}`;
+    } else if (produto.tipo_tamanho === 'unico' && produto.faixa_tamanho) {
+      variacaoFinal = `${selectedVariacao} - ${produto.faixa_tamanho}`;
+    }
 
     addItem({
       id: produto.id,
@@ -92,13 +135,13 @@ export default function ProdutoPage() {
       preco: produto.preco,
       preco_promocional: produto.preco_promocional,
       imagem_url: produto.imagem_url || '/placeholder.svg',
-      variacao: selectedVariacao,
+      variacao: variacaoFinal,
       estoque: produto.estoque,
     }, quantidade);
 
     toast({
       title: "Adicionado ao carrinho",
-      description: `${quantidade}x ${produto.nome} (${selectedVariacao})`,
+      description: `${quantidade}x ${produto.nome} (${variacaoFinal})`,
     });
   };
 
@@ -339,6 +382,17 @@ export default function ProdutoPage() {
                   ))}
                 </div>
               </div>
+
+              {/* Ring Size Selector - Only for rings */}
+              {produto.categoria === 'aneis' && produto.tipo_tamanho && (
+                <RingSizeSelector
+                  tipoTamanho={produto.tipo_tamanho}
+                  faixaTamanho={produto.faixa_tamanho}
+                  tamanhosDisponiveis={produto.tamanhos_disponiveis}
+                  selectedTamanho={selectedTamanho}
+                  onTamanhoChange={setSelectedTamanho}
+                />
+              )}
 
               {/* Quantity Selector - Minimal */}
               {!isOutOfStock && (

@@ -351,12 +351,15 @@ export type Database = {
           descricao: string | null
           destaque: boolean | null
           estoque: number | null
+          faixa_tamanho: string | null
           id: string
           imagem_url: string | null
           imagens: Json | null
           nome: string
           preco: number
           preco_promocional: number | null
+          tamanhos_disponiveis: Json | null
+          tipo_tamanho: string | null
           variacoes: Json | null
         }
         Insert: {
@@ -365,12 +368,15 @@ export type Database = {
           descricao?: string | null
           destaque?: boolean | null
           estoque?: number | null
+          faixa_tamanho?: string | null
           id?: string
           imagem_url?: string | null
           imagens?: Json | null
           nome: string
           preco: number
           preco_promocional?: number | null
+          tamanhos_disponiveis?: Json | null
+          tipo_tamanho?: string | null
           variacoes?: Json | null
         }
         Update: {
@@ -379,12 +385,15 @@ export type Database = {
           descricao?: string | null
           destaque?: boolean | null
           estoque?: number | null
+          faixa_tamanho?: string | null
           id?: string
           imagem_url?: string | null
           imagens?: Json | null
           nome?: string
           preco?: number
           preco_promocional?: number | null
+          tamanhos_disponiveis?: Json | null
+          tipo_tamanho?: string | null
           variacoes?: Json | null
         }
         Relationships: []
