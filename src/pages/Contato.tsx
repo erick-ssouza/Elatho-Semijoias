@@ -57,16 +57,19 @@ export default function Contato() {
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('mensagens')
-        .insert({
+      // Use edge function with rate limiting instead of direct DB insert
+      const { data, error } = await supabase.functions.invoke('submit-contact', {
+        body: {
           nome: formData.nome,
           email: formData.email,
           assunto: formData.assunto,
           mensagem: formData.mensagem,
-        });
+        },
+      });
 
-      if (error) throw error;
+      if (error || !data?.success) {
+        throw new Error(data?.error || 'Erro ao enviar mensagem');
+      }
 
       toast({
         title: 'Mensagem enviada!',
@@ -74,10 +77,11 @@ export default function Contato() {
       });
 
       setFormData({ nome: '', email: '', assunto: '', mensagem: '' });
-    } catch {
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Tente novamente mais tarde.';
       toast({
         title: 'Erro ao enviar',
-        description: 'Tente novamente mais tarde.',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {

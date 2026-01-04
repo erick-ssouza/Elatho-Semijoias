@@ -153,24 +153,37 @@ serve(async (req) => {
       );
     }
 
-    // 3) Incrementar uso do cupom (se houver)
+    // 3) Incrementar uso do cupom atomicamente (se houver)
     const cupomCodigo = body?.cupomCodigo?.trim();
     if (cupomCodigo) {
+      // Atomic increment: only increment if under usage limit
+      // First, get cupom with current usage info
       const { data: cupom, error: cupomSelectError } = await supabase
         .from("cupons")
-        .select("id, uso_atual")
+        .select("id, uso_atual, uso_maximo")
         .eq("codigo", cupomCodigo.toUpperCase())
         .maybeSingle();
 
       if (!cupomSelectError && cupom?.id) {
         const usoAtual = Number(cupom.uso_atual || 0);
-        const { error: cupomUpdateError } = await supabase
-          .from("cupons")
-          .update({ uso_atual: usoAtual + 1 })
-          .eq("id", cupom.id);
+        const usoMaximo = cupom.uso_maximo;
 
-        if (cupomUpdateError) {
-          console.error("Cupom update error:", cupomUpdateError.code);
+        // Only update if under limit (or no limit set)
+        if (usoMaximo === null || usoAtual < usoMaximo) {
+          const { error: cupomUpdateError } = await supabase
+            .from("cupons")
+            .update({ uso_atual: usoAtual + 1 })
+            .eq("id", cupom.id)
+            // Additional safety: only update if uso_atual hasn't changed since we read it
+            .eq("uso_atual", usoAtual);
+
+          if (cupomUpdateError) {
+            console.error("Cupom update error:", cupomUpdateError.code);
+          } else {
+            console.log("Cupom usage incremented:", cupomCodigo);
+          }
+        } else {
+          console.log("Cupom usage limit reached:", cupomCodigo);
         }
       } else if (cupomSelectError) {
         console.error("Cupom select error:", cupomSelectError.code);
