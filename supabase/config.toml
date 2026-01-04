@@ -53,3 +53,12 @@ verify_jwt = false
 
 [functions.check-verified-purchase]
 verify_jwt = false
+
+[functions.submit-review]
+verify_jwt = false
+
+[functions.submit-testimonial]
+verify_jwt = false
+
+[functions.submit-newsletter]
+verify_jwt = false

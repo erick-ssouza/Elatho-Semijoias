@@ -54,16 +54,22 @@ const ProductReviewForm = ({ produtoId, produtoNome, onSuccess }: ProductReviewF
     setLoading(true);
 
     try {
-      const { error } = await supabase.from("avaliacoes").insert({
-        produto_id: produtoId,
-        cliente_nome: nome,
-        cliente_email: email,
-        nota,
-        titulo: titulo || null,
-        comentario: comentario || null,
+      const { data, error } = await supabase.functions.invoke('submit-review', {
+        body: {
+          produto_id: produtoId,
+          cliente_nome: nome,
+          cliente_email: email,
+          nota,
+          titulo: titulo || undefined,
+          comentario: comentario || undefined,
+        },
       });
 
       if (error) throw error;
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       toast({
         title: "Avaliação enviada!",

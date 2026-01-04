@@ -28,35 +28,53 @@ export default function NewsletterPopup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    
+    const trimmedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
+      toast({
+        title: "Email inválido",
+        description: "Por favor, insira um email válido.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (trimmedEmail.length > 255) {
+      toast({
+        title: "Email inválido",
+        description: "O email é muito longo.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('newsletter_inscricoes')
-        .insert({ email: email.trim().toLowerCase() });
+      const { data, error } = await supabase.functions.invoke('submit-newsletter', {
+        body: { email: trimmedEmail },
+      });
 
-      if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: "Email já cadastrado",
-            description: "Você já está inscrito na nossa newsletter!",
-          });
-        } else {
-          throw error;
-        }
+      if (error) throw error;
+
+      if (data?.error) {
+        toast({
+          title: data.error.includes("já está inscrito") ? "Email já cadastrado" : "Erro",
+          description: data.error,
+          variant: data.error.includes("já está inscrito") ? "default" : "destructive",
+        });
       } else {
         toast({
           title: "Inscrição confirmada!",
-          description: "Você receberá nossas novidades e ofertas exclusivas.",
+          description: data?.message || "Você receberá nossas novidades e ofertas exclusivas.",
         });
       }
       setIsOpen(false);
-    } catch (error) {
-      console.error('Newsletter error:', error);
+    } catch (error: any) {
       toast({
         title: "Erro ao inscrever",
-        description: "Tente novamente mais tarde.",
+        description: error.message || "Tente novamente mais tarde.",
         variant: "destructive",
       });
     } finally {
