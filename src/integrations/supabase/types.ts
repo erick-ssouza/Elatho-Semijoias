@@ -452,6 +452,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_verified_purchase: {
+        Args: { p_cliente_email: string; p_produto_id: string }
+        Returns: boolean
+      }
       get_user_email: { Args: never; Returns: string }
       has_role: {
         Args: {

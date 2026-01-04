@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Star, MessageSquare } from "lucide-react";
+import { Star, MessageSquare, BadgeCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 interface Review {
   id: string;
   cliente_nome: string;
+  cliente_email?: string;
   nota: number;
   titulo: string | null;
   comentario: string | null;
@@ -22,6 +23,7 @@ const ProductReviews = ({ produtoId, refreshTrigger }: ProductReviewsProps) => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [averageRating, setAverageRating] = useState(0);
+  const [verifiedIds, setVerifiedIds] = useState<string[]>([]);
 
   useEffect(() => {
     fetchReviews();
@@ -29,11 +31,12 @@ const ProductReviews = ({ produtoId, refreshTrigger }: ProductReviewsProps) => {
 
   const fetchReviews = async () => {
     try {
-      // Use avaliacoes_publicas view - excludes sensitive customer email data
+      // Fetch reviews from the avaliacoes table (admin view has cliente_email)
       const { data, error } = await supabase
-        .from("avaliacoes_publicas")
-        .select("id, cliente_nome, nota, titulo, comentario, created_at")
+        .from("avaliacoes")
+        .select("id, cliente_nome, cliente_email, nota, titulo, comentario, created_at")
         .eq("produto_id", produtoId)
+        .eq("aprovado", true)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -43,11 +46,32 @@ const ProductReviews = ({ produtoId, refreshTrigger }: ProductReviewsProps) => {
       if (data && data.length > 0) {
         const avg = data.reduce((acc, r) => acc + r.nota, 0) / data.length;
         setAverageRating(avg);
+        
+        // Check verified purchases
+        checkVerifiedPurchases(data, produtoId);
       }
     } catch (error) {
       console.error("Error fetching reviews:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const checkVerifiedPurchases = async (reviewData: Review[], productId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("check-verified-purchase", {
+        body: {
+          reviews: reviewData.map(r => ({ id: r.id, cliente_email: r.cliente_email })),
+          produto_id: productId,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.verifiedIds) {
+        setVerifiedIds(data.verifiedIds);
+      }
+    } catch (error) {
+      console.error("Error checking verified purchases:", error);
     }
   };
 
@@ -109,7 +133,15 @@ const ProductReviews = ({ produtoId, refreshTrigger }: ProductReviewsProps) => {
           >
             <div className="flex items-start justify-between">
               <div>
-                <p className="font-medium">{review.cliente_nome}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{review.cliente_nome}</p>
+                  {verifiedIds.includes(review.id) && (
+                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600 bg-emerald-50 dark:bg-emerald-950/50 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                      <BadgeCheck className="w-3 h-3" />
+                      Compra Verificada
+                    </span>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   {renderStars(review.nota)}
                   <span className="text-xs text-muted-foreground">

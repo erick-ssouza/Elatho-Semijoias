@@ -9,6 +9,7 @@ import ProductGrid from '@/components/home/ProductGrid';
 import CollectionCTA from '@/components/home/CollectionCTA';
 import Testimonials from '@/components/home/Testimonials';
 import Features from '@/components/home/Features';
+import NewsletterPopup from '@/components/home/NewsletterPopup';
 
 const Index = () => {
   const [searchParams] = useSearchParams();
@@ -55,6 +56,9 @@ const Index = () => {
         </main>
         <Footer />
       </div>
+
+      {/* Newsletter Popup */}
+      <NewsletterPopup />
     </>
   );
 };

@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.sitemap]
 verify_jwt = false
+
+[functions.check-verified-purchase]
+verify_jwt = false
