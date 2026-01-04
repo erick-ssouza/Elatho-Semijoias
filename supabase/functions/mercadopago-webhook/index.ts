@@ -253,21 +253,66 @@ serve(async (req) => {
             }
           }
 
-          // Send email notification if payment confirmed
-          if (novoStatus === "confirmado" && pedido?.cliente_email) {
+          // Send notifications if payment confirmed
+          if (novoStatus === "confirmado") {
+            // 1. Send confirmation email to customer
+            if (pedido?.cliente_email) {
+              try {
+                console.log("Sending customer confirmation email for order:", pedido.numero_pedido);
+                await supabase.functions.invoke("send-payment-confirmed-email", {
+                  body: { pedidoId: pedido.id },
+                });
+                console.log("Customer confirmation email sent successfully");
+              } catch (emailError) {
+                console.error("Error sending customer email:", emailError);
+              }
+            }
+
+            // 2. Send admin notification email
             try {
-              console.log("Sending confirmation email for order:", pedido.numero_pedido);
-              await supabase.functions.invoke("send-status-update-email", {
+              console.log("Sending admin email notification for order:", pedido.numero_pedido);
+              const itens = pedido.itens as Array<{ nome: string; variacao?: string; quantidade: number; preco: number }>;
+              const endereco = pedido.endereco as { rua: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string };
+              
+              await supabase.functions.invoke("send-admin-notification", {
                 body: {
-                  to: pedido.cliente_email,
-                  customerName: pedido.cliente_nome,
-                  orderNumber: pedido.numero_pedido,
-                  newStatus: "confirmado",
+                  numeroPedido: pedido.numero_pedido,
+                  clienteNome: pedido.cliente_nome,
+                  clienteEmail: pedido.cliente_email,
+                  clienteWhatsapp: pedido.cliente_whatsapp,
+                  metodoPagamento: pedido.metodo_pagamento || "pix",
+                  total: pedido.total,
+                  subtotal: pedido.subtotal,
+                  frete: pedido.frete,
+                  itens,
+                  endereco,
                 },
               });
-              console.log("Status update email sent successfully");
-            } catch (emailError) {
-              console.error("Error sending email:", emailError);
+              console.log("Admin notification email sent successfully");
+            } catch (adminEmailError) {
+              console.error("Error sending admin email:", adminEmailError);
+            }
+
+            // 3. Send Telegram notification
+            try {
+              console.log("Sending Telegram notification for order:", pedido.numero_pedido);
+              const itens = pedido.itens as Array<{ nome: string; variacao?: string; quantidade: number }>;
+              const endereco = pedido.endereco as { rua: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string };
+              
+              await supabase.functions.invoke("send-telegram-notification", {
+                body: {
+                  numeroPedido: pedido.numero_pedido,
+                  clienteNome: pedido.cliente_nome,
+                  clienteWhatsapp: pedido.cliente_whatsapp,
+                  total: pedido.total,
+                  metodoPagamento: pedido.metodo_pagamento || "pix",
+                  itens,
+                  endereco,
+                },
+              });
+              console.log("Telegram notification sent successfully");
+            } catch (telegramError) {
+              console.error("Error sending Telegram notification:", telegramError);
             }
           }
         }
