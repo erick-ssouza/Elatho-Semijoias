@@ -52,6 +52,9 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
   const [trackingModalOpen, setTrackingModalOpen] = useState(false);
   const [trackingCode, setTrackingCode] = useState("");
   const [pendingStatusChange, setPendingStatusChange] = useState<{ id: string; status: string } | null>(null);
+  const [editingTracking, setEditingTracking] = useState(false);
+  const [editTrackingCode, setEditTrackingCode] = useState("");
+  const [savingTracking, setSavingTracking] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -221,6 +224,58 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
       }
     } catch (error) {
       toast({ title: "Erro ao atualizar status", variant: "destructive" });
+    }
+  };
+
+  const saveTrackingCode = async (id: string, code: string) => {
+    setSavingTracking(true);
+    const pedido = pedidos.find((p) => p.id === id);
+    if (!pedido) {
+      setSavingTracking(false);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("pedidos")
+        .update({ codigo_rastreio: code || null })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      setPedidos((prev) =>
+        prev.map((p) => (p.id === id ? { ...p, codigo_rastreio: code || null } : p))
+      );
+      
+      if (selectedPedido && selectedPedido.id === id) {
+        setSelectedPedido({ ...selectedPedido, codigo_rastreio: code || null });
+      }
+
+      toast({ title: "Código de rastreio salvo!" });
+      setEditingTracking(false);
+
+      // Send tracking email notification to customer
+      if (code && pedido.cliente_email) {
+        try {
+          await supabase.functions.invoke("send-status-update-email", {
+            body: {
+              numeroPedido: pedido.numero_pedido,
+              clienteNome: pedido.cliente_nome,
+              clienteEmail: pedido.cliente_email,
+              novoStatus: "enviado",
+              statusAnterior: pedido.status,
+              codigoRastreio: code,
+            },
+          });
+          toast({ title: "Email com código de rastreio enviado!" });
+        } catch (emailError) {
+          console.error("Error sending tracking email:", emailError);
+        }
+      }
+    } catch (error) {
+      toast({ title: "Erro ao salvar código de rastreio", variant: "destructive" });
+    } finally {
+      setSavingTracking(false);
     }
   };
 
@@ -523,6 +578,71 @@ const PedidosTab = ({ onUpdate }: PedidosTabProps) => {
                   <span>Total:</span>
                   <span>R$ {Number(selectedPedido.total).toFixed(2)}</span>
                 </div>
+              </div>
+
+              {/* Tracking Code Section */}
+              <div className="border-t pt-4">
+                <h4 className="font-medium mb-3 flex items-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Código de Rastreio
+                </h4>
+                {editingTracking ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Ex: BR123456789BR"
+                      value={editTrackingCode}
+                      onChange={(e) => setEditTrackingCode(e.target.value.toUpperCase())}
+                      className="flex-1"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => saveTrackingCode(selectedPedido.id, editTrackingCode)}
+                      disabled={savingTracking}
+                    >
+                      {savingTracking ? <Loader2 className="w-4 h-4 animate-spin" /> : "Salvar"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditingTracking(false);
+                        setEditTrackingCode(selectedPedido.codigo_rastreio || "");
+                      }}
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {selectedPedido.codigo_rastreio ? (
+                        <div className="space-y-1">
+                          <p className="font-mono font-medium">{selectedPedido.codigo_rastreio}</p>
+                          <a
+                            href={`https://www.linkcorreios.com.br/?id=${selectedPedido.codigo_rastreio}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm text-primary hover:underline"
+                          >
+                            Rastrear nos Correios →
+                          </a>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-sm">Nenhum código cadastrado</p>
+                      )}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setEditTrackingCode(selectedPedido.codigo_rastreio || "");
+                        setEditingTracking(true);
+                      }}
+                    >
+                      {selectedPedido.codigo_rastreio ? "Editar" : "Adicionar"}
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* WhatsApp Notification Buttons */}

@@ -355,7 +355,55 @@ export default function PedidoConfirmado() {
       setTimeout(() => setCopiedPix(false), 2500);
     });
 
-  const whatsappMessage = `Olá! Segue comprovante do pedido #${numeroPedido}`;
+  // Build detailed WhatsApp message for sending payment proof
+  const buildWhatsAppMessage = () => {
+    if (!state) {
+      return `Olá! 😊\n\nAcabei de fazer um pedido na Elatho.\n\n📦 Pedido: #${numeroPedido}\n\nAguardo a confirmação! 💛`;
+    }
+
+    const metodoPagamentoLabel = isPix ? "PIX" : "Cartão";
+    
+    // Format items
+    const itensFormatted = state.itens
+      .map((item) => {
+        const variacao = item.variacao ? ` - ${item.variacao}` : "";
+        return `• ${item.nome}${variacao} - Qtd: ${item.quantidade}`;
+      })
+      .join("\n");
+
+    // Format address
+    const endereco = state.endereco;
+    const enderecoFormatted = endereco
+      ? [
+          `${endereco.rua}, ${endereco.numero}`,
+          endereco.complemento || null,
+          `${endereco.bairro}`,
+          `${endereco.cidade} - ${endereco.estado}`,
+          `CEP: ${endereco.cep}`,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "";
+
+    return `Olá! 😊
+
+Acabei de fazer um pedido na Elatho e estou enviando o comprovante de pagamento.
+
+📦 Pedido: #${numeroPedido}
+💰 Valor: R$ ${formatPrice(state.total)}
+💳 Pagamento: ${metodoPagamentoLabel}
+
+Itens:
+${itensFormatted}
+
+Dados para entrega:
+${state.clienteNome}
+${enderecoFormatted}
+
+Aguardo a confirmação! 💛`;
+  };
+
+  const whatsappMessage = buildWhatsAppMessage();
   const whatsappUrl = `https://wa.me/5519998229202?text=${encodeURIComponent(whatsappMessage)}`;
 
   if (!numeroPedido) return null;

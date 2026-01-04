@@ -14,9 +14,12 @@ export default function WhatsAppButton() {
     return () => clearTimeout(timer);
   }, []);
 
+  const generalMessage = `Olá! 😊\nVim pelo site da Elatho e gostaria de mais informações.`;
+  const whatsappUrl = `https://wa.me/5519998229202?text=${encodeURIComponent(generalMessage)}`;
+
   return (
     <a
-      href="https://wa.me/5519998229202"
+      href={whatsappUrl}
       target="_blank"
       rel="noopener noreferrer"
       className="fixed bottom-6 right-6 z-50"
