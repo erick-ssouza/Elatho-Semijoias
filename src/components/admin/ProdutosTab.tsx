@@ -10,8 +10,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Pencil, Trash2, Images } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle } from "lucide-react";
 import MultiImageUpload from "./MultiImageUpload";
 
 interface Produto {
@@ -26,6 +29,9 @@ interface Produto {
   estoque: number | null;
   destaque: boolean | null;
   variacoes: unknown;
+  tipo_tamanho: string | null;
+  faixa_tamanho: string | null;
+  tamanhos_disponiveis: string[] | null;
 }
 
 const categorias = [
@@ -71,6 +77,10 @@ const ProdutosTab = () => {
     estoque: "10",
     destaque: false,
     variacoes: "Banho de Ouro 18k, Banho de Ródio",
+    // Ring size fields
+    tipoTamanho: "" as "" | "unico" | "pmg",
+    faixaTamanho: "",
+    tamanhosDisponiveis: [] as string[],
   });
 
   useEffect(() => {
@@ -114,6 +124,9 @@ const ProdutosTab = () => {
       estoque: "10",
       destaque: false,
       variacoes: "Banho de Ouro 18k, Banho de Ródio",
+      tipoTamanho: "",
+      faixaTamanho: "",
+      tamanhosDisponiveis: [],
     });
     setEditingProduto(null);
   };
@@ -177,6 +190,9 @@ const ProdutosTab = () => {
       estoque: String(produto.estoque || 10),
       destaque: produto.destaque || false,
       variacoes: (Array.isArray(produto.variacoes) ? produto.variacoes : []).join(", "),
+      tipoTamanho: (produto.tipo_tamanho as "" | "unico" | "pmg") || "",
+      faixaTamanho: produto.faixa_tamanho || "",
+      tamanhosDisponiveis: Array.isArray(produto.tamanhos_disponiveis) ? produto.tamanhos_disponiveis : [],
     });
     setDialogOpen(true);
   };
@@ -196,6 +212,9 @@ const ProdutosTab = () => {
     console.log("Categoria selecionada:", form.categoria);
     console.log("Categoria normalizada:", categoriaValue);
 
+    // Ring size fields - only for "aneis" category
+    const isAnel = categoriaValue === 'aneis';
+    
     const produtoData = {
       nome: form.nome,
       descricao: form.descricao || null,
@@ -207,6 +226,11 @@ const ProdutosTab = () => {
       estoque: parseInt(form.estoque),
       destaque: form.destaque,
       variacoes: variacoesArray,
+      tipo_tamanho: isAnel && form.tipoTamanho ? form.tipoTamanho : null,
+      faixa_tamanho: isAnel && form.tipoTamanho === 'unico' ? form.faixaTamanho || null : null,
+      tamanhos_disponiveis: isAnel && form.tipoTamanho === 'pmg' && form.tamanhosDisponiveis.length > 0 
+        ? form.tamanhosDisponiveis 
+        : null,
     };
 
     try {
@@ -399,6 +423,96 @@ const ProdutosTab = () => {
                 />
               </div>
 
+              {/* Ring Size Options - Only show for Anéis category */}
+              {form.categoria === 'aneis' && (
+                <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+                  <Label className="text-sm font-medium">Tipo de Tamanho (Anéis)</Label>
+                  
+                  <RadioGroup
+                    value={form.tipoTamanho}
+                    onValueChange={(value) => setForm({ 
+                      ...form, 
+                      tipoTamanho: value as "" | "unico" | "pmg",
+                      // Reset dependent fields when changing type
+                      faixaTamanho: "",
+                      tamanhosDisponiveis: [],
+                    })}
+                    className="space-y-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="unico" id="tamanho-unico" />
+                      <Label htmlFor="tamanho-unico" className="font-normal cursor-pointer">
+                        Tamanho Único / Regulável
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="pmg" id="tamanho-pmg" />
+                      <Label htmlFor="tamanho-pmg" className="font-normal cursor-pointer">
+                        Tamanhos P/M/G
+                      </Label>
+                    </div>
+                  </RadioGroup>
+
+                  {/* Options for Tamanho Único */}
+                  {form.tipoTamanho === 'unico' && (
+                    <div className="space-y-2 pl-6">
+                      <Label htmlFor="faixaTamanho" className="text-sm">
+                        Faixa de ajuste (opcional)
+                      </Label>
+                      <Input
+                        id="faixaTamanho"
+                        value={form.faixaTamanho}
+                        onChange={(e) => setForm({ ...form, faixaTamanho: e.target.value })}
+                        placeholder="Ex: Regulável 14-18"
+                      />
+                    </div>
+                  )}
+
+                  {/* Options for P/M/G */}
+                  {form.tipoTamanho === 'pmg' && (
+                    <div className="space-y-3 pl-6">
+                      <Label className="text-sm">Tamanhos disponíveis em estoque:</Label>
+                      <div className="space-y-2">
+                        {[
+                          { id: 'P', label: 'P (Nº 12-14)' },
+                          { id: 'M', label: 'M (Nº 16-18)' },
+                          { id: 'G', label: 'G (Nº 20-22)' },
+                        ].map((tamanho) => (
+                          <div key={tamanho.id} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`tamanho-${tamanho.id}`}
+                              checked={form.tamanhosDisponiveis.includes(tamanho.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setForm({ 
+                                    ...form, 
+                                    tamanhosDisponiveis: [...form.tamanhosDisponiveis, tamanho.id] 
+                                  });
+                                } else {
+                                  setForm({ 
+                                    ...form, 
+                                    tamanhosDisponiveis: form.tamanhosDisponiveis.filter(t => t !== tamanho.id) 
+                                  });
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`tamanho-${tamanho.id}`} className="font-normal cursor-pointer">
+                              {tamanho.label}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      {form.tamanhosDisponiveis.length === 0 && (
+                        <p className="text-xs text-amber-600 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Selecione ao menos um tamanho disponível
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
               <div className="flex items-center space-x-2">
                 <Switch
                   id="destaque"
@@ -464,7 +578,16 @@ const ProdutosTab = () => {
                         <span>R$ {Number(produto.preco).toFixed(2)}</span>
                       )}
                     </TableCell>
-                    <TableCell>{produto.estoque}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <span>{produto.estoque ?? 0}</span>
+                        {(produto.estoque ?? 0) <= 0 && (
+                          <Badge variant="destructive" className="text-[10px]">
+                            Esgotado
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Switch
                         checked={produto.destaque || false}
