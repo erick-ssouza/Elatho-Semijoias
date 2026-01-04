@@ -97,6 +97,7 @@ ${enderecoFormatted}`;
         chat_id: chatId,
         text: message,
         parse_mode: "HTML",
+        disable_notification: false,
       }),
     });
 
