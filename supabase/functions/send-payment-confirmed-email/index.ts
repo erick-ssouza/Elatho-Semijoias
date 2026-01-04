@@ -49,20 +49,20 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const formatPrice = (price: number) => price.toFixed(2).replace(".", ",");
-    const itens = pedido.itens as Array<{ nome: string; variacao: string; quantidade: number; preco: number }>;
+    const itens = pedido.itens as Array<{ nome: string; variacao?: string | null; quantidade: number; preco: number }>;
     const endereco = pedido.endereco as { rua: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string };
 
     const itensHtml = itens
       .map(
         (item) => `
         <tr>
-          <td style="padding: 12px; border-bottom: 1px solid #eee;">
-            ${item.nome} ${item.variacao ? `(${item.variacao})` : ""}
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #374151;">
+            ${item.nome}${item.variacao ? ` (${item.variacao})` : ""}
           </td>
-          <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; color: #374151;">
             ${item.quantidade}
           </td>
-          <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">
+          <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; color: #374151;">
             R$ ${formatPrice(item.preco * item.quantidade)}
           </td>
         </tr>
@@ -75,37 +75,37 @@ const handler = async (req: Request): Promise<Response> => {
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Pagamento Confirmado - Elatho</title>
+        <title>Pedido Confirmado - Elatho</title>
       </head>
-      <body style="font-family: 'Segoe UI', Arial, sans-serif; background-color: #f9fafb; margin: 0; padding: 20px;">
-        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f3f4f6; margin: 0; padding: 20px;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
           
-          <!-- Header - Verde para CONFIRMADO -->
-          <div style="background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%); padding: 32px; text-align: center;">
-            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">✅ Pagamento Confirmado!</h1>
-            <p style="color: #ffffff; margin: 8px 0 0 0; opacity: 0.9;">Seu pedido está sendo preparado</p>
+          <!-- Header -->
+          <div style="background-color: #059669; padding: 24px 32px; text-align: center;">
+            <h1 style="color: #ffffff; margin: 0; font-size: 22px; font-weight: 600;">✅ Pedido Confirmado</h1>
+            <p style="color: #d1fae5; margin: 8px 0 0 0; font-size: 14px;">Elatho Semijoias</p>
           </div>
           
           <!-- Content -->
           <div style="padding: 32px;">
-            <h2 style="color: #1a1a1a; margin: 0 0 16px 0;">Olá, ${pedido.cliente_nome}!</h2>
-            <p style="color: #4a4a4a; line-height: 1.6;">
-              Ótimas notícias! O pagamento do seu pedido <strong>#${pedido.numero_pedido}</strong> foi confirmado! 🎉
+            <p style="color: #374151; margin: 0 0 16px 0; font-size: 15px; line-height: 1.6;">
+              Olá, <strong>${pedido.cliente_nome}</strong>!
             </p>
-            <p style="color: #4a4a4a; line-height: 1.6;">
-              Agora estamos preparando suas joias com muito carinho. Você receberá outro email assim que enviarmos.
+            <p style="color: #374151; margin: 0 0 24px 0; font-size: 15px; line-height: 1.6;">
+              Seu pedido <strong>#${pedido.numero_pedido}</strong> foi confirmado e está sendo preparado com carinho. 
+              Você receberá o código de rastreio assim que for enviado.
             </p>
             
             <!-- Itens -->
-            <h3 style="color: #1a1a1a; margin: 24px 0 12px 0; border-bottom: 2px solid #16a34a; padding-bottom: 8px;">
-              📦 Seus Itens
+            <h3 style="color: #111827; margin: 0 0 12px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Itens do Pedido
             </h3>
-            <table style="width: 100%; border-collapse: collapse;">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 16px;">
               <thead>
-                <tr style="background-color: #f0fdf4;">
-                  <th style="padding: 12px; text-align: left; font-weight: 600;">Produto</th>
-                  <th style="padding: 12px; text-align: center; font-weight: 600;">Qtd</th>
-                  <th style="padding: 12px; text-align: right; font-weight: 600;">Valor</th>
+                <tr style="background-color: #f9fafb;">
+                  <th style="padding: 12px; text-align: left; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase;">Produto</th>
+                  <th style="padding: 12px; text-align: center; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase;">Qtd</th>
+                  <th style="padding: 12px; text-align: right; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase;">Valor</th>
                 </tr>
               </thead>
               <tbody>
@@ -113,26 +113,26 @@ const handler = async (req: Request): Promise<Response> => {
               </tbody>
               <tfoot>
                 <tr>
-                  <td colspan="2" style="padding: 8px 12px; text-align: right;">Subtotal:</td>
-                  <td style="padding: 8px 12px; text-align: right;">R$ ${formatPrice(pedido.subtotal)}</td>
+                  <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Subtotal:</td>
+                  <td style="padding: 8px 12px; text-align: right; color: #374151; font-size: 14px;">R$ ${formatPrice(pedido.subtotal)}</td>
                 </tr>
                 <tr>
-                  <td colspan="2" style="padding: 8px 12px; text-align: right;">Frete:</td>
-                  <td style="padding: 8px 12px; text-align: right;">${pedido.frete === 0 ? "Grátis" : `R$ ${formatPrice(pedido.frete)}`}</td>
+                  <td colspan="2" style="padding: 8px 12px; text-align: right; color: #6b7280; font-size: 14px;">Frete:</td>
+                  <td style="padding: 8px 12px; text-align: right; color: #374151; font-size: 14px;">${pedido.frete === 0 ? "Grátis" : `R$ ${formatPrice(pedido.frete)}`}</td>
                 </tr>
-                <tr style="background-color: #16a34a;">
-                  <td colspan="2" style="padding: 12px; text-align: right; font-weight: bold; color: #ffffff;">Total Pago:</td>
-                  <td style="padding: 12px; text-align: right; font-weight: bold; font-size: 18px; color: #ffffff;">R$ ${formatPrice(pedido.total)}</td>
+                <tr style="background-color: #059669;">
+                  <td colspan="2" style="padding: 14px 12px; text-align: right; font-weight: 600; color: #ffffff; font-size: 14px;">Total:</td>
+                  <td style="padding: 14px 12px; text-align: right; font-weight: 700; font-size: 16px; color: #ffffff;">R$ ${formatPrice(pedido.total)}</td>
                 </tr>
               </tfoot>
             </table>
             
             <!-- Endereço -->
             ${endereco ? `
-            <h3 style="color: #1a1a1a; margin: 24px 0 12px 0; border-bottom: 2px solid #16a34a; padding-bottom: 8px;">
-              📍 Endereço de Entrega
+            <h3 style="color: #111827; margin: 24px 0 12px 0; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">
+              Endereço de Entrega
             </h3>
-            <p style="color: #4a4a4a; line-height: 1.8; margin: 0;">
+            <p style="color: #374151; line-height: 1.6; margin: 0; font-size: 14px; background-color: #f9fafb; padding: 16px; border-radius: 8px;">
               ${endereco.rua}, ${endereco.numero}${endereco.complemento ? `, ${endereco.complemento}` : ""}<br>
               ${endereco.bairro}<br>
               ${endereco.cidade} - ${endereco.estado}<br>
@@ -140,24 +140,22 @@ const handler = async (req: Request): Promise<Response> => {
             </p>
             ` : ""}
             
-            <!-- Próximos passos -->
-            <div style="background-color: #f0fdf4; border-radius: 12px; padding: 20px; margin-top: 24px;">
-              <h3 style="color: #166534; margin: 0 0 8px 0;">📬 Próximos Passos</h3>
-              <p style="color: #166534; margin: 0; line-height: 1.6;">
-                1. Estamos preparando seu pedido com carinho<br>
-                2. Você receberá o código de rastreio por email<br>
-                3. Acompanhe a entrega pelos Correios
+            <!-- Info -->
+            <div style="background-color: #f0fdf4; border-radius: 8px; padding: 16px; margin-top: 24px; border: 1px solid #bbf7d0;">
+              <p style="color: #166534; margin: 0; font-size: 14px; line-height: 1.6;">
+                📦 Estamos preparando seu pedido<br>
+                📧 Você receberá o código de rastreio por email
               </p>
             </div>
           </div>
           
           <!-- Footer -->
-          <div style="background-color: #f9fafb; padding: 24px; text-align: center; border-top: 1px solid #eee;">
-            <p style="color: #6b7280; margin: 0; font-size: 14px;">
+          <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+            <p style="color: #6b7280; margin: 0; font-size: 13px;">
               Dúvidas? Responda este email ou entre em contato pelo WhatsApp.
             </p>
             <p style="color: #9ca3af; margin: 12px 0 0 0; font-size: 12px;">
-              © 2024 Elatho Semijoias. Todos os direitos reservados.
+              © ${new Date().getFullYear()} Elatho Semijoias
             </p>
           </div>
         </div>
@@ -169,7 +167,7 @@ const handler = async (req: Request): Promise<Response> => {
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [pedido.cliente_email],
-      subject: `✅ Pagamento Confirmado - Pedido #${pedido.numero_pedido} - Elatho Semijoias`,
+      subject: `✅ Pedido Confirmado - Elatho Semijoias`,
       html: clienteEmailHtml,
     });
 

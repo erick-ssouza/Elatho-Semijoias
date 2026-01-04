@@ -683,32 +683,8 @@ export default function Checkout() {
         throw new Error(orderData?.error || 'Erro ao registrar pedido');
       }
 
-      // Enviar APENAS notificação para o admin (pedido pendente)
-      void supabase.functions.invoke('send-admin-notification', {
-        body: {
-          numeroPedido,
-          clienteNome: dadosPessoais.nome,
-          clienteEmail: dadosPessoais.email,
-          clienteWhatsapp: dadosPessoais.whatsapp,
-          metodoPagamento,
-          total: totalFinal,
-          itens: items.map(item => ({
-            nome: item.nome,
-            variacao: item.variacao,
-            quantidade: item.quantidade,
-            preco: item.preco_promocional ?? item.preco,
-          })),
-          endereco: {
-            rua: endereco.rua,
-            numero: endereco.numero,
-            complemento: endereco.complemento,
-            bairro: endereco.bairro,
-            cidade: endereco.cidade,
-            estado: endereco.estado,
-            cep: endereco.cep,
-          },
-        },
-      });
+      // NÃO enviar notificações aqui - serão enviadas apenas quando o pagamento for confirmado
+      // (via webhook do Mercado Pago ou quando admin marcar como pago)
 
       // Manter dados do checkout até o pagamento ser aprovado.
       // (Importante para retorno do PIX / Mercado Pago sem perder campos)
