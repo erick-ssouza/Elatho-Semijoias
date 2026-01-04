@@ -52,11 +52,14 @@ serve(async (req) => {
     console.log("Webhook configured:", !!webhookUrl);
 
     // Create PIX payment via Mercado Pago API
+    // binary_mode: true desativa comunicações automáticas do MP com o cliente
     const paymentBody = {
       transaction_amount: total,
       description: descricao || `Pedido ${numeroPedido} - Elatho Semijoias`,
       payment_method_id: "pix",
       external_reference: numeroPedido,
+      binary_mode: true, // Desativa emails automáticos do Mercado Pago
+      statement_descriptor: "ELATHO",
       payer: {
         email: clienteEmail,
         first_name: clienteNome.split(' ')[0],
