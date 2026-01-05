@@ -174,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar email para o cliente
     console.log("Sending customer email for order:", orderData.numeroPedido);
     const { data: customerEmailData, error: customerEmailError } = await resend.emails.send({
-      from: "Elatho Semijoias <onboarding@resend.dev>",
+      from: "Elatho Semijoias <pedidos@elathosemijoias.com.br>",
       to: [orderData.clienteEmail],
       subject: `✨ Pedido #${orderData.numeroPedido} Confirmado - Elatho Semijoias`,
       html: clienteEmailHtml,
@@ -295,7 +295,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Enviar email para o admin
     console.log("Sending admin email for order:", orderData.numeroPedido);
     const { data: adminEmailData, error: adminEmailError } = await resend.emails.send({
-      from: "Elatho Semijoias <onboarding@resend.dev>",
+      from: "Elatho Semijoias <pedidos@elathosemijoias.com.br>",
       to: [adminEmailAddress],
       subject: `🛒 Novo Pedido #${orderData.numeroPedido} - R$ ${formatPrice(orderData.total)}`,
       html: adminEmailHtml,

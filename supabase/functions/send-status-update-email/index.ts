@@ -178,7 +178,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending status update email for order:", numeroPedido);
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "Elatho Semijoias <onboarding@resend.dev>",
+      from: "Elatho Semijoias <pedidos@elathosemijoias.com.br>",
       to: [clienteEmail],
       subject: `${emoji} Pedido #${numeroPedido} - ${statusLabel}`,
       html: emailHtml,
