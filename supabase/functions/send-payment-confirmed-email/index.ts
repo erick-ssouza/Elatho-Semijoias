@@ -185,7 +185,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`[${timestamp}] Using Resend API key: ${Deno.env.get("RESEND_API_KEY") ? "Key is set (hidden)" : "KEY NOT SET!"}`);
     
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "Elatho Semijoias <onboarding@resend.dev>",
+      from: "Elatho Semijoias <pedidos@elathosemijoias.com.br>",
       to: [pedido.cliente_email],
       subject: `✅ Pedido Confirmado - Elatho Semijoias`,
       html: clienteEmailHtml,

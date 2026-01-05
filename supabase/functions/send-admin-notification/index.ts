@@ -180,7 +180,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log("Sending admin notification for PAID order");
     const { data: emailData, error: emailError } = await resend.emails.send({
-      from: "Elatho Semijoias <onboarding@resend.dev>",
+      from: "Elatho Semijoias <pedidos@elathosemijoias.com.br>",
       to: [ADMIN_EMAIL],
       subject: `✅ Pedido Pago #${data.numeroPedido} - R$ ${formatPrice(data.total)}`,
       html: adminEmailHtml,
