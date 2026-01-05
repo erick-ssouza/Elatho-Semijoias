@@ -258,61 +258,117 @@ serve(async (req) => {
             // 1. Send confirmation email to customer
             if (pedido?.cliente_email) {
               try {
-                console.log("Sending customer confirmation email for order:", pedido.numero_pedido);
-                await supabase.functions.invoke("send-payment-confirmed-email", {
-                  body: { pedidoId: pedido.id },
-                });
-                console.log("Customer confirmation email sent successfully");
+                console.log(
+                  "Sending customer confirmation email for order:",
+                  pedido.numero_pedido,
+                  "->",
+                  pedido.cliente_email
+                );
+
+                const { data: confirmData, error: confirmError } = await supabase.functions.invoke(
+                  "send-payment-confirmed-email",
+                  {
+                    body: { pedidoId: pedido.id },
+                  }
+                );
+
+                if (confirmError) {
+                  console.error("send-payment-confirmed-email returned error:", confirmError);
+                  console.error("send-payment-confirmed-email response data:", confirmData);
+                } else {
+                  console.log("Customer confirmation email sent successfully:", confirmData);
+                }
               } catch (emailError) {
-                console.error("Error sending customer email:", emailError);
+                console.error("Error sending customer email (invoke threw):", emailError);
               }
+            } else {
+              console.warn("Skipping customer confirmation email: pedido.cliente_email is empty");
             }
 
             // 2. Send admin notification email
             try {
               console.log("Sending admin email notification for order:", pedido.numero_pedido);
-              const itens = pedido.itens as Array<{ nome: string; variacao?: string; quantidade: number; preco: number }>;
-              const endereco = pedido.endereco as { rua: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string };
-              
-              await supabase.functions.invoke("send-admin-notification", {
-                body: {
-                  numeroPedido: pedido.numero_pedido,
-                  clienteNome: pedido.cliente_nome,
-                  clienteEmail: pedido.cliente_email,
-                  clienteWhatsapp: pedido.cliente_whatsapp,
-                  metodoPagamento: pedido.metodo_pagamento || "pix",
-                  total: pedido.total,
-                  subtotal: pedido.subtotal,
-                  frete: pedido.frete,
-                  itens,
-                  endereco,
-                },
-              });
-              console.log("Admin notification email sent successfully");
+              const itens = pedido.itens as Array<{
+                nome: string;
+                variacao?: string;
+                quantidade: number;
+                preco: number;
+              }>;
+              const endereco = pedido.endereco as {
+                rua: string;
+                numero: string;
+                complemento?: string;
+                bairro: string;
+                cidade: string;
+                estado: string;
+                cep: string;
+              };
+
+              const { data: adminInvokeData, error: adminInvokeError } = await supabase.functions.invoke(
+                "send-admin-notification",
+                {
+                  body: {
+                    numeroPedido: pedido.numero_pedido,
+                    clienteNome: pedido.cliente_nome,
+                    clienteEmail: pedido.cliente_email,
+                    clienteWhatsapp: pedido.cliente_whatsapp,
+                    metodoPagamento: pedido.metodo_pagamento || "pix",
+                    total: pedido.total,
+                    subtotal: pedido.subtotal,
+                    frete: pedido.frete,
+                    itens,
+                    endereco,
+                  },
+                }
+              );
+
+              if (adminInvokeError) {
+                console.error("send-admin-notification returned error:", adminInvokeError);
+                console.error("send-admin-notification response data:", adminInvokeData);
+              } else {
+                console.log("Admin notification email sent successfully:", adminInvokeData);
+              }
             } catch (adminEmailError) {
-              console.error("Error sending admin email:", adminEmailError);
+              console.error("Error sending admin email (invoke threw):", adminEmailError);
             }
 
             // 3. Send Telegram notification
             try {
               console.log("Sending Telegram notification for order:", pedido.numero_pedido);
               const itens = pedido.itens as Array<{ nome: string; variacao?: string; quantidade: number }>;
-              const endereco = pedido.endereco as { rua: string; numero: string; complemento?: string; bairro: string; cidade: string; estado: string; cep: string };
-              
-              await supabase.functions.invoke("send-telegram-notification", {
-                body: {
-                  numeroPedido: pedido.numero_pedido,
-                  clienteNome: pedido.cliente_nome,
-                  clienteWhatsapp: pedido.cliente_whatsapp,
-                  total: pedido.total,
-                  metodoPagamento: pedido.metodo_pagamento || "pix",
-                  itens,
-                  endereco,
-                },
-              });
-              console.log("Telegram notification sent successfully");
+              const endereco = pedido.endereco as {
+                rua: string;
+                numero: string;
+                complemento?: string;
+                bairro: string;
+                cidade: string;
+                estado: string;
+                cep: string;
+              };
+
+              const { data: telegramInvokeData, error: telegramInvokeError } = await supabase.functions.invoke(
+                "send-telegram-notification",
+                {
+                  body: {
+                    numeroPedido: pedido.numero_pedido,
+                    clienteNome: pedido.cliente_nome,
+                    clienteWhatsapp: pedido.cliente_whatsapp,
+                    total: pedido.total,
+                    metodoPagamento: pedido.metodo_pagamento || "pix",
+                    itens,
+                    endereco,
+                  },
+                }
+              );
+
+              if (telegramInvokeError) {
+                console.error("send-telegram-notification returned error:", telegramInvokeError);
+                console.error("send-telegram-notification response data:", telegramInvokeData);
+              } else {
+                console.log("Telegram notification sent successfully:", telegramInvokeData);
+              }
             } catch (telegramError) {
-              console.error("Error sending Telegram notification:", telegramError);
+              console.error("Error sending Telegram notification (invoke threw):", telegramError);
             }
           }
         }
