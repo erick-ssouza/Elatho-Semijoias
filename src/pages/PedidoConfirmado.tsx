@@ -127,7 +127,48 @@ export default function PedidoConfirmado() {
     [cartItems.length, clearCart]
   );
 
-  // Function to fetch order status from database
+  // Function to fetch order status from edge function (bypasses RLS for all users)
+  const fetchOrderStatusFromEdge = useCallback(async (source: string = 'manual') => {
+    if (!numeroPedido) return null;
+
+    const timestamp = new Date().toISOString();
+    console.log(`[DEBUG ${timestamp}] fetchOrderStatusFromEdge chamado - fonte: ${source}, pedido: ${numeroPedido}, browser: ${navigator.userAgent.slice(0, 50)}`);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('get-order-status', {
+        body: { numeroPedido },
+      });
+
+      if (error) {
+        console.error(`[DEBUG ${timestamp}] Edge function error:`, error);
+        return null;
+      }
+
+      if (!data || !data.found) {
+        console.log(`[DEBUG ${timestamp}] Pedido não encontrado via edge function`);
+        return null;
+      }
+
+      console.log(`[DEBUG ${timestamp}] Resultado da edge function:`, {
+        status: data.status,
+        paymentStatus: data.paymentStatus,
+        id: data.id,
+        serverTimestamp: data.timestamp
+      });
+
+      return {
+        id: data.id,
+        numero_pedido: data.numeroPedido,
+        status: data.status,
+        payment_status: data.paymentStatus,
+      };
+    } catch (err) {
+      console.error(`[DEBUG ${timestamp}] Erro inesperado na edge function:`, err);
+      return null;
+    }
+  }, [numeroPedido]);
+
+  // Fallback: fetch directly from database (for initial load with full data)
   const fetchOrderStatus = useCallback(async (source: string = 'manual') => {
     if (!numeroPedido) return null;
 
@@ -135,7 +176,6 @@ export default function PedidoConfirmado() {
     console.log(`[DEBUG ${timestamp}] fetchOrderStatus chamado - fonte: ${source}, pedido: ${numeroPedido}`);
 
     try {
-      // Add cache-busting by using a fresh timestamp
       const { data, error } = await supabase
         .from('pedidos')
         .select('id, numero_pedido, status, payment_status, itens, total, subtotal, frete, endereco, metodo_pagamento, cliente_nome')
@@ -165,7 +205,7 @@ export default function PedidoConfirmado() {
     }
   }, [numeroPedido]);
 
-  // Manual refresh function
+  // Manual refresh function - uses edge function for reliable status check
   const handleRefreshStatus = useCallback(async (source: string = 'manual') => {
     const timestamp = new Date().toISOString();
     console.log(`[DEBUG ${timestamp}] handleRefreshStatus iniciado - fonte: ${source}`);
@@ -173,10 +213,11 @@ export default function PedidoConfirmado() {
     setIsRefreshing(true);
     setPollCount(prev => prev + 1);
     
-    const data = await fetchOrderStatus(source);
+    // Use edge function for polling (bypasses RLS)
+    const data = await fetchOrderStatusFromEdge(source);
 
     if (data) {
-      console.log(`[DEBUG ${timestamp}] Atualizando estado com dados frescos`);
+      console.log(`[DEBUG ${timestamp}] Atualizando estado com dados frescos via edge function`);
       setOrderStatus(data.status);
       setPaymentStatus(data.payment_status);
       setLastChecked(new Date());
@@ -203,20 +244,20 @@ export default function PedidoConfirmado() {
         });
       }
     } else {
-      console.log(`[DEBUG ${timestamp}] Nenhum dado retornado`);
+      console.log(`[DEBUG ${timestamp}] Nenhum dado retornado da edge function`);
     }
 
     setIsRefreshing(false);
-  }, [fetchOrderStatus, maybeClearCartOnConfirmed, toast]);
+  }, [fetchOrderStatusFromEdge, maybeClearCartOnConfirmed, toast]);
 
   // Buscar dados do pedido no backend se não tiver state
   useEffect(() => {
     const fetchPedido = async () => {
       console.log('[DEBUG] useEffect inicial: buscando dados do pedido...');
       
-      // If we have locationState, still fetch fresh status from DB
+      // If we have locationState, still fetch fresh status from edge function
       if (locationState) {
-        const freshData = await fetchOrderStatus('initial-with-state');
+        const freshData = await fetchOrderStatusFromEdge('initial-with-state');
         if (freshData) {
           setOrderStatus(freshData.status);
           setPaymentStatus(freshData.payment_status);
@@ -232,6 +273,7 @@ export default function PedidoConfirmado() {
       setLoading(true);
       setNotFound(false);
 
+      // For initial full data load, use direct query
       const data = await fetchOrderStatus('initial-no-state');
 
       if (!data) {
@@ -273,7 +315,7 @@ export default function PedidoConfirmado() {
     };
 
     fetchPedido();
-  }, [numeroPedido, locationState, fetchOrderStatus, maybeClearCartOnConfirmed]);
+  }, [numeroPedido, locationState, fetchOrderStatus, fetchOrderStatusFromEdge, maybeClearCartOnConfirmed]);
 
   // Realtime subscription para atualização do status de pagamento
   useEffect(() => {
@@ -329,25 +371,26 @@ export default function PedidoConfirmado() {
     };
   }, [numeroPedido, toast]);
 
-  // Auto-refresh every 15 seconds while payment is pending (reduced from 30s for better UX)
+  // Auto-refresh every 10 seconds while payment is pending (uses edge function)
   useEffect(() => {
     const isPending = !isPaymentConfirmed(orderStatus, paymentStatus);
     if (!isPending || !numeroPedido) return;
 
     const timestamp = new Date().toISOString();
-    console.log(`[DEBUG ${timestamp}] Auto-refresh: Iniciando polling a cada 15s... Browser: ${navigator.userAgent}`);
+    console.log(`[DEBUG ${timestamp}] Auto-refresh: Iniciando polling a cada 10s... Browser: ${navigator.userAgent}`);
     
-    // Initial check after 5 seconds
+    // Initial check after 3 seconds
     const initialTimeout = setTimeout(() => {
-      console.log(`[DEBUG] Auto-refresh: Verificação inicial após 5s`);
+      console.log(`[DEBUG] Auto-refresh: Verificação inicial após 3s`);
       handleRefreshStatus('polling-initial');
-    }, 5000);
+    }, 3000);
     
+    // More aggressive polling - 10 seconds
     const interval = setInterval(() => {
       const now = new Date().toISOString();
-      console.log(`[DEBUG ${now}] Auto-refresh: Executando verificação periódica`);
+      console.log(`[DEBUG ${now}] Auto-refresh: Executando verificação periódica via edge function`);
       handleRefreshStatus('polling-interval');
-    }, 15000); // 15 seconds - reduced for faster updates
+    }, 10000); // 10 seconds for faster updates
 
     return () => {
       console.log('[DEBUG] Auto-refresh: Parando polling e limpando timers');
