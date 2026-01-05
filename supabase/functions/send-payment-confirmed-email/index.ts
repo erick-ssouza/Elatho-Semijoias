@@ -14,21 +14,33 @@ interface PaymentConfirmedRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("send-payment-confirmed-email function called");
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] send-payment-confirmed-email function called`);
 
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { pedidoId }: PaymentConfirmedRequest = await req.json();
-    console.log("Sending payment confirmation for pedido:", pedidoId);
+    const body = await req.json();
+    const { pedidoId } = body;
+    console.log(`[${timestamp}] Received request body:`, JSON.stringify(body));
+    console.log(`[${timestamp}] Sending payment confirmation for pedido:`, pedidoId);
+
+    if (!pedidoId) {
+      console.error(`[${timestamp}] Missing pedidoId in request`);
+      return new Response(
+        JSON.stringify({ error: "pedidoId is required" }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceKey);
 
     // Buscar dados do pedido
+    console.log(`[${timestamp}] Fetching order data from database...`);
     const { data: pedido, error: pedidoError } = await supabase
       .from("pedidos")
       .select("*")
@@ -36,12 +48,18 @@ const handler = async (req: Request): Promise<Response> => {
       .single();
 
     if (pedidoError || !pedido) {
-      console.error("Pedido not found:", pedidoError);
+      console.error(`[${timestamp}] Pedido not found:`, pedidoError);
       throw new Error("Pedido não encontrado");
     }
 
+    console.log(`[${timestamp}] Order found:`, {
+      numero_pedido: pedido.numero_pedido,
+      cliente_nome: pedido.cliente_nome,
+      cliente_email: pedido.cliente_email,
+    });
+
     if (!pedido.cliente_email) {
-      console.log("No email for this customer, skipping");
+      console.log(`[${timestamp}] No email for this customer, skipping`);
       return new Response(
         JSON.stringify({ success: true, skipped: true, reason: "No customer email" }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -163,7 +181,9 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
-    console.log("Sending confirmation email for order:", pedido.numero_pedido);
+    console.log(`[${timestamp}] Preparing to send email to: ${pedido.cliente_email}`);
+    console.log(`[${timestamp}] Using Resend API key: ${Deno.env.get("RESEND_API_KEY") ? "Key is set (hidden)" : "KEY NOT SET!"}`);
+    
     const { data: emailData, error: emailError } = await resend.emails.send({
       from: "Elatho Semijoias <onboarding@resend.dev>",
       to: [pedido.cliente_email],
@@ -172,18 +192,22 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     if (emailError) {
-      console.error("Error sending confirmation email:", emailError);
+      console.error(`[${timestamp}] Error sending confirmation email:`, emailError);
+      console.error(`[${timestamp}] Email error details:`, JSON.stringify(emailError));
       throw emailError;
     }
 
-    console.log("Confirmation email sent:", emailData);
+    console.log(`[${timestamp}] Confirmation email sent successfully!`);
+    console.log(`[${timestamp}] Email response:`, JSON.stringify(emailData));
 
     return new Response(
       JSON.stringify({ success: true, emailId: emailData?.id }),
       { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   } catch (error: any) {
-    console.error("Error in send-payment-confirmed-email:", error);
+    const ts = new Date().toISOString();
+    console.error(`[${ts}] Error in send-payment-confirmed-email:`, error);
+    console.error(`[${ts}] Error stack:`, error.stack);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
