@@ -89,7 +89,7 @@ export default function PedidoConfirmado() {
 
   const locationState = (location.state as LocationState | null) ?? null;
   const numeroFromQuery = (searchParams.get('numero') || searchParams.get('pedido') || '').trim();
-  const numeroPedido = locationState?.numeroPedido || numeroFromQuery;
+  const numeroPedido = (locationState?.numeroPedido || numeroFromQuery || '').trim();
 
   const [copiedPix, setCopiedPix] = useState(false);
   const [loading, setLoading] = useState(!locationState && !!numeroPedido);
@@ -105,6 +105,7 @@ export default function PedidoConfirmado() {
 
   const { items: cartItems, clearCart } = useCart();
   const cartClearedRef = useRef(false);
+  const refreshStatusRef = useRef<(source: string) => void>(() => {});
 
   const maybeClearCartOnConfirmed = useCallback(
     (status?: string | null, paymentStatusArg?: string | null) => {
@@ -209,10 +210,10 @@ export default function PedidoConfirmado() {
   const handleRefreshStatus = useCallback(async (source: string = 'manual') => {
     const timestamp = new Date().toISOString();
     console.log(`[DEBUG ${timestamp}] handleRefreshStatus iniciado - fonte: ${source}`);
-    
+
     setIsRefreshing(true);
-    setPollCount(prev => prev + 1);
-    
+    setPollCount((prev) => prev + 1);
+
     // Use edge function for polling (bypasses RLS)
     const data = await fetchOrderStatusFromEdge(source);
 
@@ -224,7 +225,7 @@ export default function PedidoConfirmado() {
       setPedidoId(data.id);
 
       // Update pedidoData with fresh data
-      setPedidoData(prev =>
+      setPedidoData((prev) =>
         prev
           ? {
               ...prev,
@@ -245,10 +246,25 @@ export default function PedidoConfirmado() {
       }
     } else {
       console.log(`[DEBUG ${timestamp}] Nenhum dado retornado da edge function`);
+
+      // Só notificar o usuário quando for uma ação manual
+      if (source.startsWith('button')) {
+        toast({
+          title: 'Não foi possível verificar agora',
+          description: 'Tente novamente em alguns instantes (a confirmação também é automática).',
+          variant: 'destructive',
+        });
+      }
     }
 
     setIsRefreshing(false);
   }, [fetchOrderStatusFromEdge, maybeClearCartOnConfirmed, toast]);
+
+  useEffect(() => {
+    refreshStatusRef.current = (source: string) => {
+      void handleRefreshStatus(source);
+    };
+  }, [handleRefreshStatus]);
 
   // Buscar dados do pedido no backend se não tiver state
   useEffect(() => {
@@ -377,27 +393,37 @@ export default function PedidoConfirmado() {
     if (!isPending || !numeroPedido) return;
 
     const timestamp = new Date().toISOString();
-    console.log(`[DEBUG ${timestamp}] Auto-refresh: Iniciando polling a cada 10s... Browser: ${navigator.userAgent}`);
-    
+    console.log(
+      `[DEBUG ${timestamp}] Auto-refresh: Iniciando polling a cada 10s... Browser: ${navigator.userAgent}`
+    );
+
+    const run = (src: string) => {
+      try {
+        refreshStatusRef.current(src);
+      } catch (err) {
+        console.error('[DEBUG] Auto-refresh: erro ao executar refreshStatusRef', err);
+      }
+    };
+
     // Initial check after 3 seconds
     const initialTimeout = setTimeout(() => {
       console.log(`[DEBUG] Auto-refresh: Verificação inicial após 3s`);
-      handleRefreshStatus('polling-initial');
+      run('polling-initial');
     }, 3000);
-    
-    // More aggressive polling - 10 seconds
+
+    // Poll every 10 seconds
     const interval = setInterval(() => {
       const now = new Date().toISOString();
       console.log(`[DEBUG ${now}] Auto-refresh: Executando verificação periódica via edge function`);
-      handleRefreshStatus('polling-interval');
-    }, 10000); // 10 seconds for faster updates
+      run('polling-interval');
+    }, 10000);
 
     return () => {
       console.log('[DEBUG] Auto-refresh: Parando polling e limpando timers');
       clearTimeout(initialTimeout);
       clearInterval(interval);
     };
-  }, [orderStatus, paymentStatus, numeroPedido, handleRefreshStatus]);
+  }, [orderStatus, paymentStatus, numeroPedido]);
 
   // Calculate time on page for fallback message
   const getTimeOnPage = useCallback(() => {
@@ -635,7 +661,7 @@ Aguardo a confirmação! 💛`;
                   </div>
 
                   <p className="text-xs text-muted-foreground mb-2">
-                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} • Verificações: {pollCount} • Atualiza a cada 15s
+                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} • Verificações: {pollCount} • Atualiza a cada 10s
                   </p>
 
                   {/* Fallback message after 2 minutes */}
@@ -747,7 +773,7 @@ Aguardo a confirmação! 💛`;
                   </div>
 
                   <p className="text-xs text-muted-foreground mb-2">
-                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} • Verificações: {pollCount} • Atualiza a cada 15s
+                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} • Verificações: {pollCount} • Atualiza a cada 10s
                   </p>
 
                   {/* Fallback message after 2 minutes */}
