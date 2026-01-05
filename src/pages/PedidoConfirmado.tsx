@@ -100,6 +100,8 @@ export default function PedidoConfirmado() {
   const [pedidoId, setPedidoId] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastChecked, setLastChecked] = useState<Date>(new Date());
+  const [pageLoadTime] = useState<Date>(new Date());
+  const [pollCount, setPollCount] = useState(0);
 
   const { items: cartItems, clearCart } = useCart();
   const cartClearedRef = useRef(false);
@@ -126,34 +128,55 @@ export default function PedidoConfirmado() {
   );
 
   // Function to fetch order status from database
-  const fetchOrderStatus = useCallback(async () => {
+  const fetchOrderStatus = useCallback(async (source: string = 'manual') => {
     if (!numeroPedido) return null;
 
+    const timestamp = new Date().toISOString();
+    console.log(`[DEBUG ${timestamp}] fetchOrderStatus chamado - fonte: ${source}, pedido: ${numeroPedido}`);
+
     try {
+      // Add cache-busting by using a fresh timestamp
       const { data, error } = await supabase
         .from('pedidos')
         .select('id, numero_pedido, status, payment_status, itens, total, subtotal, frete, endereco, metodo_pagamento, cliente_nome')
         .eq('numero_pedido', numeroPedido)
         .maybeSingle();
 
-      if (error || !data) {
-        console.error('Erro ao buscar pedido:', error);
+      if (error) {
+        console.error(`[DEBUG ${timestamp}] Erro ao buscar pedido:`, error);
+        return null;
+      }
+      
+      if (!data) {
+        console.log(`[DEBUG ${timestamp}] Pedido não encontrado`);
         return null;
       }
 
+      console.log(`[DEBUG ${timestamp}] Resultado da consulta:`, {
+        status: data.status,
+        payment_status: data.payment_status,
+        id: data.id
+      });
+
       return data;
     } catch (err) {
-      console.error('Erro ao buscar status:', err);
+      console.error(`[DEBUG ${timestamp}] Erro inesperado:`, err);
       return null;
     }
   }, [numeroPedido]);
 
   // Manual refresh function
-  const handleRefreshStatus = useCallback(async () => {
+  const handleRefreshStatus = useCallback(async (source: string = 'manual') => {
+    const timestamp = new Date().toISOString();
+    console.log(`[DEBUG ${timestamp}] handleRefreshStatus iniciado - fonte: ${source}`);
+    
     setIsRefreshing(true);
-    const data = await fetchOrderStatus();
+    setPollCount(prev => prev + 1);
+    
+    const data = await fetchOrderStatus(source);
 
     if (data) {
+      console.log(`[DEBUG ${timestamp}] Atualizando estado com dados frescos`);
       setOrderStatus(data.status);
       setPaymentStatus(data.payment_status);
       setLastChecked(new Date());
@@ -173,11 +196,14 @@ export default function PedidoConfirmado() {
       maybeClearCartOnConfirmed(data.status, data.payment_status);
 
       if (isPaymentConfirmed(data.status, data.payment_status)) {
+        console.log(`[DEBUG ${timestamp}] Pagamento confirmado!`);
         toast({
           title: '🎉 Pagamento Confirmado!',
           description: 'Seu pagamento foi processado com sucesso.',
         });
       }
+    } else {
+      console.log(`[DEBUG ${timestamp}] Nenhum dado retornado`);
     }
 
     setIsRefreshing(false);
@@ -186,9 +212,11 @@ export default function PedidoConfirmado() {
   // Buscar dados do pedido no backend se não tiver state
   useEffect(() => {
     const fetchPedido = async () => {
+      console.log('[DEBUG] useEffect inicial: buscando dados do pedido...');
+      
       // If we have locationState, still fetch fresh status from DB
       if (locationState) {
-        const freshData = await fetchOrderStatus();
+        const freshData = await fetchOrderStatus('initial-with-state');
         if (freshData) {
           setOrderStatus(freshData.status);
           setPaymentStatus(freshData.payment_status);
@@ -204,7 +232,7 @@ export default function PedidoConfirmado() {
       setLoading(true);
       setNotFound(false);
 
-      const data = await fetchOrderStatus();
+      const data = await fetchOrderStatus('initial-no-state');
 
       if (!data) {
         setNotFound(true);
@@ -301,23 +329,55 @@ export default function PedidoConfirmado() {
     };
   }, [numeroPedido, toast]);
 
-  // Auto-refresh every 30 seconds while payment is pending
+  // Auto-refresh every 15 seconds while payment is pending (reduced from 30s for better UX)
   useEffect(() => {
     const isPending = !isPaymentConfirmed(orderStatus, paymentStatus);
     if (!isPending || !numeroPedido) return;
 
-    console.log('[Auto-refresh] Iniciando polling a cada 30s...');
+    const timestamp = new Date().toISOString();
+    console.log(`[DEBUG ${timestamp}] Auto-refresh: Iniciando polling a cada 15s... Browser: ${navigator.userAgent}`);
+    
+    // Initial check after 5 seconds
+    const initialTimeout = setTimeout(() => {
+      console.log(`[DEBUG] Auto-refresh: Verificação inicial após 5s`);
+      handleRefreshStatus('polling-initial');
+    }, 5000);
     
     const interval = setInterval(() => {
-      console.log('[Auto-refresh] Verificando status...');
-      handleRefreshStatus();
-    }, 30000); // 30 seconds
+      const now = new Date().toISOString();
+      console.log(`[DEBUG ${now}] Auto-refresh: Executando verificação periódica`);
+      handleRefreshStatus('polling-interval');
+    }, 15000); // 15 seconds - reduced for faster updates
 
     return () => {
-      console.log('[Auto-refresh] Parando polling');
+      console.log('[DEBUG] Auto-refresh: Parando polling e limpando timers');
+      clearTimeout(initialTimeout);
       clearInterval(interval);
     };
   }, [orderStatus, paymentStatus, numeroPedido, handleRefreshStatus]);
+
+  // Calculate time on page for fallback message
+  const getTimeOnPage = useCallback(() => {
+    return Math.floor((new Date().getTime() - pageLoadTime.getTime()) / 1000);
+  }, [pageLoadTime]);
+
+  const [showFallbackMessage, setShowFallbackMessage] = useState(false);
+
+  // Show fallback message after 2 minutes
+  useEffect(() => {
+    const isPending = !isPaymentConfirmed(orderStatus, paymentStatus);
+    if (!isPending) {
+      setShowFallbackMessage(false);
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      console.log('[DEBUG] 2 minutos na página sem confirmação - mostrando mensagem de fallback');
+      setShowFallbackMessage(true);
+    }, 120000); // 2 minutes
+
+    return () => clearTimeout(timeout);
+  }, [orderStatus, paymentStatus]);
 
   useEffect(() => {
     if (!numeroPedido) navigate('/');
@@ -515,21 +575,38 @@ Aguardo a confirmação! 💛`;
                         <span className="text-sm font-medium text-amber-600">Aguardando pagamento</span>
                       </div>
                       <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleRefreshStatus} 
+                        variant="default" 
+                        size="default" 
+                        onClick={() => handleRefreshStatus('button-click')} 
                         disabled={isRefreshing}
-                        className="gap-2"
+                        className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md"
                       >
-                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                        Verificar
+                        {isRefreshing ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4" />
+                        )}
+                        {isRefreshing ? 'Verificando...' : 'Verificar Pagamento'}
                       </Button>
                     </div>
                   </div>
 
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} (atualiza a cada 30s)
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} • Verificações: {pollCount} • Atualiza a cada 15s
                   </p>
+
+                  {/* Fallback message after 2 minutes */}
+                  {showFallbackMessage && (
+                    <div className="mb-4 p-4 rounded-lg bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-400 dark:border-amber-600">
+                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                        ⏰ Já realizou o pagamento?
+                      </p>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        Clique no botão <strong>"Verificar Pagamento"</strong> acima ou aguarde alguns instantes para a confirmação automática.
+                        Se o problema persistir, entre em contato pelo WhatsApp.
+                      </p>
+                    </div>
+                  )}
 
                   <div className="grid md:grid-cols-[280px_1fr] gap-5 items-start">
                     {/* QR Code do Mercado Pago */}
@@ -611,20 +688,36 @@ Aguardo a confirmação! 💛`;
                       </div>
                     </div>
                     <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleRefreshStatus} 
+                      variant="default" 
+                      size="default" 
+                      onClick={() => handleRefreshStatus('button-click-fallback')} 
                       disabled={isRefreshing}
-                      className="gap-2"
+                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold shadow-md"
                     >
-                      <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                      Verificar Status
+                      {isRefreshing ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      {isRefreshing ? 'Verificando...' : 'Verificar Status'}
                     </Button>
                   </div>
 
-                  <p className="text-xs text-muted-foreground mb-4">
-                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} (atualiza a cada 30s)
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Última verificação: {lastChecked.toLocaleTimeString('pt-BR')} • Verificações: {pollCount} • Atualiza a cada 15s
                   </p>
+
+                  {/* Fallback message after 2 minutes */}
+                  {showFallbackMessage && (
+                    <div className="mb-4 p-4 rounded-lg bg-amber-100 dark:bg-amber-900/30 border-2 border-amber-400 dark:border-amber-600">
+                      <p className="text-sm font-semibold text-amber-800 dark:text-amber-200">
+                        ⏰ Já realizou o pagamento?
+                      </p>
+                      <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                        Clique no botão <strong>"Verificar Status"</strong> acima ou entre em contato pelo WhatsApp abaixo.
+                      </p>
+                    </div>
+                  )}
 
                   {typeof state?.total === 'number' && (
                     <div className="p-4 bg-background rounded-lg border border-border mb-4">
