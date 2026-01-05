@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 const BASE_URL = 'https://elathosemijoias.com.br';
-const DEFAULT_IMAGE = `${BASE_URL}/og-image.jpg`;
+const DEFAULT_IMAGE = `${BASE_URL}/og-image.png`;
 
 export function SEO({
   title,
