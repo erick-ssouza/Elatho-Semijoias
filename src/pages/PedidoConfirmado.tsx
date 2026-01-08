@@ -628,7 +628,7 @@ Aguardo a confirmação! 💛`;
                 </section>
               )}
 
-              {/* Pagamento PIX - Aguardando (com QR Code do Mercado Pago) */}
+              {/* Pagamento PIX - Aguardando */}
               {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && hasPixData && (
                 <section className="card-elegant p-6 border-2 border-primary/30 bg-primary/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
@@ -678,7 +678,7 @@ Aguardo a confirmação! 💛`;
                   )}
 
                   <div className="grid md:grid-cols-[280px_1fr] gap-5 items-start">
-                    {/* QR Code do Mercado Pago */}
+                    {/* QR Code PIX */}
                     <div className="bg-card rounded-xl border border-border p-4 flex items-center justify-center">
                       <img 
                         src={`data:image/png;base64,${pixQrCodeBase64}`}
@@ -703,7 +703,7 @@ Aguardo a confirmação! 💛`;
                           </p>
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          Após o pagamento, a confirmação é automática via Mercado Pago.
+                          Após o pagamento, a confirmação é automática.
                         </p>
                       </div>
 
@@ -809,12 +809,15 @@ Aguardo a confirmação! 💛`;
                 </section>
               )}
 
-              {/* Pagamento Cartão */}
+              {/* Pagamento Cartão - Confirmado */}
               {!isPix && (
                 <section className="card-elegant p-6 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
-                  <h2 className="text-xl font-display font-bold mb-2">Pagamento por Cartão</h2>
+                  <h2 className="text-xl font-display font-bold mb-2 flex items-center gap-2">
+                    <BadgeCheck className="h-5 w-5 text-green-600" />
+                    Pagamento Confirmado!
+                  </h2>
                   <p className="text-muted-foreground">
-                    Você será redirecionado para o Mercado Pago para finalizar o pagamento.
+                    Obrigado pela sua compra na Elatho Semijoias. Você receberá o código de rastreamento por e-mail assim que seu pedido for enviado.
                   </p>
                 </section>
               )}

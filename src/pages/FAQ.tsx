@@ -20,7 +20,7 @@ const faqItems = [
   },
   {
     pergunta: 'Posso parcelar minha compra?',
-    resposta: 'Sim! Parcele em até 10x pelo Mercado Pago. Para pagamentos via PIX, o pagamento é processado instantaneamente.'
+    resposta: 'Sim! Parcele em até 10x no cartão de crédito. Para pagamentos via PIX, o pagamento é processado instantaneamente.'
   },
   {
     pergunta: 'As peças têm garantia?',
