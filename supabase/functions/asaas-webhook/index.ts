@@ -51,13 +51,14 @@ serve(async (req) => {
     console.log(`Processing webhook for order ${numeroPedido}, event: ${payload.event}, status: ${payment.status}`);
 
     // Map Asaas status to our status
+    // Valid statuses: pendente, confirmado, enviado, entregue, cancelado
     let newStatus: string | null = null;
     let paymentStatus: string | null = null;
 
     switch (payload.event) {
       case "PAYMENT_CONFIRMED":
       case "PAYMENT_RECEIVED":
-        newStatus = "pago";
+        newStatus = "confirmado";  // Payment confirmed, ready to ship
         paymentStatus = "approved";
         break;
       case "PAYMENT_OVERDUE":
