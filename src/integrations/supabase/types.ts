@@ -465,6 +465,10 @@ export type Database = {
         Args: { p_cliente_email: string; p_produto_id: string }
         Returns: boolean
       }
+      decrement_stock: {
+        Args: { p_produto_id: string; p_quantidade: number }
+        Returns: undefined
+      }
       get_user_email: { Args: never; Returns: string }
       has_role: {
         Args: {
