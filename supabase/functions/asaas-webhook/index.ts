@@ -100,7 +100,7 @@ serve(async (req) => {
     }
 
     // Avoid reprocessing already confirmed orders
-    if (pedido.status === "pago" || pedido.status === "enviado" || pedido.status === "entregue") {
+    if (pedido.status === "confirmado" || pedido.status === "enviado" || pedido.status === "entregue") {
       console.log("Order already processed, skipping:", numeroPedido);
       return new Response(JSON.stringify({ received: true, skipped: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -157,13 +157,26 @@ serve(async (req) => {
 
       // Send admin notification
       try {
+        const endereco = pedido.endereco as Record<string, string> | null;
         await supabase.functions.invoke("send-admin-notification", {
           body: {
             numeroPedido,
             clienteNome: pedido.cliente_nome,
             clienteEmail: pedido.cliente_email,
+            clienteWhatsapp: pedido.cliente_whatsapp,
             total: pedido.total,
+            subtotal: pedido.subtotal,
+            frete: pedido.frete,
             metodoPagamento: pedido.metodo_pagamento,
+            itens: pedido.itens,
+            endereco: endereco || {
+              rua: "Não informado",
+              numero: "",
+              bairro: "",
+              cidade: "",
+              estado: "",
+              cep: ""
+            },
           },
         });
         console.log("Admin notification sent");
