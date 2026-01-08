@@ -29,8 +29,12 @@ serve(async (req) => {
 
     console.log("Creating Asaas customer for:", email);
 
-    // Clean phone and CPF
-    const phoneNumbers = telefone?.replace(/\D/g, '') || '';
+    // Clean phone and CPF - Asaas accepts 10-11 digits (DDD + number)
+    let phoneNumbers = telefone?.replace(/\D/g, '') || '';
+    // Remove country code if present (55)
+    if (phoneNumbers.length > 11 && phoneNumbers.startsWith('55')) {
+      phoneNumbers = phoneNumbers.substring(2);
+    }
     const cpfNumbers = cpf?.replace(/\D/g, '') || '';
 
     // First, check if customer already exists
