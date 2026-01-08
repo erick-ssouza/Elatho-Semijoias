@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, asaas-access-token",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 interface AsaasWebhookPayload {
@@ -18,6 +18,37 @@ interface AsaasWebhookPayload {
   };
 }
 
+interface AsaasPaymentResponse {
+  id: string;
+  status: string;
+  value: number;
+  externalReference: string;
+}
+
+// Verify payment exists in Asaas API
+async function verifyPaymentWithAsaas(paymentId: string, apiKey: string): Promise<AsaasPaymentResponse | null> {
+  try {
+    const response = await fetch(`https://api.asaas.com/v3/payments/${paymentId}`, {
+      method: "GET",
+      headers: {
+        "accept": "application/json",
+        "access_token": apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      console.error(`Asaas API returned status ${response.status} for payment ${paymentId}`);
+      return null;
+    }
+
+    const data = await response.json();
+    return data as AsaasPaymentResponse;
+  } catch (error) {
+    console.error("Error verifying payment with Asaas:", error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -26,9 +57,18 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const asaasApiKey = Deno.env.get("ASAAS_API_KEY");
 
     if (!supabaseUrl || !supabaseServiceKey) {
       throw new Error("Supabase credentials not configured");
+    }
+
+    if (!asaasApiKey) {
+      console.error("ASAAS_API_KEY not configured - cannot verify webhook authenticity");
+      return new Response(
+        JSON.stringify({ error: "Webhook verification not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -46,6 +86,30 @@ serve(async (req) => {
     }
 
     const { payment } = payload;
+
+    // SECURITY: Verify the payment exists in Asaas API before processing
+    // This prevents forged webhook requests from manipulating orders
+    console.log(`Verifying payment ${payment.id} with Asaas API...`);
+    const verifiedPayment = await verifyPaymentWithAsaas(payment.id, asaasApiKey);
+
+    if (!verifiedPayment) {
+      console.error(`Payment verification failed for ${payment.id} - rejecting webhook`);
+      return new Response(
+        JSON.stringify({ error: "Payment verification failed" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate that the payment data matches what Asaas returned
+    if (verifiedPayment.externalReference !== payment.externalReference) {
+      console.error(`External reference mismatch: webhook=${payment.externalReference}, api=${verifiedPayment.externalReference}`);
+      return new Response(
+        JSON.stringify({ error: "Payment data mismatch" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`Payment ${payment.id} verified successfully. Status: ${verifiedPayment.status}`);
     const numeroPedido = payment.externalReference;
 
     console.log(`Processing webhook for order ${numeroPedido}, event: ${payload.event}, status: ${payment.status}`);
