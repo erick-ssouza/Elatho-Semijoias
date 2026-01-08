@@ -629,7 +629,7 @@ Aguardo a confirmação! 💛`;
               )}
 
               {/* Pagamento PIX - Aguardando (com QR Code do Mercado Pago) */}
-              {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && hasPixFromMercadoPago && (
+              {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && hasPixData && (
                 <section className="card-elegant p-6 border-2 border-primary/30 bg-primary/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div className="flex items-center gap-2">
@@ -744,7 +744,7 @@ Aguardo a confirmação! 💛`;
               )}
 
               {/* Fallback: PIX sem QR Code automático (erro na API) */}
-              {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && !hasPixFromMercadoPago && (
+              {isPix && !isPaymentConfirmed(orderStatus, paymentStatus) && !hasPixData && (
                 <section className="card-elegant p-6 border-2 border-amber-500/30 bg-amber-500/5 animate-fade-in-up" style={{ animationDelay: '80ms' }}>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                     <div className="flex items-center gap-3">
