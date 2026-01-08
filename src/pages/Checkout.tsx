@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 // Validation schemas
 const dadosPessoaisSchema = z.object({
@@ -55,6 +56,13 @@ interface CupomAplicado {
   desconto: number;
 }
 
+interface DadosCartao {
+  numero: string;
+  nome: string;
+  validade: string;
+  cvv: string;
+}
+
 const FRETE_REGIOES: Record<string, number> = {
   SP: 15.90, RJ: 15.90, MG: 15.90, ES: 15.90, // Sudeste
   PR: 19.90, SC: 19.90, RS: 19.90, // Sul
@@ -78,10 +86,10 @@ interface CheckoutStorageDataV2 {
 }
 
 const stepNumberToKey = (n: number): CheckoutStepKey =>
-  n === 2 ? 'address' : n === 3 ? 'review' : 'personal';
+  n === 2 ? 'address' : n === 3 ? 'review' : n === 4 ? 'payment' : 'personal';
 
 const stepKeyToNumber = (k?: string | null): number =>
-  k === 'address' ? 2 : k === 'review' || k === 'payment' ? 3 : 1;
+  k === 'address' ? 2 : k === 'review' ? 3 : k === 'payment' ? 4 : 1;
 
 const readCheckoutStorage = (): CheckoutStorageDataV2 | null => {
   try {
@@ -90,7 +98,6 @@ const readCheckoutStorage = (): CheckoutStorageDataV2 | null => {
 
     const parsed = JSON.parse(stored) as any;
 
-    // Backward compatibility (older shape used: { dadosPessoais, endereco, step:number })
     if (typeof parsed?.step === 'number') {
       return {
         version: 2,
@@ -120,6 +127,28 @@ const readCheckoutStorage = (): CheckoutStorageDataV2 | null => {
   }
 };
 
+// Calculate installment values with interest
+function calculateInstallments(total: number): Array<{ parcelas: number; valor: number; total: number; temJuros: boolean }> {
+  const result: Array<{ parcelas: number; valor: number; total: number; temJuros: boolean }> = [];
+  
+  for (let p = 1; p <= 10; p++) {
+    if (p <= 4) {
+      // Sem juros
+      const valorParcela = Math.round((total / p) * 100) / 100;
+      result.push({ parcelas: p, valor: valorParcela, total, temJuros: false });
+    } else {
+      // Com juros de 2% a.m.
+      const taxa = 0.02;
+      const fator = (taxa * Math.pow(1 + taxa, p)) / (Math.pow(1 + taxa, p) - 1);
+      const valorParcela = Math.round((total * fator) * 100) / 100;
+      const totalComJuros = Math.round(valorParcela * p * 100) / 100;
+      result.push({ parcelas: p, valor: valorParcela, total: totalComJuros, temJuros: true });
+    }
+  }
+  
+  return result;
+}
+
 export default function Checkout() {
   const [step, setStep] = useState(1);
   const [loadingPix, setLoadingPix] = useState(false);
@@ -133,6 +162,16 @@ export default function Checkout() {
   const [cupomCodigo, setCupomCodigo] = useState('');
   const [cupomLoading, setCupomLoading] = useState(false);
   const [cupomAplicado, setCupomAplicado] = useState<CupomAplicado | null>(null);
+  
+  // Card payment states
+  const [showCardForm, setShowCardForm] = useState(false);
+  const [parcelas, setParcelas] = useState(1);
+  const [dadosCartao, setDadosCartao] = useState<DadosCartao>({
+    numero: '',
+    nome: '',
+    validade: '',
+    cvv: '',
+  });
   
   const [dadosPessoais, setDadosPessoais] = useState<DadosPessoais>({
     nome: '',
@@ -158,7 +197,7 @@ export default function Checkout() {
 
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'cartao' | null>(null);
 
-  // Restaurar dados do checkout do localStorage + aplicar step de retorno via URL
+  // Restaurar dados do checkout do localStorage
   useEffect(() => {
     const stored = readCheckoutStorage();
     if (stored) {
@@ -170,29 +209,10 @@ export default function Checkout() {
 
     const params = new URLSearchParams(location.search);
     const stepParam = params.get('step');
-    const returnProvider = params.get('return');
-    const status = params.get('status');
-
     if (stepParam) {
       setStep(stepKeyToNumber(stepParam));
     }
-
-    // Retorno do Mercado Pago (cancelado/falha) deve cair direto na revisão
-    if (returnProvider === 'mp') {
-      setStep(3);
-      if (status === 'failure') {
-        toast({
-          title: 'Pagamento não concluído',
-          description: 'Revise seu pedido e tente novamente quando quiser.',
-        });
-      }
-    }
-
-    // Retorno do PIX (navegação interna)
-    if (returnProvider === 'pix') {
-      setStep(3);
-    }
-  }, [location.search, toast]);
+  }, [location.search]);
 
   // Salvar dados do checkout no localStorage quando mudarem
   useEffect(() => {
@@ -213,7 +233,6 @@ export default function Checkout() {
 
   const subtotal = getSubtotal();
   const descontoCupom = cupomAplicado?.desconto || 0;
-  // Frete grátis: somente se subtotal > 299 OU se cupom de frete grátis foi aplicado
   const freteGratisPorCupom = cupomAplicado?.tipo === 'frete_gratis';
   const freteGratisPorValor = subtotal > 299;
   const temCepValido = endereco.estado && FRETE_REGIOES[endereco.estado] !== undefined;
@@ -221,29 +240,22 @@ export default function Checkout() {
     ? ((freteGratisPorValor || freteGratisPorCupom) ? 0 : (FRETE_REGIOES[endereco.estado] || 0))
     : 0;
   
-  // Calcular total base (sem desconto PIX)
   const totalBase = Math.max(0, subtotal - descontoCupom + frete);
-  
-  // Desconto PIX de 5% calculado separadamente (aplicado apenas no momento do pagamento)
   const descontoPix = totalBase * 0.05;
   const totalComPix = totalBase - descontoPix;
-  
-  // Total exibido (sem desconto PIX até o step 3)
   const total = totalBase;
+
+  // Calculate installments for card payment
+  const parcelasOptions = calculateInstallments(totalBase);
 
   const isLoading = loadingPix || loadingCartao;
   
   useEffect(() => {
-    // Evita redirecionar para Home quando o carrinho é limpo após o pedido ser criado
     if (items.length === 0 && !orderPlaced && !isLoading) {
       navigate('/');
     }
   }, [items.length, orderPlaced, isLoading, navigate]);
 
-  // Dados do checkout são limpos apenas após pagamento confirmado (na tela de confirmação)
-  // ou quando o cliente limpa o carrinho explicitamente.
-
-  // Persistência (usada antes de redirecionar para pagamentos externos)
   const persistCheckoutData = (overrides: Partial<CheckoutStorageDataV2> = {}) => {
     const payload: CheckoutStorageDataV2 = {
       version: 2,
@@ -284,6 +296,17 @@ export default function Checkout() {
     return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
   };
 
+  const formatCardNumber = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 16);
+    return numbers.replace(/(\d{4})(?=\d)/g, '$1 ').trim();
+  };
+
+  const formatCardExpiry = (value: string) => {
+    const numbers = value.replace(/\D/g, '').slice(0, 4);
+    if (numbers.length <= 2) return numbers;
+    return `${numbers.slice(0, 2)}/${numbers.slice(2)}`;
+  };
+
   const validateCPF = (cpf: string): boolean => {
     const numbers = cpf.replace(/\D/g, '');
     if (numbers.length !== 11) return false;
@@ -306,7 +329,6 @@ export default function Checkout() {
     return digit === parseInt(numbers[10]);
   };
 
-  // Schema for ViaCEP response validation
   const viaCepSchema = z.object({
     cep: z.string().optional(),
     logradouro: z.string().optional(),
@@ -325,7 +347,6 @@ export default function Checkout() {
       const response = await fetch(`https://viacep.com.br/ws/${cepNumbers}/json/`);
       const rawData = await response.json();
       
-      // Validate ViaCEP response
       const parseResult = viaCepSchema.safeParse(rawData);
       if (!parseResult.success) {
         toast({
@@ -347,7 +368,6 @@ export default function Checkout() {
         return;
       }
 
-      // Validate state is a valid Brazilian UF
       const validUFs = ['AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO'];
       const uf = data.uf?.toUpperCase() || '';
       
@@ -409,6 +429,21 @@ export default function Checkout() {
     setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
+  const handleCardChange = (field: keyof DadosCartao, value: string) => {
+    let formattedValue = value;
+    
+    if (field === 'numero') {
+      formattedValue = formatCardNumber(value);
+    } else if (field === 'validade') {
+      formattedValue = formatCardExpiry(value);
+    } else if (field === 'cvv') {
+      formattedValue = value.replace(/\D/g, '').slice(0, 4);
+    }
+    
+    setDadosCartao(prev => ({ ...prev, [field]: formattedValue }));
+    setErrors(prev => ({ ...prev, [`card_${field}`]: '' }));
+  };
+
   const validateStep1 = (): boolean => {
     try {
       dadosPessoaisSchema.parse(dadosPessoais);
@@ -453,6 +488,39 @@ export default function Checkout() {
     }
   };
 
+  const validateCard = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    
+    const cardNumbers = dadosCartao.numero.replace(/\s/g, '');
+    if (cardNumbers.length < 13 || cardNumbers.length > 16) {
+      newErrors.card_numero = 'Número do cartão inválido';
+    }
+    
+    if (!dadosCartao.nome.trim() || dadosCartao.nome.length < 3) {
+      newErrors.card_nome = 'Nome no cartão é obrigatório';
+    }
+    
+    const validadeNumbers = dadosCartao.validade.replace(/\D/g, '');
+    if (validadeNumbers.length !== 4) {
+      newErrors.card_validade = 'Validade inválida';
+    } else {
+      const month = parseInt(validadeNumbers.slice(0, 2));
+      const year = parseInt('20' + validadeNumbers.slice(2));
+      const now = new Date();
+      const cardDate = new Date(year, month - 1);
+      if (month < 1 || month > 12 || cardDate < now) {
+        newErrors.card_validade = 'Cartão expirado ou validade inválida';
+      }
+    }
+    
+    if (dadosCartao.cvv.length < 3) {
+      newErrors.card_cvv = 'CVV inválido';
+    }
+    
+    setErrors(prev => ({ ...prev, ...newErrors }));
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleNext = () => {
     if (step === 1 && validateStep1()) {
       setStep(2);
@@ -462,7 +530,9 @@ export default function Checkout() {
   };
 
   const handleBack = () => {
-    if (step > 1) {
+    if (showCardForm) {
+      setShowCardForm(false);
+    } else if (step > 1) {
       setStep(step - 1);
     }
   };
@@ -497,7 +567,6 @@ export default function Checkout() {
         return;
       }
 
-      // Check expiration
       if (cupom.validade && new Date(cupom.validade) < new Date()) {
         toast({
           title: 'Cupom expirado',
@@ -507,7 +576,6 @@ export default function Checkout() {
         return;
       }
 
-      // Check usage limit
       if (cupom.uso_maximo && cupom.uso_atual >= cupom.uso_maximo) {
         toast({
           title: 'Cupom esgotado',
@@ -517,7 +585,6 @@ export default function Checkout() {
         return;
       }
 
-      // Check minimum value
       if (cupom.valor_minimo && subtotal < Number(cupom.valor_minimo)) {
         toast({
           title: 'Valor mínimo não atingido',
@@ -527,12 +594,11 @@ export default function Checkout() {
         return;
       }
 
-      // Calculate discount
       let descontoCalculado = 0;
       if (cupom.tipo === 'percentual') {
         descontoCalculado = subtotal * (Number(cupom.valor) / 100);
       } else if (cupom.tipo === 'frete_gratis') {
-        descontoCalculado = 0; // Frete grátis não dá desconto no subtotal, zera o frete
+        descontoCalculado = 0;
       } else {
         descontoCalculado = Math.min(Number(cupom.valor), subtotal);
       }
@@ -587,6 +653,18 @@ export default function Checkout() {
       return;
     }
 
+    // For card, show card form first
+    if (metodoPagamento === 'cartao' && !showCardForm) {
+      setShowCardForm(true);
+      setPaymentMethod('cartao');
+      return;
+    }
+
+    // Validate card if card payment
+    if (metodoPagamento === 'cartao' && !validateCard()) {
+      return;
+    }
+
     setPaymentMethod(metodoPagamento);
 
     if (metodoPagamento === 'pix') {
@@ -616,49 +694,85 @@ export default function Checkout() {
         preco: item.preco_promocional ?? item.preco,
       }));
 
-      let paymentId: string | undefined;
-      let pixData: { paymentId?: string; qrCode?: string; qrCodeBase64?: string; ticketUrl?: string; expirationDate?: string; success?: boolean; error?: string } | null = null;
+      // Step 1: Create customer in Asaas
+      const { data: customerData, error: customerError } = await supabase.functions.invoke('create-asaas-customer', {
+        body: {
+          nome: dadosPessoais.nome,
+          email: dadosPessoais.email,
+          telefone: dadosPessoais.whatsapp,
+          cpf: dadosPessoais.cpf,
+        },
+      });
 
-      // Para PIX, aplicar desconto de 5% e gerar o pagamento ANTES de criar o pedido
+      if (customerError || !customerData?.success) {
+        throw new Error(customerData?.error || 'Erro ao criar cliente');
+      }
+
+      const customerId = customerData.customerId;
+      let paymentId: string | undefined;
+      let pixData: { paymentId?: string; pixCopiaECola?: string; qrCodeBase64?: string; expirationDate?: string } | null = null;
+
       const totalFinal = metodoPagamento === 'pix' ? totalComPix : totalBase;
 
       if (metodoPagamento === 'pix') {
-        const { data, error: pixError } = await supabase.functions.invoke('create-pix-payment', {
+        // Step 2a: Create PIX payment
+        const { data: pixPaymentData, error: pixError } = await supabase.functions.invoke('create-asaas-pix-payment', {
           body: {
+            customerId,
+            valor: totalFinal,
             numeroPedido,
-            clienteNome: dadosPessoais.nome,
-            clienteEmail: dadosPessoais.email,
-            clienteCpf: dadosPessoais.cpf,
-            total: totalFinal,
             descricao: `Pedido ${numeroPedido} - Elatho Semijoias`,
           },
         });
 
-        if (pixError || !data?.success) {
-          console.error('Erro ao criar pagamento PIX:', {
-            error: data?.error,
-            errorCode: data?.errorCode,
-            errorDetails: data?.errorDetails,
-            rawError: data?.rawError,
-            pixError,
-          });
+        if (pixError || !pixPaymentData?.success) {
+          throw new Error(pixPaymentData?.error || 'Erro ao criar pagamento PIX');
+        }
 
-          const errorMsg = data?.error || pixError?.message || 'Erro desconhecido ao criar pagamento PIX';
-          toast({
-            title: 'Erro no pagamento PIX',
-            description: errorMsg,
-            variant: 'destructive',
-          });
+        pixData = pixPaymentData;
+        paymentId = pixPaymentData.paymentId;
+      } else {
+        // Step 2b: Create card payment
+        const validadeNumbers = dadosCartao.validade.replace(/\D/g, '');
+        
+        const { data: cardPaymentData, error: cardError } = await supabase.functions.invoke('create-asaas-card-payment', {
+          body: {
+            customerId,
+            valor: totalFinal,
+            parcelas,
+            numeroPedido,
+            descricao: `Pedido ${numeroPedido} - Elatho Semijoias`,
+            cartao: {
+              holderName: dadosCartao.nome,
+              number: dadosCartao.numero.replace(/\s/g, ''),
+              expiryMonth: validadeNumbers.slice(0, 2),
+              expiryYear: validadeNumbers.slice(2),
+              ccv: dadosCartao.cvv,
+            },
+            holderInfo: {
+              name: dadosPessoais.nome,
+              email: dadosPessoais.email,
+              cpf: dadosPessoais.cpf,
+              cep: endereco.cep,
+              addressNumber: endereco.numero,
+              phone: dadosPessoais.whatsapp,
+            },
+          },
+        });
 
-          setLoadingPix(false);
-          return;
-        } else {
-          pixData = data;
-          paymentId = data.paymentId;
+        if (cardError || !cardPaymentData?.success) {
+          throw new Error(cardPaymentData?.error || 'Erro ao processar pagamento com cartão');
+        }
+
+        paymentId = cardPaymentData.paymentId;
+
+        // If card payment was rejected
+        if (!cardPaymentData.isApproved && cardPaymentData.status !== 'PENDING') {
+          throw new Error('Pagamento recusado. Verifique os dados do cartão e tente novamente.');
         }
       }
 
-      // Registrar pedido no backend com o total final (com desconto PIX se aplicável)
+      // Step 3: Register order in database
       const { data: orderData, error: orderError } = await supabase.functions.invoke('create-order', {
         body: {
           numeroPedido,
@@ -683,20 +797,15 @@ export default function Checkout() {
         throw new Error(orderData?.error || 'Erro ao registrar pedido');
       }
 
-      // NÃO enviar notificações aqui - serão enviadas apenas quando o pagamento for confirmado
-      // (via webhook do Mercado Pago ou quando admin marcar como pago)
-
-      // Manter dados do checkout até o pagamento ser aprovado.
-      // (Importante para retorno do PIX / Mercado Pago sem perder campos)
       persistCheckoutData({
         step: 'review',
         paymentMethod: metodoPagamento,
         numeroPedido,
       });
 
-      if (metodoPagamento === 'pix') {
-        setOrderPlaced(true);
+      setOrderPlaced(true);
 
+      if (metodoPagamento === 'pix') {
         navigate(`/pedido-confirmado?numero=${encodeURIComponent(numeroPedido)}`, {
           replace: false,
           state: {
@@ -710,35 +819,27 @@ export default function Checkout() {
             itens: itensJson,
             endereco: enderecoJson,
             clienteNome: dadosPessoais.nome,
-            pixCopiaECola: pixData?.qrCode,
+            pixCopiaECola: pixData?.pixCopiaECola,
             pixQrCodeBase64: pixData?.qrCodeBase64,
             pixPaymentId: pixData?.paymentId,
           },
         });
       } else {
-        // Cartão parcelado via Mercado Pago
-        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout-link', {
-          body: {
+        // Card payment - navigate to confirmation
+        navigate(`/pedido-confirmado?numero=${encodeURIComponent(numeroPedido)}`, {
+          replace: false,
+          state: {
             numeroPedido,
-            clienteNome: dadosPessoais.nome,
-            clienteEmail: dadosPessoais.email,
             total: totalFinal,
-            itens: items.map(item => ({
-              nome: item.nome,
-              quantidade: item.quantidade,
-              preco: item.preco_promocional ?? item.preco,
-            })),
+            subtotal,
+            frete,
+            desconto: descontoCupom,
+            metodoPagamento: 'cartao',
+            itens: itensJson,
+            endereco: enderecoJson,
+            clienteNome: dadosPessoais.nome,
           },
         });
-
-        if (checkoutError || !checkoutData?.success) {
-          throw new Error(checkoutData?.details || 'Erro ao gerar link de pagamento');
-        }
-
-        setOrderPlaced(true);
-
-        // Redirecionar diretamente para o Mercado Pago (sem limpar dados do checkout)
-        window.location.href = checkoutData.checkoutUrl;
       }
 
     } catch (error) {
@@ -988,7 +1089,7 @@ export default function Checkout() {
                 )}
 
                 {/* Step 3: Revisão */}
-                {step === 3 && (
+                {step === 3 && !showCardForm && (
                   <div className="space-y-6 animate-fade-in">
                     <h2 className="text-xl font-display font-semibold">Revisão do Pedido</h2>
                     
@@ -1050,7 +1151,7 @@ export default function Checkout() {
                       <h3 className="font-medium text-primary mb-3">💳 Formas de Pagamento</h3>
                       <div className="space-y-2 text-sm text-muted-foreground">
                         <p><strong>PIX (5% de desconto):</strong> Pagamento instantâneo com QR Code - <span className="text-green-600 font-medium">R$ {formatPrice(totalComPix)}</span></p>
-                        <p><strong>Cartão:</strong> Parcele em até 10x no cartão via Mercado Pago - R$ {formatPrice(totalBase)}</p>
+                        <p><strong>Cartão:</strong> Parcele em até 10x (sem juros até 4x) - R$ {formatPrice(totalBase)}</p>
                       </div>
                     </div>
 
@@ -1075,6 +1176,88 @@ export default function Checkout() {
                   </div>
                 )}
 
+                {/* Card Form */}
+                {step === 3 && showCardForm && (
+                  <div className="space-y-6 animate-fade-in">
+                    <h2 className="text-xl font-display font-semibold">Dados do Cartão</h2>
+                    
+                    <div className="grid gap-4">
+                      <div>
+                        <Label htmlFor="cardNumber">Número do Cartão *</Label>
+                        <Input
+                          id="cardNumber"
+                          value={dadosCartao.numero}
+                          onChange={(e) => handleCardChange('numero', e.target.value)}
+                          placeholder="0000 0000 0000 0000"
+                          className={`input-elegant mt-1 ${errors.card_numero ? 'border-destructive' : ''}`}
+                        />
+                        {errors.card_numero && <p className="text-sm text-destructive mt-1">{errors.card_numero}</p>}
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="cardName">Nome no Cartão *</Label>
+                        <Input
+                          id="cardName"
+                          value={dadosCartao.nome}
+                          onChange={(e) => handleCardChange('nome', e.target.value.toUpperCase())}
+                          placeholder="NOME COMO ESTÁ NO CARTÃO"
+                          className={`input-elegant mt-1 uppercase ${errors.card_nome ? 'border-destructive' : ''}`}
+                        />
+                        {errors.card_nome && <p className="text-sm text-destructive mt-1">{errors.card_nome}</p>}
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="cardExpiry">Validade *</Label>
+                          <Input
+                            id="cardExpiry"
+                            value={dadosCartao.validade}
+                            onChange={(e) => handleCardChange('validade', e.target.value)}
+                            placeholder="MM/AA"
+                            className={`input-elegant mt-1 ${errors.card_validade ? 'border-destructive' : ''}`}
+                          />
+                          {errors.card_validade && <p className="text-sm text-destructive mt-1">{errors.card_validade}</p>}
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="cardCvv">CVV *</Label>
+                          <Input
+                            id="cardCvv"
+                            value={dadosCartao.cvv}
+                            onChange={(e) => handleCardChange('cvv', e.target.value)}
+                            placeholder="123"
+                            className={`input-elegant mt-1 ${errors.card_cvv ? 'border-destructive' : ''}`}
+                          />
+                          {errors.card_cvv && <p className="text-sm text-destructive mt-1">{errors.card_cvv}</p>}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <Label htmlFor="parcelas">Parcelas *</Label>
+                        <Select value={parcelas.toString()} onValueChange={(v) => setParcelas(parseInt(v))}>
+                          <SelectTrigger className="mt-1">
+                            <SelectValue placeholder="Selecione as parcelas" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {parcelasOptions.map((opt) => (
+                              <SelectItem key={opt.parcelas} value={opt.parcelas.toString()}>
+                                {opt.parcelas}x de R$ {formatPrice(opt.valor)} 
+                                {opt.temJuros ? ` (R$ ${formatPrice(opt.total)})` : ' (sem juros)'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-accent/50 border border-border">
+                      <p className="text-sm text-muted-foreground">
+                        🔒 Seus dados são protegidos e criptografados
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Navigation buttons */}
                 <div className="flex flex-col gap-4 mt-8 pt-6 border-t border-border">
                   {step < 3 ? (
@@ -1092,6 +1275,27 @@ export default function Checkout() {
                         <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
+                  ) : showCardForm ? (
+                    <>
+                      <Button 
+                        onClick={() => handleFinalizarPedido('cartao')} 
+                        className="w-full btn-gold gap-2"
+                        disabled={isLoading}
+                      >
+                        {loadingCartao ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <>
+                            <CreditCard className="h-4 w-4" />
+                            Pagar R$ {formatPrice(parcelasOptions.find(p => p.parcelas === parcelas)?.total || totalBase)}
+                          </>
+                        )}
+                      </Button>
+                      <Button variant="outline" onClick={handleBack} className="gap-2">
+                        <ChevronLeft className="h-4 w-4" />
+                        Voltar
+                      </Button>
+                    </>
                   ) : (
                     <>
                       <div className="flex flex-col gap-3">
@@ -1224,7 +1428,7 @@ export default function Checkout() {
                           : `R$ ${formatPrice(frete)}`}
                     </span>
                   </div>
-                  {step === 3 && (
+                  {step === 3 && !showCardForm && (
                     <div className="flex justify-between text-sm text-green-600">
                       <span>Desconto PIX (5%)</span>
                       <span>-R$ {formatPrice(descontoPix)}</span>
@@ -1234,10 +1438,20 @@ export default function Checkout() {
                     <span>Total</span>
                     <span className="text-primary">R$ {formatPrice(total)}</span>
                   </div>
-                  {step === 3 && (
+                  {step === 3 && !showCardForm && (
                     <div className="flex justify-between text-sm text-green-600 bg-green-50 p-2 rounded-lg -mx-2">
                       <span className="font-medium">Total no PIX</span>
                       <span className="font-bold">R$ {formatPrice(totalComPix)}</span>
+                    </div>
+                  )}
+                  {showCardForm && parcelas > 1 && (
+                    <div className="text-sm text-muted-foreground bg-accent/50 p-2 rounded-lg -mx-2">
+                      <span>{parcelas}x de R$ {formatPrice(parcelasOptions.find(p => p.parcelas === parcelas)?.valor || 0)}</span>
+                      {parcelas > 4 && (
+                        <span className="text-xs block mt-1">
+                          Total: R$ {formatPrice(parcelasOptions.find(p => p.parcelas === parcelas)?.total || 0)}
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>

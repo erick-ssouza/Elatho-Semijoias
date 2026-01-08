@@ -51,7 +51,7 @@ interface LocationState {
   endereco: EnderecoPedido;
   clienteNome: string;
 
-  // PIX do Mercado Pago
+  // PIX do Asaas
   pixCopiaECola?: string;
   pixQrCodeBase64?: string;
   pixPaymentId?: string;
@@ -459,10 +459,10 @@ export default function PedidoConfirmado() {
 
   const isPix = (state?.metodoPagamento || 'pix') === 'pix';
 
-  // Dados PIX do Mercado Pago
+  // Dados PIX do Asaas
   const pixCopiaECola = locationState?.pixCopiaECola || '';
   const pixQrCodeBase64 = locationState?.pixQrCodeBase64 || '';
-  const hasPixFromMercadoPago = !!pixCopiaECola && !!pixQrCodeBase64;
+  const hasPixData = !!pixCopiaECola && !!pixQrCodeBase64;
 
   const handleCopy = async (value: string, onOk: () => void) => {
     try {
