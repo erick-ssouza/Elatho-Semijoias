@@ -386,8 +386,8 @@ const ProdutosTab = () => {
                 <MultiImageUpload
                   mainImage={form.imagem_url}
                   additionalImages={form.imagens}
-                  onMainImageChange={(url) => setForm({ ...form, imagem_url: url })}
-                  onAdditionalImagesChange={(urls) => setForm({ ...form, imagens: urls })}
+                  onMainImageChange={(url) => setForm(prev => ({ ...prev, imagem_url: url }))}
+                  onAdditionalImagesChange={(urls) => setForm(prev => ({ ...prev, imagens: urls }))}
                 />
               </div>
 
