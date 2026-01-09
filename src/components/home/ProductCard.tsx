@@ -18,6 +18,7 @@ interface ProductCardProps {
   mediaAvaliacoes?: number | null;
   totalAvaliacoes?: number;
   estoque?: number | null;
+  tipo_material?: string | null;
   index?: number;
 }
 
@@ -27,9 +28,11 @@ export default function ProductCard({
   preco,
   preco_promocional,
   imagem_url,
+  categoria,
   variacoes,
   descricao,
   estoque,
+  tipo_material,
   index = 0,
 }: ProductCardProps) {
   const [isVisible, setIsVisible] = useState(false);
@@ -208,6 +211,8 @@ export default function ProductCard({
             variacoes,
             descricao,
             estoque,
+            categoria,
+            tipo_material,
           }}
         />
       )}

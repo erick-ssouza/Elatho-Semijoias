@@ -38,6 +38,7 @@ interface Produto {
   tipo_tamanho: string | null;
   faixa_tamanho: string | null;
   tamanhos_disponiveis: string[] | null;
+  tipo_material: string | null;
 }
 
 const categorias = [
@@ -170,35 +171,25 @@ const ProdutosTab = () => {
   const openEdit = (produto: Produto) => {
     setEditingProduto(produto);
     
-    // Try to detect material type and additional description from description
-    let tipoMaterial = "";
-    let descricaoAdicional = "";
+    // Usar tipo_material salvo no banco (se existir)
+    const tipoMaterial = produto.tipo_material || "";
     
-    if (produto.descricao) {
-      // Try to find material type by checking if description contains frase de valorização
-      for (const mat of TIPOS_MATERIAL) {
-        const testDesc = gerarDescricaoAutomatica(produto.categoria, mat.value);
-        if (produto.descricao.startsWith(testDesc.split('\n')[0])) {
-          tipoMaterial = mat.value;
-          // Extract additional description if exists
-          if (produto.descricao.length > testDesc.length) {
-            descricaoAdicional = produto.descricao.slice(testDesc.length).trim();
-            if (descricaoAdicional.startsWith('\n\n')) {
-              descricaoAdicional = descricaoAdicional.slice(2);
-            }
-          }
-          break;
-        }
-      }
-      // If no material detected, treat entire description as additional
-      if (!tipoMaterial) {
-        descricaoAdicional = produto.descricao;
-      }
+    // Descrição adicional: se existe descrição salva e não temos tipo_material,
+    // tratar toda a descrição como adicional (produto legado)
+    let descricaoAdicional = "";
+    if (produto.descricao && !produto.tipo_material) {
+      // Produto legado sem tipo_material - toda descrição é adicional
+      descricaoAdicional = produto.descricao;
     }
+    
+    // Gerar preview da descrição para mostrar no form
+    const descricaoPreview = tipoMaterial 
+      ? gerarDescricaoAutomatica(produto.categoria, tipoMaterial)
+      : '';
     
     setForm({
       nome: produto.nome,
-      descricao: produto.descricao || "",
+      descricao: combinarDescricoes(descricaoPreview, descricaoAdicional),
       descricaoAdicional,
       tipoMaterial,
       preco: String(produto.preco),
@@ -234,9 +225,14 @@ const ProdutosTab = () => {
     // Ring size fields - only for "aneis" category
     const isAnel = categoriaValue === 'aneis';
     
+    // Descrição salva agora é apenas a descrição adicional (se existir)
+    // A descrição principal é gerada dinamicamente no site
+    const descricaoParaSalvar = form.descricaoAdicional?.trim() || null;
+
     const produtoData = {
       nome: form.nome,
-      descricao: form.descricao || null,
+      descricao: descricaoParaSalvar,
+      tipo_material: form.tipoMaterial || null,
       preco: parseFloat(form.preco),
       preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
       categoria: categoriaValue,
@@ -376,15 +372,18 @@ const ProdutosTab = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label>Descrição Final (gerada automaticamente)</Label>
-                <Textarea
-                  value={form.descricao}
-                  readOnly
-                  rows={3}
-                  className="bg-muted"
-                />
-              </div>
+              {/* Preview da descrição que será exibida no site */}
+              {form.tipoMaterial && form.categoria && (
+                <div className="space-y-2">
+                  <Label className="text-muted-foreground text-xs">Preview (gerado automaticamente no site)</Label>
+                  <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground whitespace-pre-wrap max-h-32 overflow-y-auto border">
+                    {combinarDescricoes(
+                      gerarDescricaoAutomatica(form.categoria, form.tipoMaterial),
+                      form.descricaoAdicional
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">

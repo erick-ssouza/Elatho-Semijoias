@@ -4,6 +4,7 @@ import { X, ShoppingBag } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useCart } from "@/contexts/CartContext";
 import { toast } from "sonner";
+import { gerarDescricaoAutomatica, combinarDescricoes } from "@/lib/productDescriptions";
 
 interface QuickViewModalProps {
   open: boolean;
@@ -17,6 +18,8 @@ interface QuickViewModalProps {
     variacoes?: string[] | null;
     descricao?: string | null;
     estoque?: number | null;
+    categoria?: string;
+    tipo_material?: string | null;
   };
 }
 
@@ -31,6 +34,17 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
   const hasDiscount = product.preco_promocional && product.preco_promocional < product.preco;
   const variacoes = product.variacoes || ["Dourado", "Prateado", "Rosé"];
   const isOutOfStock = product.estoque !== null && product.estoque !== undefined && product.estoque <= 0;
+
+  // Gerar descrição dinamicamente se tiver tipo_material
+  const descricaoGerada = product.tipo_material && product.categoria
+    ? gerarDescricaoAutomatica(product.categoria, product.tipo_material)
+    : null;
+  const descricaoFinal = descricaoGerada 
+    ? combinarDescricoes(descricaoGerada, product.descricao)
+    : product.descricao;
+  
+  // Pegar apenas a frase de valorização (primeira linha)
+  const fraseValorizacao = descricaoFinal?.split('\n\n')[0].split('\n')[0] || null;
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
@@ -86,10 +100,9 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
               <span className="text-2xl">R$ {formatPrice(finalPrice)}</span>
             </div>
 
-            {product.descricao && (
+            {fraseValorizacao && (
               <p className="text-sm text-muted-foreground mt-4 line-clamp-2 italic">
-                {/* Show only the valorization phrase (first line) */}
-                {product.descricao.split('\n\n')[0].split('\n')[0]}
+                {fraseValorizacao}
               </p>
             )}
 

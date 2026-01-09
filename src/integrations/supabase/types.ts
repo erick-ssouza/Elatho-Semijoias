@@ -359,6 +359,7 @@ export type Database = {
           preco: number
           preco_promocional: number | null
           tamanhos_disponiveis: Json | null
+          tipo_material: string | null
           tipo_tamanho: string | null
           variacoes: Json | null
         }
@@ -376,6 +377,7 @@ export type Database = {
           preco: number
           preco_promocional?: number | null
           tamanhos_disponiveis?: Json | null
+          tipo_material?: string | null
           tipo_tamanho?: string | null
           variacoes?: Json | null
         }
@@ -393,6 +395,7 @@ export type Database = {
           preco?: number
           preco_promocional?: number | null
           tamanhos_disponiveis?: Json | null
+          tipo_material?: string | null
           tipo_tamanho?: string | null
           variacoes?: Json | null
         }
