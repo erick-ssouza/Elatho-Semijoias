@@ -37,9 +37,24 @@ export function RingSizeSelector({
     );
   }
 
-  // Tamanhos P/M/G
+  // Tamanhos P/M/G - show ONLY available sizes
   if (tipoTamanho === "pmg") {
     const disponiveis = tamanhosDisponiveis || [];
+    
+    // Filter to show only available sizes
+    const tamanhosVisiveis = TAMANHOS.filter(tamanho => disponiveis.includes(tamanho.id));
+    
+    // If no sizes available, show message
+    if (tamanhosVisiveis.length === 0) {
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">Tamanho:</p>
+          <p className="text-sm text-muted-foreground italic">
+            Sem tamanhos disponíveis no momento
+          </p>
+        </div>
+      );
+    }
     
     return (
       <div className="space-y-4">
@@ -51,34 +66,25 @@ export function RingSizeSelector({
         </div>
         
         <div className="flex flex-wrap gap-3">
-          {TAMANHOS.map((tamanho) => {
-            const isDisponivel = disponiveis.includes(tamanho.id);
+          {tamanhosVisiveis.map((tamanho) => {
             const isSelected = selectedTamanho === tamanho.id;
             
             return (
               <button
                 key={tamanho.id}
-                onClick={() => isDisponivel && onTamanhoChange(tamanho.id)}
-                disabled={!isDisponivel}
+                onClick={() => onTamanhoChange(tamanho.id)}
                 className={`relative flex flex-col items-center justify-center min-w-[70px] h-16 border rounded-lg transition-all ${
                   isSelected
                     ? "border-foreground bg-foreground text-background"
-                    : isDisponivel
-                    ? "border-border hover:border-foreground"
-                    : "border-border/50 bg-muted/50 cursor-not-allowed"
+                    : "border-border hover:border-foreground"
                 }`}
               >
-                <span className={`text-lg font-medium ${!isDisponivel ? "text-muted-foreground line-through" : ""}`}>
+                <span className="text-lg font-medium">
                   {tamanho.label}
                 </span>
                 <span className={`text-[10px] ${isSelected ? "text-background/70" : "text-muted-foreground"}`}>
                   {tamanho.descricao}
                 </span>
-                {!isDisponivel && (
-                  <span className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground text-[9px] px-1.5 py-0.5 rounded">
-                    Esgotado
-                  </span>
-                )}
               </button>
             );
           })}

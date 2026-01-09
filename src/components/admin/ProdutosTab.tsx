@@ -16,6 +16,12 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle } from "lucide-react";
 import MultiImageUpload from "./MultiImageUpload";
+import { 
+  TIPOS_MATERIAL, 
+  gerarDescricaoAutomatica, 
+  combinarDescricoes,
+  getTipoMaterial 
+} from "@/lib/productDescriptions";
 
 interface Produto {
   id: string;
@@ -40,15 +46,6 @@ const categorias = [
   { value: "colares", label: "Colares" },
   { value: "pulseiras", label: "Pulseiras" },
   { value: "conjuntos", label: "Conjuntos" },
-];
-
-const tiposMaterial = [
-  { value: "ouro18k", label: "Banho de Ouro 18k", descricao: "Material: Liga metálica com banho de ouro 18k\nGarantia: 12 meses contra defeitos" },
-  { value: "rodio", label: "Banho de Ródio", descricao: "Material: Liga metálica com banho de ródio\nGarantia: 12 meses contra defeitos" },
-  { value: "ouro18k_zirconias", label: "Banho de Ouro 18k com Zircônias", descricao: "Material: Liga metálica com banho de ouro 18k\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
-  { value: "rodio_zirconias", label: "Banho de Ródio com Zircônias", descricao: "Material: Liga metálica com banho de ródio\nPedras: Zircônias de alta qualidade\nGarantia: 12 meses contra defeitos" },
-  { value: "ouro18k_perolas", label: "Banho de Ouro 18k com Pérolas", descricao: "Material: Liga metálica com banho de ouro 18k\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
-  { value: "rodio_perolas", label: "Banho de Ródio com Pérolas", descricao: "Material: Liga metálica com banho de ródio\nPedras: Pérolas sintéticas de alta qualidade\nGarantia: 12 meses contra defeitos" },
 ];
 
 const getCategoriaLabel = (value: string) => {
@@ -132,47 +129,69 @@ const ProdutosTab = () => {
   };
 
   const handleMaterialChange = (value: string) => {
-    const material = tiposMaterial.find(t => t.value === value);
-    if (material) {
-      setForm(prev => ({
+    setForm(prev => {
+      const descricaoAuto = gerarDescricaoAutomatica(prev.categoria, value);
+      return {
         ...prev,
         tipoMaterial: value,
-        descricao: material.descricao + (prev.descricaoAdicional ? '\n' + prev.descricaoAdicional : ''),
-      }));
-    } else {
-      setForm(prev => ({ ...prev, tipoMaterial: value }));
-    }
+        descricao: combinarDescricoes(descricaoAuto, prev.descricaoAdicional),
+      };
+    });
+  };
+
+  const handleCategoriaChange = (categoria: string) => {
+    setForm(prev => {
+      const descricaoAuto = prev.tipoMaterial 
+        ? gerarDescricaoAutomatica(categoria, prev.tipoMaterial)
+        : '';
+      return {
+        ...prev,
+        categoria,
+        descricao: combinarDescricoes(descricaoAuto, prev.descricaoAdicional),
+        // Reset ring size fields when changing category
+        tipoTamanho: categoria === 'aneis' ? prev.tipoTamanho : "",
+        faixaTamanho: categoria === 'aneis' ? prev.faixaTamanho : "",
+        tamanhosDisponiveis: categoria === 'aneis' ? prev.tamanhosDisponiveis : [],
+      };
+    });
   };
 
   const handleDescricaoAdicionalChange = (value: string) => {
-    const material = tiposMaterial.find(t => t.value === form.tipoMaterial);
-    const baseDescricao = material ? material.descricao : '';
+    const descricaoAuto = form.tipoMaterial 
+      ? gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)
+      : '';
     setForm(prev => ({
       ...prev,
       descricaoAdicional: value,
-      descricao: baseDescricao + (value ? '\n' + value : ''),
+      descricao: combinarDescricoes(descricaoAuto, value),
     }));
   };
 
   const openEdit = (produto: Produto) => {
     setEditingProduto(produto);
     
-    // Try to detect material type from description
+    // Try to detect material type and additional description from description
     let tipoMaterial = "";
     let descricaoAdicional = "";
     
     if (produto.descricao) {
-      const matchingMaterial = tiposMaterial.find(t => produto.descricao?.startsWith(t.descricao.split('\n')[0]));
-      if (matchingMaterial) {
-        tipoMaterial = matchingMaterial.value;
-        const standardDesc = matchingMaterial.descricao;
-        if (produto.descricao.length > standardDesc.length) {
-          descricaoAdicional = produto.descricao.slice(standardDesc.length).trim();
-          if (descricaoAdicional.startsWith('\n')) {
-            descricaoAdicional = descricaoAdicional.slice(1);
+      // Try to find material type by checking if description contains frase de valorização
+      for (const mat of TIPOS_MATERIAL) {
+        const testDesc = gerarDescricaoAutomatica(produto.categoria, mat.value);
+        if (produto.descricao.startsWith(testDesc.split('\n')[0])) {
+          tipoMaterial = mat.value;
+          // Extract additional description if exists
+          if (produto.descricao.length > testDesc.length) {
+            descricaoAdicional = produto.descricao.slice(testDesc.length).trim();
+            if (descricaoAdicional.startsWith('\n\n')) {
+              descricaoAdicional = descricaoAdicional.slice(2);
+            }
           }
+          break;
         }
-      } else {
+      }
+      // If no material detected, treat entire description as additional
+      if (!tipoMaterial) {
         descricaoAdicional = produto.descricao;
       }
     }
@@ -319,7 +338,7 @@ const ProdutosTab = () => {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="categoria">Categoria *</Label>
-                  <Select value={form.categoria} onValueChange={(v) => setForm({ ...form, categoria: v })}>
+                  <Select value={form.categoria} onValueChange={handleCategoriaChange}>
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
@@ -339,7 +358,7 @@ const ProdutosTab = () => {
                     <SelectValue placeholder="Selecione o tipo de material" />
                   </SelectTrigger>
                   <SelectContent>
-                    {tiposMaterial.map((tipo) => (
+                    {TIPOS_MATERIAL.map((tipo) => (
                       <SelectItem key={tipo.value} value={tipo.value}>{tipo.label}</SelectItem>
                     ))}
                   </SelectContent>
