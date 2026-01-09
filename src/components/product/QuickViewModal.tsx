@@ -87,8 +87,9 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
             </div>
 
             {product.descricao && (
-              <p className="text-sm text-muted-foreground mt-4 line-clamp-3">
-                {product.descricao}
+              <p className="text-sm text-muted-foreground mt-4 line-clamp-2 italic">
+                {/* Show only the valorization phrase (first line) */}
+                {product.descricao.split('\n\n')[0].split('\n')[0]}
               </p>
             )}
 

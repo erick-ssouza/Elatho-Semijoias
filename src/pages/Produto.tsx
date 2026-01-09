@@ -477,14 +477,47 @@ export default function ProdutoPage() {
             {/* Tab content */}
             {activeTab === 'descricao' && (
               <div className="max-w-2xl">
-                <p className="text-muted-foreground leading-relaxed">
-                  {produto.descricao || 'Semijoia exclusiva Elatho com acabamento premium em ouro 18k. Peça delicada e sofisticada, perfeita para qualquer ocasião.'}
-                </p>
-                <div className="mt-8 space-y-2 text-sm text-muted-foreground">
-                  <p>Material: Liga metálica com banho de ouro 18k</p>
-                  <p>Pedras: Zircônias de alta qualidade</p>
-                  <p>Garantia: 12 meses contra defeitos</p>
-                </div>
+                {produto.descricao ? (
+                  <div className="space-y-6">
+                    {/* Parse and render formatted description */}
+                    {produto.descricao.split('\n\n').map((paragraph, index) => {
+                      const trimmed = paragraph.trim();
+                      
+                      // Check if this is the specifications section
+                      if (trimmed.startsWith('**Especificações:**')) {
+                        const lines = paragraph.split('\n').filter(l => l.trim());
+                        return (
+                          <div key={index} className="space-y-2">
+                            <p className="text-sm font-medium text-foreground">Especificações:</p>
+                            <ul className="space-y-1 text-sm text-muted-foreground">
+                              {lines.slice(1).map((line, lineIndex) => {
+                                const cleanLine = line.replace(/^[•\-]\s*/, '').trim();
+                                return cleanLine ? (
+                                  <li key={lineIndex}>• {cleanLine}</li>
+                                ) : null;
+                              })}
+                            </ul>
+                          </div>
+                        );
+                      }
+                      
+                      // Regular paragraph (valorization phrase or additional description)
+                      if (trimmed && !trimmed.startsWith('•')) {
+                        return (
+                          <p key={index} className="text-muted-foreground leading-relaxed italic">
+                            {trimmed}
+                          </p>
+                        );
+                      }
+                      
+                      return null;
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground leading-relaxed">
+                    Semijoia exclusiva Elatho com acabamento premium. Peça delicada e sofisticada, perfeita para qualquer ocasião.
+                  </p>
+                )}
               </div>
             )}
 
