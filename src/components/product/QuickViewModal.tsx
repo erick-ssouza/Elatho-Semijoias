@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { X, ShoppingBag } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -15,7 +14,6 @@ interface QuickViewModalProps {
     preco: number;
     preco_promocional?: number | null;
     imagem_url: string | null;
-    variacoes?: string[] | null;
     descricao?: string | null;
     estoque?: number | null;
     categoria?: string;
@@ -24,7 +22,6 @@ interface QuickViewModalProps {
 }
 
 export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalProps) {
-  const [selectedVariacao, setSelectedVariacao] = useState<string | null>(null);
   const { addItem } = useCart();
 
   const formatPrice = (price: number) =>
@@ -32,7 +29,6 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
 
   const finalPrice = product.preco_promocional || product.preco;
   const hasDiscount = product.preco_promocional && product.preco_promocional < product.preco;
-  const variacoes = product.variacoes || ["Dourado", "Prateado", "Rosé"];
   const isOutOfStock = product.estoque !== null && product.estoque !== undefined && product.estoque <= 0;
 
   // Gerar descrição dinamicamente se tiver tipo_material
@@ -48,18 +44,13 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
 
   const handleAddToCart = () => {
     if (isOutOfStock) return;
-    
-    if (!selectedVariacao) {
-      toast.error("Selecione uma variação");
-      return;
-    }
 
     addItem({
       id: product.id,
       nome: product.nome,
       preco: finalPrice,
       imagem_url: product.imagem_url || "",
-      variacao: selectedVariacao,
+      variacao: "Padrão",
       estoque: product.estoque,
     }, 1);
 
@@ -105,28 +96,6 @@ export function QuickViewModal({ open, onOpenChange, product }: QuickViewModalPr
                 {fraseValorizacao}
               </p>
             )}
-
-            {/* Variations */}
-            <div className="mt-6">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground mb-3">
-                Variação
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {variacoes.map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => setSelectedVariacao(v)}
-                    className={`px-4 py-2 text-xs uppercase tracking-wider border transition-all ${
-                      selectedVariacao === v
-                        ? "border-foreground bg-foreground text-background"
-                        : "border-border hover:border-foreground"
-                    }`}
-                  >
-                    {v}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="mt-auto pt-6 space-y-3">
               {isOutOfStock ? (

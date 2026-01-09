@@ -26,7 +26,6 @@ interface Produto {
   imagem_url: string | null;
   imagens: string[] | null;
   categoria: string;
-  variacoes: string[];
   estoque: number | null;
   tipo_tamanho: string | null;
   faixa_tamanho: string | null;
@@ -38,7 +37,6 @@ export default function ProdutoPage() {
   const { id } = useParams<{ id: string }>();
   const [produto, setProduto] = useState<Produto | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedVariacao, setSelectedVariacao] = useState<string>('');
   const [selectedTamanho, setSelectedTamanho] = useState<string>('');
   const [quantidade, setQuantidade] = useState(1);
   const [activeTab, setActiveTab] = useState<'descricao' | 'cuidados'>('descricao');
@@ -58,10 +56,6 @@ export default function ProdutoPage() {
         .maybeSingle();
 
       if (!error && data) {
-        const variacoes = Array.isArray(data.variacoes) 
-          ? data.variacoes as string[]
-          : ['Banho de Ouro 18k', 'Banho de Ródio'];
-        
         const imagens = Array.isArray(data.imagens) 
           ? data.imagens as string[]
           : [];
@@ -72,17 +66,15 @@ export default function ProdutoPage() {
         
         setProduto({ 
           ...data, 
-          variacoes, 
           imagens,
           tipo_tamanho: data.tipo_tamanho || null,
           faixa_tamanho: data.faixa_tamanho || null,
           tamanhos_disponiveis: tamanhosDisponiveis,
           tipo_material: data.tipo_material || null,
         });
-        setSelectedVariacao(variacoes[0] || '');
         
-        // Auto-select first available size for rings with P/M/G
-        if (data.tipo_tamanho === 'pmg' && tamanhosDisponiveis && tamanhosDisponiveis.length > 0) {
+        // Auto-select first available size for rings with P/M/G or numeração
+        if ((data.tipo_tamanho === 'pmg' || data.tipo_tamanho === 'numeracao') && tamanhosDisponiveis && tamanhosDisponiveis.length > 0) {
           setSelectedTamanho(tamanhosDisponiveis[0]);
         }
         
@@ -108,13 +100,13 @@ export default function ProdutoPage() {
   const isOutOfStock = produto && (produto.estoque !== null && produto.estoque !== undefined && produto.estoque <= 0);
 
   // Check if ring requires size selection but none selected
-  const isRingWithSizes = produto?.categoria === 'aneis' && produto?.tipo_tamanho === 'pmg';
+  const isRingWithSizes = produto?.categoria === 'aneis' && (produto?.tipo_tamanho === 'pmg' || produto?.tipo_tamanho === 'numeracao');
   const needsSizeSelection = isRingWithSizes && !selectedTamanho;
 
   const handleAddToCart = () => {
-    if (!produto || !selectedVariacao || isOutOfStock) return;
+    if (!produto || isOutOfStock) return;
     
-    // For rings with P/M/G sizes, require size selection
+    // For rings with sizes, require size selection
     if (isRingWithSizes && !selectedTamanho) {
       toast({
         title: "Selecione um tamanho",
@@ -125,11 +117,11 @@ export default function ProdutoPage() {
     }
 
     // Build variation string including size for rings
-    let variacaoFinal = selectedVariacao;
+    let variacaoFinal = "Padrão";
     if (isRingWithSizes && selectedTamanho) {
-      variacaoFinal = `${selectedVariacao} - Tam. ${selectedTamanho}`;
+      variacaoFinal = `Tam. ${selectedTamanho}`;
     } else if (produto.tipo_tamanho === 'unico' && produto.faixa_tamanho) {
-      variacaoFinal = `${selectedVariacao} - ${produto.faixa_tamanho}`;
+      variacaoFinal = produto.faixa_tamanho;
     }
 
     addItem({
@@ -144,7 +136,7 @@ export default function ProdutoPage() {
 
     toast({
       title: "Adicionado ao carrinho",
-      description: `${quantidade}x ${produto.nome} (${variacaoFinal})`,
+      description: `${quantidade}x ${produto.nome}${variacaoFinal !== "Padrão" ? ` (${variacaoFinal})` : ""}`,
     });
   };
 
@@ -228,7 +220,6 @@ export default function ProdutoPage() {
     },
     "category": categoriaLabel,
     "material": "Liga metálica com banho de ouro 18k",
-    "color": produto.variacoes,
     "offers": {
       "@type": "Offer",
       "url": productUrl,
@@ -375,27 +366,6 @@ export default function ProdutoPage() {
                 </div>
               </div>
 
-              {/* Variation Selector - Text style */}
-              <div className="space-y-4">
-                <p className="text-sm">
-                  Cor: <span className="font-medium">{selectedVariacao}</span>
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  {produto.variacoes.map((variacao) => (
-                    <button
-                      key={variacao}
-                      onClick={() => setSelectedVariacao(variacao)}
-                      className={`text-sm transition-all duration-300 ${
-                        selectedVariacao === variacao
-                          ? 'text-foreground underline underline-offset-4'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {variacao}
-                    </button>
-                  ))}
-                </div>
-              </div>
 
               {/* Ring Size Selector - Only for rings */}
               {produto.categoria === 'aneis' && produto.tipo_tamanho && (

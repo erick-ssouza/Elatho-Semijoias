@@ -9,7 +9,7 @@ interface RingSizeSelectorProps {
   onTamanhoChange: (tamanho: string) => void;
 }
 
-const TAMANHOS = [
+const TAMANHOS_PMG = [
   { id: "P", label: "P", descricao: "Nº 12-14" },
   { id: "M", label: "M", descricao: "Nº 16-18" },
   { id: "G", label: "G", descricao: "Nº 20-22" },
@@ -37,12 +37,65 @@ export function RingSizeSelector({
     );
   }
 
+  // Numeração (12-30) - show ONLY available sizes
+  if (tipoTamanho === "numeracao") {
+    const disponiveis = tamanhosDisponiveis || [];
+    
+    // Filter to show only available sizes (sorted)
+    const numerosVisiveis = disponiveis
+      .filter(n => ["12", "14", "16", "18", "20", "22", "24", "26", "28", "30"].includes(n))
+      .sort((a, b) => parseInt(a) - parseInt(b));
+    
+    // If no sizes available, show message
+    if (numerosVisiveis.length === 0) {
+      return (
+        <div className="space-y-2">
+          <p className="text-sm text-muted-foreground">Tamanho:</p>
+          <p className="text-sm text-muted-foreground italic">
+            Sem tamanhos disponíveis no momento
+          </p>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <p className="text-sm">
+            Tamanho: <span className="font-medium">{selectedTamanho || "Selecione"}</span>
+          </p>
+          <SizeGuideModal />
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          {numerosVisiveis.map((numero) => {
+            const isSelected = selectedTamanho === numero;
+            
+            return (
+              <button
+                key={numero}
+                onClick={() => onTamanhoChange(numero)}
+                className={`flex items-center justify-center min-w-[48px] h-12 border rounded-lg transition-all ${
+                  isSelected
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border hover:border-foreground"
+                }`}
+              >
+                <span className="text-sm font-medium">{numero}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   // Tamanhos P/M/G - show ONLY available sizes
   if (tipoTamanho === "pmg") {
     const disponiveis = tamanhosDisponiveis || [];
     
     // Filter to show only available sizes
-    const tamanhosVisiveis = TAMANHOS.filter(tamanho => disponiveis.includes(tamanho.id));
+    const tamanhosVisiveis = TAMANHOS_PMG.filter(tamanho => disponiveis.includes(tamanho.id));
     
     // If no sizes available, show message
     if (tamanhosVisiveis.length === 0) {
