@@ -46,7 +46,8 @@ const categorias = [
   { value: "conjuntos", label: "Conjuntos" },
 ];
 
-const NUMERACOES = ["12", "14", "16", "18", "20", "22", "24", "26", "28", "30"];
+// All ring sizes from 12 to 30
+const NUMERACOES = Array.from({ length: 19 }, (_, i) => String(12 + i)); // ["12", "13", ..., "30"]
 
 const getCategoriaLabel = (value: string) => {
   const cat = categorias.find(c => c.value === value);
@@ -72,8 +73,9 @@ const ProdutosTab = () => {
     estoque: "10",
     destaque: false,
     // Ring size fields
-    tipoTamanho: "" as "" | "unico" | "numeracao" | "pmg",
-    faixaTamanho: "",
+    tipoTamanho: "" as "" | "unico" | "regulavel" | "numeracao" | "pmg",
+    faixaTamanhoMin: "",
+    faixaTamanhoMax: "",
     tamanhosDisponiveis: [] as string[],
   });
 
@@ -116,7 +118,8 @@ const ProdutosTab = () => {
       estoque: "10",
       destaque: false,
       tipoTamanho: "",
-      faixaTamanho: "",
+      faixaTamanhoMin: "",
+      faixaTamanhoMax: "",
       tamanhosDisponiveis: [],
     });
     setEditingProduto(null);
@@ -135,7 +138,8 @@ const ProdutosTab = () => {
       categoria,
       // Reset ring size fields when changing category
       tipoTamanho: categoria === 'aneis' ? prev.tipoTamanho : "",
-      faixaTamanho: categoria === 'aneis' ? prev.faixaTamanho : "",
+      faixaTamanhoMin: categoria === 'aneis' ? prev.faixaTamanhoMin : "",
+      faixaTamanhoMax: categoria === 'aneis' ? prev.faixaTamanhoMax : "",
       tamanhosDisponiveis: categoria === 'aneis' ? prev.tamanhosDisponiveis : [],
     }));
   };
@@ -147,12 +151,23 @@ const ProdutosTab = () => {
     const tipoMaterial = produto.tipo_material || "";
     
     // Detectar tipo de tamanho para produtos antigos
-    let tipoTamanho: "" | "unico" | "numeracao" | "pmg" = "";
+    let tipoTamanho: "" | "unico" | "regulavel" | "numeracao" | "pmg" = "";
     const savedTipoTamanho = produto.tipo_tamanho;
-    if (savedTipoTamanho === "unico" || savedTipoTamanho === "numeracao" || savedTipoTamanho === "pmg") {
+    if (savedTipoTamanho === "unico" || savedTipoTamanho === "regulavel" || savedTipoTamanho === "numeracao" || savedTipoTamanho === "pmg") {
       tipoTamanho = savedTipoTamanho;
     }
     let tamanhosDisponiveis = Array.isArray(produto.tamanhos_disponiveis) ? produto.tamanhos_disponiveis : [];
+    
+    // Parse faixa_tamanho for "regulavel" type (format: "16 ao 20")
+    let faixaTamanhoMin = "";
+    let faixaTamanhoMax = "";
+    if (produto.faixa_tamanho && tipoTamanho === "regulavel") {
+      const match = produto.faixa_tamanho.match(/(\d+)\s*ao\s*(\d+)/i);
+      if (match) {
+        faixaTamanhoMin = match[1];
+        faixaTamanhoMax = match[2];
+      }
+    }
     
     setForm({
       nome: produto.nome,
@@ -165,7 +180,8 @@ const ProdutosTab = () => {
       estoque: String(produto.estoque || 10),
       destaque: produto.destaque || false,
       tipoTamanho,
-      faixaTamanho: produto.faixa_tamanho || "",
+      faixaTamanhoMin,
+      faixaTamanhoMax,
       tamanhosDisponiveis,
     });
     setDialogOpen(true);
@@ -181,6 +197,12 @@ const ProdutosTab = () => {
     // Ring size fields - only for "aneis" category
     const isAnel = categoriaValue === 'aneis';
 
+    // Build faixa_tamanho for "regulavel" type
+    let faixaTamanho: string | null = null;
+    if (isAnel && form.tipoTamanho === 'regulavel' && form.faixaTamanhoMin && form.faixaTamanhoMax) {
+      faixaTamanho = `${form.faixaTamanhoMin} ao ${form.faixaTamanhoMax}`;
+    }
+
     const produtoData = {
       nome: form.nome,
       descricao: null, // Descrição é gerada dinamicamente no site
@@ -194,7 +216,7 @@ const ProdutosTab = () => {
       destaque: form.destaque,
       variacoes: null, // Campo removido
       tipo_tamanho: isAnel && form.tipoTamanho ? form.tipoTamanho : null,
-      faixa_tamanho: isAnel && form.tipoTamanho === 'unico' ? form.faixaTamanho || null : null,
+      faixa_tamanho: faixaTamanho,
       tamanhos_disponiveis: isAnel && (form.tipoTamanho === 'pmg' || form.tipoTamanho === 'numeracao') && form.tamanhosDisponiveis.length > 0 
         ? form.tamanhosDisponiveis 
         : null,
@@ -378,129 +400,161 @@ const ProdutosTab = () => {
                     value={form.tipoTamanho}
                     onValueChange={(value) => setForm({ 
                       ...form, 
-                      tipoTamanho: value as "" | "unico" | "numeracao" | "pmg",
+                      tipoTamanho: value as "" | "unico" | "regulavel" | "numeracao" | "pmg",
                       // Reset dependent fields when changing type
-                      faixaTamanho: "",
+                      faixaTamanhoMin: "",
+                      faixaTamanhoMax: "",
                       tamanhosDisponiveis: [],
                     })}
-                    className="space-y-2"
+                    className="space-y-3"
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="unico" id="tamanho-unico" />
                       <Label htmlFor="tamanho-unico" className="font-normal cursor-pointer">
-                        Tamanho Único / Regulável
+                        Tamanho Único
                       </Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="numeracao" id="tamanho-numeracao" />
-                      <Label htmlFor="tamanho-numeracao" className="font-normal cursor-pointer">
-                        Numeração (12-30)
-                      </Label>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="regulavel" id="tamanho-regulavel" />
+                        <Label htmlFor="tamanho-regulavel" className="font-normal cursor-pointer">
+                          Regulável
+                        </Label>
+                      </div>
+                      {/* Faixa de ajuste for Regulável */}
+                      {form.tipoTamanho === 'regulavel' && (
+                        <div className="flex items-center gap-2 pl-6">
+                          <Label className="text-sm text-muted-foreground whitespace-nowrap">Faixa:</Label>
+                          <Input
+                            type="number"
+                            min="12"
+                            max="30"
+                            value={form.faixaTamanhoMin}
+                            onChange={(e) => setForm({ ...form, faixaTamanhoMin: e.target.value })}
+                            placeholder="16"
+                            className="w-16 h-8 text-center"
+                          />
+                          <span className="text-sm text-muted-foreground">ao</span>
+                          <Input
+                            type="number"
+                            min="12"
+                            max="30"
+                            value={form.faixaTamanhoMax}
+                            onChange={(e) => setForm({ ...form, faixaTamanhoMax: e.target.value })}
+                            placeholder="20"
+                            className="w-16 h-8 text-center"
+                          />
+                        </div>
+                      )}
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="pmg" id="tamanho-pmg" />
-                      <Label htmlFor="tamanho-pmg" className="font-normal cursor-pointer">
-                        Tamanhos P/M/G
-                      </Label>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="numeracao" id="tamanho-numeracao" />
+                        <Label htmlFor="tamanho-numeracao" className="font-normal cursor-pointer">
+                          Numeração (12-30)
+                        </Label>
+                      </div>
+                      {/* Multi-select dropdown for Numeração */}
+                      {form.tipoTamanho === 'numeracao' && (
+                        <div className="space-y-3 pl-6">
+                          <div className="space-y-2">
+                            <Select
+                              onValueChange={(value) => {
+                                if (!form.tamanhosDisponiveis.includes(value)) {
+                                  setForm({ 
+                                    ...form, 
+                                    tamanhosDisponiveis: [...form.tamanhosDisponiveis, value].sort((a, b) => parseInt(a) - parseInt(b))
+                                  });
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-full">
+                                <SelectValue placeholder="Selecione os tamanhos..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {NUMERACOES.filter(num => !form.tamanhosDisponiveis.includes(num)).map((num) => (
+                                  <SelectItem key={num} value={num}>{num}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {form.tamanhosDisponiveis.length > 0 && (
+                              <div className="flex flex-wrap gap-1">
+                                {form.tamanhosDisponiveis.map((tamanho) => (
+                                  <Badge 
+                                    key={tamanho} 
+                                    variant="secondary" 
+                                    className="cursor-pointer hover:bg-destructive hover:text-destructive-foreground transition-colors"
+                                    onClick={() => setForm({ 
+                                      ...form, 
+                                      tamanhosDisponiveis: form.tamanhosDisponiveis.filter(t => t !== tamanho) 
+                                    })}
+                                  >
+                                    {tamanho} ×
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {form.tamanhosDisponiveis.length === 0 && (
+                            <p className="text-xs text-amber-600 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Selecione ao menos um tamanho disponível
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="pmg" id="tamanho-pmg" />
+                        <Label htmlFor="tamanho-pmg" className="font-normal cursor-pointer">
+                          Tamanhos P/M/G
+                        </Label>
+                      </div>
+                      {/* Checkboxes for P/M/G */}
+                      {form.tipoTamanho === 'pmg' && (
+                        <div className="space-y-2 pl-6">
+                          {[
+                            { id: 'P', label: 'P (14-18)' },
+                            { id: 'M', label: 'M (19-23)' },
+                            { id: 'G', label: 'G (24-30)' },
+                          ].map((tamanho) => (
+                            <div key={tamanho.id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`tamanho-${tamanho.id}`}
+                                checked={form.tamanhosDisponiveis.includes(tamanho.id)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setForm({ 
+                                      ...form, 
+                                      tamanhosDisponiveis: [...form.tamanhosDisponiveis, tamanho.id] 
+                                    });
+                                  } else {
+                                    setForm({ 
+                                      ...form, 
+                                      tamanhosDisponiveis: form.tamanhosDisponiveis.filter(t => t !== tamanho.id) 
+                                    });
+                                  }
+                                }}
+                              />
+                              <Label htmlFor={`tamanho-${tamanho.id}`} className="font-normal cursor-pointer">
+                                {tamanho.label}
+                              </Label>
+                            </div>
+                          ))}
+                          {form.tamanhosDisponiveis.length === 0 && (
+                            <p className="text-xs text-amber-600 flex items-center gap-1">
+                              <AlertCircle className="w-3 h-3" />
+                              Selecione ao menos um tamanho disponível
+                            </p>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </RadioGroup>
-
-                  {/* Options for Tamanho Único */}
-                  {form.tipoTamanho === 'unico' && (
-                    <div className="space-y-2 pl-6">
-                      <Label htmlFor="faixaTamanho" className="text-sm">
-                        Faixa de ajuste (opcional)
-                      </Label>
-                      <Input
-                        id="faixaTamanho"
-                        value={form.faixaTamanho}
-                        onChange={(e) => setForm({ ...form, faixaTamanho: e.target.value })}
-                        placeholder="Ex: Regulável 14-18"
-                      />
-                    </div>
-                  )}
-
-                  {/* Options for Numeração (12-30) */}
-                  {form.tipoTamanho === 'numeracao' && (
-                    <div className="space-y-3 pl-6">
-                      <Label className="text-sm">Tamanhos disponíveis (marque os que têm estoque):</Label>
-                      <div className="grid grid-cols-5 gap-2">
-                        {NUMERACOES.map((num) => (
-                          <div key={num} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`num-${num}`}
-                              checked={form.tamanhosDisponiveis.includes(num)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setForm({ 
-                                    ...form, 
-                                    tamanhosDisponiveis: [...form.tamanhosDisponiveis, num].sort((a, b) => parseInt(a) - parseInt(b))
-                                  });
-                                } else {
-                                  setForm({ 
-                                    ...form, 
-                                    tamanhosDisponiveis: form.tamanhosDisponiveis.filter(t => t !== num) 
-                                  });
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`num-${num}`} className="font-normal cursor-pointer text-sm">
-                              {num}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                      {form.tamanhosDisponiveis.length === 0 && (
-                        <p className="text-xs text-amber-600 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          Selecione ao menos um tamanho disponível
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Options for P/M/G */}
-                  {form.tipoTamanho === 'pmg' && (
-                    <div className="space-y-3 pl-6">
-                      <Label className="text-sm">Tamanhos disponíveis em estoque:</Label>
-                      <div className="space-y-2">
-                        {[
-                          { id: 'P', label: 'P (Nº 12-14)' },
-                          { id: 'M', label: 'M (Nº 16-18)' },
-                          { id: 'G', label: 'G (Nº 20-22)' },
-                        ].map((tamanho) => (
-                          <div key={tamanho.id} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`tamanho-${tamanho.id}`}
-                              checked={form.tamanhosDisponiveis.includes(tamanho.id)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setForm({ 
-                                    ...form, 
-                                    tamanhosDisponiveis: [...form.tamanhosDisponiveis, tamanho.id] 
-                                  });
-                                } else {
-                                  setForm({ 
-                                    ...form, 
-                                    tamanhosDisponiveis: form.tamanhosDisponiveis.filter(t => t !== tamanho.id) 
-                                  });
-                                }
-                              }}
-                            />
-                            <Label htmlFor={`tamanho-${tamanho.id}`} className="font-normal cursor-pointer">
-                              {tamanho.label}
-                            </Label>
-                          </div>
-                        ))}
-                      </div>
-                      {form.tamanhosDisponiveis.length === 0 && (
-                        <p className="text-xs text-amber-600 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          Selecione ao menos um tamanho disponível
-                        </p>
-                      )}
-                    </div>
-                  )}
                 </div>
               )}
 
