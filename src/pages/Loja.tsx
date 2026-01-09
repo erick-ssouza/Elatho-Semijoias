@@ -334,28 +334,21 @@ const Loja = () => {
                   ) : filteredProdutos.length > 0 ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
                       {filteredProdutos.map((produto, index) => (
-                        <div
+                        <ProductCard
                           key={produto.id}
-                          className="animate-fade-in-up group"
-                          style={{ animationDelay: `${index * 30}ms` }}
-                        >
-                          <div className="bg-card rounded-lg overflow-hidden transition-all duration-500 hover:shadow-2xl hover:-translate-y-2 group-hover:shadow-primary/10">
-                            <div className="overflow-hidden">
-                              <ProductCard
-                                id={produto.id}
-                                nome={produto.nome}
-                                preco={produto.preco}
-                                preco_promocional={produto.preco_promocional}
-                                imagem_url={produto.imagem_url}
-                                categoria={produto.categoria}
-                                variacoes={produto.variacoes}
-                                descricao={produto.descricao}
-                                estoque={produto.estoque}
-                                mediaAvaliacoes={produto.mediaAvaliacoes}
-                              />
-                            </div>
-                          </div>
-                        </div>
+                          id={produto.id}
+                          nome={produto.nome}
+                          preco={produto.preco}
+                          preco_promocional={produto.preco_promocional}
+                          imagem_url={produto.imagem_url}
+                          categoria={produto.categoria}
+                          descricao={produto.descricao}
+                          estoque={produto.estoque}
+                          tipo_material={produto.tipo_material}
+                          mediaAvaliacoes={produto.mediaAvaliacoes}
+                          totalAvaliacoes={produto.totalAvaliacoes}
+                          index={index}
+                        />
                       ))}
                     </div>
                   ) : (

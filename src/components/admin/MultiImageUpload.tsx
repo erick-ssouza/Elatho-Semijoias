@@ -162,11 +162,13 @@ export default function MultiImageUpload({
     const newAdditional = [...additionalImages];
     newAdditional.splice(index - 1, 1);
     
-    // Move current main to additional
+    // Move current main to additional (at the beginning)
     if (mainImage) {
       newAdditional.unshift(mainImage);
     }
     
+    // Update both in sequence - the parent should use functional updates
+    // to ensure both changes are applied correctly
     onMainImageChange(newMainUrl);
     onAdditionalImagesChange(newAdditional);
     toast({ title: "Imagem principal atualizada" });
