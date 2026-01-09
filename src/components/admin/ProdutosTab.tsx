@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -18,9 +17,7 @@ import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle } from "lucide-react
 import MultiImageUpload from "./MultiImageUpload";
 import { 
   TIPOS_MATERIAL, 
-  gerarDescricaoAutomatica, 
-  combinarDescricoes,
-  getTipoMaterial 
+  gerarDescricaoAutomatica
 } from "@/lib/productDescriptions";
 
 interface Produto {
@@ -49,6 +46,8 @@ const categorias = [
   { value: "conjuntos", label: "Conjuntos" },
 ];
 
+const NUMERACOES = ["12", "14", "16", "18", "20", "22", "24", "26", "28", "30"];
+
 const getCategoriaLabel = (value: string) => {
   const cat = categorias.find(c => c.value === value);
   return cat ? cat.label : value;
@@ -64,8 +63,6 @@ const ProdutosTab = () => {
 
   const [form, setForm] = useState({
     nome: "",
-    descricao: "",
-    descricaoAdicional: "",
     tipoMaterial: "",
     preco: "",
     preco_promocional: "",
@@ -74,9 +71,8 @@ const ProdutosTab = () => {
     imagens: [] as string[],
     estoque: "10",
     destaque: false,
-    variacoes: "Banho de Ouro 18k, Banho de Ródio",
     // Ring size fields
-    tipoTamanho: "" as "" | "unico" | "pmg",
+    tipoTamanho: "" as "" | "unico" | "numeracao" | "pmg",
     faixaTamanho: "",
     tamanhosDisponiveis: [] as string[],
   });
@@ -111,8 +107,6 @@ const ProdutosTab = () => {
   const resetForm = () => {
     setForm({
       nome: "",
-      descricao: "",
-      descricaoAdicional: "",
       tipoMaterial: "",
       preco: "",
       preco_promocional: "",
@@ -121,7 +115,6 @@ const ProdutosTab = () => {
       imagens: [],
       estoque: "10",
       destaque: false,
-      variacoes: "Banho de Ouro 18k, Banho de Ródio",
       tipoTamanho: "",
       faixaTamanho: "",
       tamanhosDisponiveis: [],
@@ -130,41 +123,20 @@ const ProdutosTab = () => {
   };
 
   const handleMaterialChange = (value: string) => {
-    setForm(prev => {
-      const descricaoAuto = gerarDescricaoAutomatica(prev.categoria, value);
-      return {
-        ...prev,
-        tipoMaterial: value,
-        descricao: combinarDescricoes(descricaoAuto, prev.descricaoAdicional),
-      };
-    });
+    setForm(prev => ({
+      ...prev,
+      tipoMaterial: value,
+    }));
   };
 
   const handleCategoriaChange = (categoria: string) => {
-    setForm(prev => {
-      const descricaoAuto = prev.tipoMaterial 
-        ? gerarDescricaoAutomatica(categoria, prev.tipoMaterial)
-        : '';
-      return {
-        ...prev,
-        categoria,
-        descricao: combinarDescricoes(descricaoAuto, prev.descricaoAdicional),
-        // Reset ring size fields when changing category
-        tipoTamanho: categoria === 'aneis' ? prev.tipoTamanho : "",
-        faixaTamanho: categoria === 'aneis' ? prev.faixaTamanho : "",
-        tamanhosDisponiveis: categoria === 'aneis' ? prev.tamanhosDisponiveis : [],
-      };
-    });
-  };
-
-  const handleDescricaoAdicionalChange = (value: string) => {
-    const descricaoAuto = form.tipoMaterial 
-      ? gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)
-      : '';
     setForm(prev => ({
       ...prev,
-      descricaoAdicional: value,
-      descricao: combinarDescricoes(descricaoAuto, value),
+      categoria,
+      // Reset ring size fields when changing category
+      tipoTamanho: categoria === 'aneis' ? prev.tipoTamanho : "",
+      faixaTamanho: categoria === 'aneis' ? prev.faixaTamanho : "",
+      tamanhosDisponiveis: categoria === 'aneis' ? prev.tamanhosDisponiveis : [],
     }));
   };
 
@@ -174,23 +146,16 @@ const ProdutosTab = () => {
     // Usar tipo_material salvo no banco (se existir)
     const tipoMaterial = produto.tipo_material || "";
     
-    // Descrição adicional: se existe descrição salva e não temos tipo_material,
-    // tratar toda a descrição como adicional (produto legado)
-    let descricaoAdicional = "";
-    if (produto.descricao && !produto.tipo_material) {
-      // Produto legado sem tipo_material - toda descrição é adicional
-      descricaoAdicional = produto.descricao;
+    // Detectar tipo de tamanho para produtos antigos
+    let tipoTamanho: "" | "unico" | "numeracao" | "pmg" = "";
+    const savedTipoTamanho = produto.tipo_tamanho;
+    if (savedTipoTamanho === "unico" || savedTipoTamanho === "numeracao" || savedTipoTamanho === "pmg") {
+      tipoTamanho = savedTipoTamanho;
     }
-    
-    // Gerar preview da descrição para mostrar no form
-    const descricaoPreview = tipoMaterial 
-      ? gerarDescricaoAutomatica(produto.categoria, tipoMaterial)
-      : '';
+    let tamanhosDisponiveis = Array.isArray(produto.tamanhos_disponiveis) ? produto.tamanhos_disponiveis : [];
     
     setForm({
       nome: produto.nome,
-      descricao: combinarDescricoes(descricaoPreview, descricaoAdicional),
-      descricaoAdicional,
       tipoMaterial,
       preco: String(produto.preco),
       preco_promocional: produto.preco_promocional ? String(produto.preco_promocional) : "",
@@ -199,10 +164,9 @@ const ProdutosTab = () => {
       imagens: Array.isArray(produto.imagens) ? produto.imagens : [],
       estoque: String(produto.estoque || 10),
       destaque: produto.destaque || false,
-      variacoes: (Array.isArray(produto.variacoes) ? produto.variacoes : []).join(", "),
-      tipoTamanho: (produto.tipo_tamanho as "" | "unico" | "pmg") || "",
+      tipoTamanho,
       faixaTamanho: produto.faixa_tamanho || "",
-      tamanhosDisponiveis: Array.isArray(produto.tamanhos_disponiveis) ? produto.tamanhos_disponiveis : [],
+      tamanhosDisponiveis,
     });
     setDialogOpen(true);
   };
@@ -211,27 +175,15 @@ const ProdutosTab = () => {
     e.preventDefault();
     setSaving(true);
 
-    const variacoesArray = form.variacoes
-      .split(",")
-      .map((v) => v.trim())
-      .filter(Boolean);
-
     // Garantir que categoria está em minúsculas sem acento
     const categoriaValue = form.categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
-    console.log("Categoria selecionada:", form.categoria);
-    console.log("Categoria normalizada:", categoriaValue);
-
     // Ring size fields - only for "aneis" category
     const isAnel = categoriaValue === 'aneis';
-    
-    // Descrição salva agora é apenas a descrição adicional (se existir)
-    // A descrição principal é gerada dinamicamente no site
-    const descricaoParaSalvar = form.descricaoAdicional?.trim() || null;
 
     const produtoData = {
       nome: form.nome,
-      descricao: descricaoParaSalvar,
+      descricao: null, // Descrição é gerada dinamicamente no site
       tipo_material: form.tipoMaterial || null,
       preco: parseFloat(form.preco),
       preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
@@ -240,10 +192,10 @@ const ProdutosTab = () => {
       imagens: form.imagens.length > 0 ? form.imagens : null,
       estoque: parseInt(form.estoque),
       destaque: form.destaque,
-      variacoes: variacoesArray,
+      variacoes: null, // Campo removido
       tipo_tamanho: isAnel && form.tipoTamanho ? form.tipoTamanho : null,
       faixa_tamanho: isAnel && form.tipoTamanho === 'unico' ? form.faixaTamanho || null : null,
-      tamanhos_disponiveis: isAnel && form.tipoTamanho === 'pmg' && form.tamanhosDisponiveis.length > 0 
+      tamanhos_disponiveis: isAnel && (form.tipoTamanho === 'pmg' || form.tipoTamanho === 'numeracao') && form.tamanhosDisponiveis.length > 0 
         ? form.tamanhosDisponiveis 
         : null,
     };
@@ -361,26 +313,12 @@ const ProdutosTab = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="descricaoAdicional">Descrição Adicional (opcional)</Label>
-                <Textarea
-                  id="descricaoAdicional"
-                  value={form.descricaoAdicional}
-                  onChange={(e) => handleDescricaoAdicionalChange(e.target.value)}
-                  rows={2}
-                  placeholder="Informações adicionais sobre o produto..."
-                />
-              </div>
-
               {/* Preview da descrição que será exibida no site */}
               {form.tipoMaterial && form.categoria && (
                 <div className="space-y-2">
-                  <Label className="text-muted-foreground text-xs">Preview (gerado automaticamente no site)</Label>
+                  <Label className="text-muted-foreground text-xs">Preview da descrição (gerado automaticamente no site)</Label>
                   <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground whitespace-pre-wrap max-h-32 overflow-y-auto border">
-                    {combinarDescricoes(
-                      gerarDescricaoAutomatica(form.categoria, form.tipoMaterial),
-                      form.descricaoAdicional
-                    )}
+                    {gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)}
                   </div>
                 </div>
               )}
@@ -431,16 +369,6 @@ const ProdutosTab = () => {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="variacoes">Variações (separadas por vírgula)</Label>
-                <Input
-                  id="variacoes"
-                  value={form.variacoes}
-                  onChange={(e) => setForm({ ...form, variacoes: e.target.value })}
-                  placeholder="Banho de Ouro 18k, Banho de Ródio"
-                />
-              </div>
-
               {/* Ring Size Options - Only show for Anéis category */}
               {form.categoria === 'aneis' && (
                 <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
@@ -450,7 +378,7 @@ const ProdutosTab = () => {
                     value={form.tipoTamanho}
                     onValueChange={(value) => setForm({ 
                       ...form, 
-                      tipoTamanho: value as "" | "unico" | "pmg",
+                      tipoTamanho: value as "" | "unico" | "numeracao" | "pmg",
                       // Reset dependent fields when changing type
                       faixaTamanho: "",
                       tamanhosDisponiveis: [],
@@ -461,6 +389,12 @@ const ProdutosTab = () => {
                       <RadioGroupItem value="unico" id="tamanho-unico" />
                       <Label htmlFor="tamanho-unico" className="font-normal cursor-pointer">
                         Tamanho Único / Regulável
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="numeracao" id="tamanho-numeracao" />
+                      <Label htmlFor="tamanho-numeracao" className="font-normal cursor-pointer">
+                        Numeração (12-30)
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -483,6 +417,45 @@ const ProdutosTab = () => {
                         onChange={(e) => setForm({ ...form, faixaTamanho: e.target.value })}
                         placeholder="Ex: Regulável 14-18"
                       />
+                    </div>
+                  )}
+
+                  {/* Options for Numeração (12-30) */}
+                  {form.tipoTamanho === 'numeracao' && (
+                    <div className="space-y-3 pl-6">
+                      <Label className="text-sm">Tamanhos disponíveis (marque os que têm estoque):</Label>
+                      <div className="grid grid-cols-5 gap-2">
+                        {NUMERACOES.map((num) => (
+                          <div key={num} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`num-${num}`}
+                              checked={form.tamanhosDisponiveis.includes(num)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setForm({ 
+                                    ...form, 
+                                    tamanhosDisponiveis: [...form.tamanhosDisponiveis, num].sort((a, b) => parseInt(a) - parseInt(b))
+                                  });
+                                } else {
+                                  setForm({ 
+                                    ...form, 
+                                    tamanhosDisponiveis: form.tamanhosDisponiveis.filter(t => t !== num) 
+                                  });
+                                }
+                              }}
+                            />
+                            <Label htmlFor={`num-${num}`} className="font-normal cursor-pointer text-sm">
+                              {num}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                      {form.tamanhosDisponiveis.length === 0 && (
+                        <p className="text-xs text-amber-600 flex items-center gap-1">
+                          <AlertCircle className="w-3 h-3" />
+                          Selecione ao menos um tamanho disponível
+                        </p>
+                      )}
                     </div>
                   )}
 

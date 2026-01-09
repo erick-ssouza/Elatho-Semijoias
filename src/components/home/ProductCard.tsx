@@ -208,7 +208,6 @@ export default function ProductCard({
             preco,
             preco_promocional,
             imagem_url,
-            variacoes,
             descricao,
             estoque,
             categoria,
