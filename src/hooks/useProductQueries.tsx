@@ -13,6 +13,10 @@ interface Produto {
   imagens: string[] | null;
   estoque: number | null;
   destaque: boolean | null;
+  tipo_material: string | null;
+  tipo_tamanho: string | null;
+  faixa_tamanho: string | null;
+  tamanhos_disponiveis: string[] | null;
 }
 
 interface ProductListItem {
@@ -25,6 +29,7 @@ interface ProductListItem {
   variacoes: string[] | null;
   descricao: string | null;
   estoque: number | null;
+  tipo_material: string | null;
 }
 
 interface ProductWithRating extends ProductListItem {
@@ -40,7 +45,7 @@ export function useProducts(category?: string, onlyHighlighted: boolean = true) 
     queryFn: async () => {
       let query = supabase
         .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque')
+        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque, tipo_material')
         .gt('estoque', 0); // Only show products with stock > 0
 
       if (onlyHighlighted) {
@@ -117,7 +122,16 @@ export function useProduct(id: string | undefined) {
         ? data.imagens as string[]
         : [];
 
-      return { ...data, variacoes, imagens } as Produto;
+      const tamanhos = Array.isArray(data.tamanhos_disponiveis)
+        ? data.tamanhos_disponiveis as string[]
+        : null;
+
+      return { 
+        ...data, 
+        variacoes, 
+        imagens,
+        tamanhos_disponiveis: tamanhos,
+      } as Produto;
     },
     enabled: !!id,
     staleTime: 1000 * 60 * 5, // 5 minutes

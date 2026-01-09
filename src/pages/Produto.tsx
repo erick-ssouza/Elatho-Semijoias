@@ -15,6 +15,7 @@ import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { RingSizeSelector } from '@/components/product/RingSizeSelector';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { gerarDescricaoAutomatica, combinarDescricoes } from '@/lib/productDescriptions';
 
 interface Produto {
   id: string;
@@ -30,6 +31,7 @@ interface Produto {
   tipo_tamanho: string | null;
   faixa_tamanho: string | null;
   tamanhos_disponiveis: string[] | null;
+  tipo_material: string | null;
 }
 
 export default function ProdutoPage() {
@@ -75,6 +77,7 @@ export default function ProdutoPage() {
           tipo_tamanho: data.tipo_tamanho || null,
           faixa_tamanho: data.faixa_tamanho || null,
           tamanhos_disponiveis: tamanhosDisponiveis,
+          tipo_material: data.tipo_material || null,
         });
         setSelectedVariacao(variacoes[0] || '');
         
@@ -198,12 +201,23 @@ export default function ProdutoPage() {
     pulseiras: 'Pulseiras',
   }[produto.categoria] || produto.categoria;
 
+  // Gerar descrição dinamicamente baseada no tipo_material
+  // Se não tiver tipo_material, usa a descrição salva no banco (produtos legados)
+  const descricaoGerada = produto.tipo_material 
+    ? gerarDescricaoAutomatica(produto.categoria, produto.tipo_material)
+    : null;
+  
+  // Combinar com descrição adicional (que está salva no campo descricao)
+  const descricaoFinal = descricaoGerada 
+    ? combinarDescricoes(descricaoGerada, produto.descricao)
+    : produto.descricao;
+
   // Schema JSON-LD para SEO
   const productSchema = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": produto.nome,
-    "description": produto.descricao || `${produto.nome} - Semijoia exclusiva Elatho com acabamento em ouro 18k.`,
+    "description": descricaoFinal || `${produto.nome} - Semijoia exclusiva Elatho com acabamento em ouro 18k.`,
     "image": produto.imagens?.length 
       ? [produto.imagem_url, ...produto.imagens].filter(Boolean)
       : produto.imagem_url ? [produto.imagem_url] : [],
@@ -294,9 +308,9 @@ export default function ProdutoPage() {
     <>
       <Helmet>
         <title>{produto.nome} | Elatho Semijoias</title>
-        <meta name="description" content={produto.descricao || `${produto.nome} - Semijoia exclusiva Elatho com acabamento em ouro 18k.`} />
+        <meta name="description" content={descricaoFinal?.split('\n')[0] || `${produto.nome} - Semijoia exclusiva Elatho com acabamento em ouro 18k.`} />
         <meta property="og:title" content={`${produto.nome} | Elatho Semijoias`} />
-        <meta property="og:description" content={produto.descricao || 'Semijoia exclusiva Elatho com acabamento premium.'} />
+        <meta property="og:description" content={descricaoFinal?.split('\n')[0] || 'Semijoia exclusiva Elatho com acabamento premium.'} />
         <meta property="og:image" content={produto.imagem_url || ''} />
         <meta property="og:url" content={productUrl} />
         <meta property="og:type" content="product" />
@@ -304,7 +318,7 @@ export default function ProdutoPage() {
         <meta property="product:price:currency" content="BRL" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={`${produto.nome} | Elatho Semijoias`} />
-        <meta name="twitter:description" content={produto.descricao || 'Semijoia exclusiva Elatho.'} />
+        <meta name="twitter:description" content={descricaoFinal?.split('\n')[0] || 'Semijoia exclusiva Elatho.'} />
         <meta name="twitter:image" content={produto.imagem_url || ''} />
         <script type="application/ld+json">
           {JSON.stringify(productSchema)}
@@ -477,10 +491,10 @@ export default function ProdutoPage() {
             {/* Tab content */}
             {activeTab === 'descricao' && (
               <div className="max-w-2xl">
-                {produto.descricao ? (
+                {descricaoFinal ? (
                   <div className="space-y-6">
                     {/* Parse and render formatted description */}
-                    {produto.descricao.split('\n\n').map((paragraph, index) => {
+                    {descricaoFinal.split('\n\n').map((paragraph, index) => {
                       const trimmed = paragraph.trim();
                       
                       // Check if this is the specifications section

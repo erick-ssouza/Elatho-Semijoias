@@ -1,5 +1,6 @@
 // Sistema de descrições automáticas para produtos
 // Baseado em categoria + tipo de material
+// IMPORTANTE: Descrições são geradas dinamicamente no site, NÃO salvar no banco!
 
 export const FRASES_VALORIZACAO: Record<string, string> = {
   brincos: "Emoldure seu rosto com elegância. Peça criada para realçar sua beleza e expressar sua personalidade única.",
@@ -42,46 +43,54 @@ export function getTipoMaterial(value: string): TipoMaterial | undefined {
 
 /**
  * Gera descrição automática baseada na categoria e tipo de material
+ * IMPORTANTE: Esta função é chamada no frontend para gerar a descrição em tempo real
+ * A descrição NÃO é salva no banco de dados
  */
 export function gerarDescricaoAutomatica(categoria: string, tipoMaterialValue: string): string {
-  const categoriaKey = categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-  const milesimos = MILESIMOS[categoriaKey] || 10;
-  const frase = FRASES_VALORIZACAO[categoriaKey] || "";
-  const material = getTipoMaterial(tipoMaterialValue);
-  
-  if (!material) return frase;
-  
-  let descricao = `${frase}\n\n**Especificações:**\n`;
-  
-  // Material
-  if (material.ehOuro) {
-    descricao += `• Material: Liga metálica com banho de ouro 18k\n`;
-  } else if (material.ehRodio) {
-    descricao += `• Material: Liga metálica com banho de ródio\n`;
+  try {
+    const categoriaKey = categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    const milesimos = MILESIMOS[categoriaKey] || 10;
+    const frase = FRASES_VALORIZACAO[categoriaKey] || "";
+    const material = getTipoMaterial(tipoMaterialValue);
+    
+    if (!material) return frase || "Semijoia de alta qualidade com acabamento antialérgico e camada de paládio. Garantia: 12 meses contra defeitos.";
+    
+    let descricao = `${frase}\n\n**Especificações:**\n`;
+    
+    // Material
+    if (material.ehOuro) {
+      descricao += `• Material: Liga metálica com banho de ouro 18k\n`;
+    } else if (material.ehRodio) {
+      descricao += `• Material: Liga metálica com banho de ródio\n`;
+    }
+    
+    // Milésimos
+    descricao += `• Espessura do banho: ${milesimos} milésimos\n`;
+    
+    // Pedras/Detalhes (se aplicável)
+    if (material.temZirconias) {
+      descricao += `• Pedras: Zircônias de alta qualidade\n`;
+    }
+    if (material.temPerolas) {
+      descricao += `• Detalhes: Pérolas sintéticas de alto brilho\n`;
+    }
+    
+    // Acabamento e garantia (sempre)
+    descricao += `• Acabamento: Camada de paládio antialérgica\n`;
+    descricao += `• Garantia: 12 meses contra defeitos`;
+    
+    return descricao;
+  } catch (error) {
+    console.error('Erro ao gerar descrição:', error);
+    // Fallback seguro
+    return "Semijoia de alta qualidade com acabamento antialérgico e camada de paládio. Garantia: 12 meses contra defeitos.";
   }
-  
-  // Milésimos
-  descricao += `• Espessura do banho: ${milesimos} milésimos\n`;
-  
-  // Pedras/Detalhes (se aplicável)
-  if (material.temZirconias) {
-    descricao += `• Pedras: Zircônias de alta qualidade\n`;
-  }
-  if (material.temPerolas) {
-    descricao += `• Detalhes: Pérolas sintéticas de alto brilho\n`;
-  }
-  
-  // Acabamento e garantia (sempre)
-  descricao += `• Acabamento: Camada de paládio antialérgica\n`;
-  descricao += `• Garantia: 12 meses contra defeitos`;
-  
-  return descricao;
 }
 
 /**
  * Combina descrição automática com descrição adicional do admin
  */
-export function combinarDescricoes(descricaoAutomatica: string, descricaoAdicional: string): string {
+export function combinarDescricoes(descricaoAutomatica: string, descricaoAdicional: string | null | undefined): string {
   if (!descricaoAdicional || !descricaoAdicional.trim()) {
     return descricaoAutomatica;
   }
@@ -126,4 +135,13 @@ export function formatarDescricaoParaExibicao(descricao: string | null): { frase
   }
   
   return { frase, especificacoes, adicional };
+}
+
+/**
+ * Obtém o label do tipo de material a partir do value
+ */
+export function getMaterialLabel(value: string | null | undefined): string {
+  if (!value) return '';
+  const material = getTipoMaterial(value);
+  return material?.label || '';
 }
