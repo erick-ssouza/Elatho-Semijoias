@@ -7,6 +7,35 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Rate limiting: 10 requests per minute per IP
+const RATE_LIMIT_WINDOW_MS = 60000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
+const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now();
+  const record = rateLimitMap.get(ip);
+
+  if (!record || now > record.resetTime) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+
+  if (record.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return true;
+  }
+
+  record.count++;
+  return false;
+}
+
+// Validate order number format to prevent enumeration with invalid patterns
+function isValidOrderNumberFormat(orderNumber: string): boolean {
+  // Expected format: ELA-YYYYMMDD-XXX (e.g., ELA-20250110-001)
+  const orderNumberRegex = /^ELA-\d{8}-\d{3}$/;
+  return orderNumberRegex.test(orderNumber);
+}
+
 serve(async (req) => {
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
@@ -15,6 +44,27 @@ serve(async (req) => {
 
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] get-order-status called`);
+
+  // Get client IP for rate limiting
+  const clientIP = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || 
+                   req.headers.get("x-real-ip") || 
+                   "unknown";
+
+  // Check rate limit
+  if (isRateLimited(clientIP)) {
+    console.log(`[${timestamp}] Rate limit exceeded for IP: ${clientIP}`);
+    return new Response(
+      JSON.stringify({ error: "Too many requests. Please try again later." }),
+      { 
+        status: 429, 
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json",
+          "Retry-After": "60"
+        } 
+      }
+    );
+  }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -27,6 +77,15 @@ serve(async (req) => {
       console.log(`[${timestamp}] Missing numeroPedido`);
       return new Response(
         JSON.stringify({ error: "numeroPedido is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate order number format
+    if (typeof numeroPedido !== 'string' || !isValidOrderNumberFormat(numeroPedido)) {
+      console.log(`[${timestamp}] Invalid order number format: ${numeroPedido}`);
+      return new Response(
+        JSON.stringify({ error: "Invalid order number format" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
