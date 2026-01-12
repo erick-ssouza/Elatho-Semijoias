@@ -120,10 +120,10 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`sticky top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-background' 
-            : 'bg-transparent'
+            ? 'bg-background shadow-sm' 
+            : 'bg-background/80 backdrop-blur-sm'
         }`}
       >
         <div className="container mx-auto px-6 lg:px-12">

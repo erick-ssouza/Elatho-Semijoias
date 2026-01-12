@@ -47,7 +47,7 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <BenefitsBar />
         <Navbar />
-        <main className="pt-16 md:pt-20">
+        <main>
           <Hero />
           <Categories 
             selectedCategory={selectedCategory} 

@@ -36,7 +36,7 @@ export default function BenefitsBar() {
 
   return (
     <div 
-      className="bg-primary text-primary-foreground sticky top-0 z-[60] animate-fade-in-up"
+      className="bg-primary text-primary-foreground relative z-[60] animate-fade-in-up"
       style={{ animationDuration: '0.3s' }}
     >
       <div className="container mx-auto px-4 py-2 md:py-2.5 relative">
