@@ -57,7 +57,9 @@ export default function Auth() {
   const { toast } = useToast();
 
   // Get the page user came from (for redirect after login)
-  const from = (location.state as { from?: string })?.from || '/';
+  // SECURITY: Validate redirect path to prevent open redirect attacks
+  const rawFrom = (location.state as { from?: string })?.from || '/';
+  const from = rawFrom.startsWith('/') && !rawFrom.startsWith('//') && !rawFrom.includes(':') ? rawFrom : '/';
 
   // If already logged in, show logged in state
   useEffect(() => {
