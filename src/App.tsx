@@ -11,6 +11,7 @@ import WhatsAppButton from "@/components/layout/WhatsAppButton";
 import ScrollToTopButton from "@/components/layout/ScrollToTopButton";
 import { ScrollToTop } from "@/components/layout/ScrollToTop";
 import { AnimatedRoutes } from "@/components/layout/AnimatedRoutes";
+import { GoogleAnalyticsProvider } from "@/components/seo/GoogleAnalytics";
 
 const queryClient = new QueryClient();
 
@@ -23,12 +24,14 @@ const App = () => (
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <ScrollToTop />
-              <BackgroundLayout>
-                <AnimatedRoutes />
-                <WhatsAppButton />
-                <ScrollToTopButton />
-              </BackgroundLayout>
+              <GoogleAnalyticsProvider>
+                <ScrollToTop />
+                <BackgroundLayout>
+                  <AnimatedRoutes />
+                  <WhatsAppButton />
+                  <ScrollToTopButton />
+                </BackgroundLayout>
+              </GoogleAnalyticsProvider>
             </BrowserRouter>
           </TooltipProvider>
         </CartProvider>

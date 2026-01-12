@@ -16,6 +16,7 @@ import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { RingSizeSelector } from '@/components/product/RingSizeSelector';
 import { WaitlistForm } from '@/components/product/WaitlistForm';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
+import { useProductReviews } from '@/hooks/useProductQueries';
 import { gerarDescricaoAutomatica, combinarDescricoes } from '@/lib/productDescriptions';
 
 interface Produto {
@@ -45,6 +46,9 @@ export default function ProdutoPage() {
   const { addItem } = useCart();
   const { toast } = useToast();
   const { addProduct, getProductsExcluding } = useRecentlyViewed();
+  
+  // Fetch product reviews for aggregateRating schema
+  const { data: reviews } = useProductReviews(id || '');
 
   useEffect(() => {
     const fetchProduto = async () => {
@@ -214,8 +218,14 @@ export default function ProdutoPage() {
     descricaoFinal = produto.descricao;
   }
 
+  // Calculate aggregate rating from reviews
+  const reviewCount = reviews?.length || 0;
+  const averageRating = reviewCount > 0 
+    ? reviews!.reduce((sum, r) => sum + (r.nota || 0), 0) / reviewCount 
+    : 0;
+
   // Schema JSON-LD para SEO
-  const productSchema = {
+  const productSchema: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": produto.nome,
@@ -278,6 +288,34 @@ export default function ProdutoPage() {
       }
     }
   };
+
+  // Add aggregateRating only if there are reviews
+  if (reviewCount > 0) {
+    productSchema.aggregateRating = {
+      "@type": "AggregateRating",
+      "ratingValue": averageRating.toFixed(1),
+      "reviewCount": reviewCount,
+      "bestRating": "5",
+      "worstRating": "1"
+    };
+    
+    // Add individual reviews (up to 5 for schema)
+    productSchema.review = reviews!.slice(0, 5).map(review => ({
+      "@type": "Review",
+      "author": {
+        "@type": "Person",
+        "name": review.cliente_nome
+      },
+      "datePublished": review.created_at?.split('T')[0],
+      "reviewRating": {
+        "@type": "Rating",
+        "ratingValue": review.nota,
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "reviewBody": review.comentario || review.titulo || ""
+    }));
+  }
 
   // Breadcrumb Schema
   const breadcrumbSchema = {
