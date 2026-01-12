@@ -11,6 +11,7 @@ import Testimonials from '@/components/home/Testimonials';
 import Features from '@/components/home/Features';
 import NewsletterPopup from '@/components/home/NewsletterPopup';
 import BenefitsBar from '@/components/layout/BenefitsBar';
+import { OrganizationSchema } from '@/components/seo/OrganizationSchema';
 
 const Index = () => {
   const [searchParams] = useSearchParams();
@@ -25,6 +26,7 @@ const Index = () => {
 
   return (
     <>
+      <OrganizationSchema />
       <Helmet>
         <title>Elatho Semijoias | Joias Banhadas a Ouro com Garantia</title>
         <meta name="description" content="Semijoias diferenciadas para momentos inesquecíveis. Tecnologia antialérgica, banhada a ouro 18k. Entrega para todo Brasil. 5% OFF no PIX." />
