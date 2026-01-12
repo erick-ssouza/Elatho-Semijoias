@@ -12,8 +12,9 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle, RotateCcw, FileText } from "lucide-react";
 import MultiImageUpload from "./MultiImageUpload";
 import { 
   TIPOS_MATERIAL, 
@@ -24,6 +25,7 @@ interface Produto {
   id: string;
   nome: string;
   descricao: string | null;
+  descricao_customizada: string | null;
   preco: number;
   preco_promocional: number | null;
   categoria: string;
@@ -77,6 +79,10 @@ const ProdutosTab = () => {
     faixaTamanhoMin: "",
     faixaTamanhoMax: "",
     tamanhosDisponiveis: [] as string[],
+    // Description fields
+    descricaoCustomizada: null as string | null,
+    editandoDescricao: false,
+    descricaoEditada: "",
   });
 
   useEffect(() => {
@@ -121,6 +127,9 @@ const ProdutosTab = () => {
       faixaTamanhoMin: "",
       faixaTamanhoMax: "",
       tamanhosDisponiveis: [],
+      descricaoCustomizada: null,
+      editandoDescricao: false,
+      descricaoEditada: "",
     });
     setEditingProduto(null);
   };
@@ -168,6 +177,9 @@ const ProdutosTab = () => {
         faixaTamanhoMax = match[2];
       }
     }
+
+    // Get custom description
+    const descricaoCustomizada = produto.descricao_customizada || null;
     
     setForm({
       nome: produto.nome,
@@ -183,6 +195,9 @@ const ProdutosTab = () => {
       faixaTamanhoMin,
       faixaTamanhoMax,
       tamanhosDisponiveis,
+      descricaoCustomizada,
+      editandoDescricao: false,
+      descricaoEditada: descricaoCustomizada || "",
     });
     setDialogOpen(true);
   };
@@ -206,6 +221,7 @@ const ProdutosTab = () => {
     const produtoData = {
       nome: form.nome,
       descricao: null, // Descrição é gerada dinamicamente no site
+      descricao_customizada: form.descricaoCustomizada,
       tipo_material: form.tipoMaterial || null,
       preco: parseFloat(form.preco),
       preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
@@ -335,13 +351,97 @@ const ProdutosTab = () => {
                 </Select>
               </div>
 
-              {/* Preview da descrição que será exibida no site */}
+              {/* Descrição do produto */}
               {form.tipoMaterial && form.categoria && (
-                <div className="space-y-2">
-                  <Label className="text-muted-foreground text-xs">Preview da descrição (gerado automaticamente no site)</Label>
-                  <div className="p-3 bg-muted/50 rounded-lg text-sm text-muted-foreground whitespace-pre-wrap max-h-32 overflow-y-auto border">
-                    {gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)}
+                <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Descrição do Produto
+                    </Label>
+                    {form.descricaoCustomizada ? (
+                      <Badge variant="secondary" className="text-amber-600 bg-amber-50">
+                        ⚠️ Descrição editada manualmente
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="text-muted-foreground">
+                        📝 Gerada automaticamente
+                      </Badge>
+                    )}
                   </div>
+                  
+                  {form.editandoDescricao ? (
+                    <>
+                      <Textarea
+                        value={form.descricaoEditada}
+                        onChange={(e) => setForm(prev => ({ ...prev, descricaoEditada: e.target.value }))}
+                        placeholder="Digite a descrição personalizada..."
+                        className="min-h-[120px] text-sm"
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setForm(prev => ({ 
+                            ...prev, 
+                            descricaoCustomizada: prev.descricaoEditada.trim() || null,
+                            editandoDescricao: false 
+                          }))}
+                        >
+                          💾 Salvar Descrição
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setForm(prev => ({ 
+                            ...prev, 
+                            editandoDescricao: false,
+                            descricaoEditada: prev.descricaoCustomizada || ""
+                          }))}
+                        >
+                          Cancelar
+                        </Button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-3 bg-background rounded-lg text-sm whitespace-pre-wrap max-h-32 overflow-y-auto border">
+                        {form.descricaoCustomizada || gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)}
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setForm(prev => ({ 
+                            ...prev, 
+                            editandoDescricao: true,
+                            descricaoEditada: prev.descricaoCustomizada || gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)
+                          }))}
+                        >
+                          <Pencil className="w-3 h-3 mr-1" />
+                          Editar Descrição
+                        </Button>
+                        {form.descricaoCustomizada && (
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setForm(prev => ({ 
+                              ...prev, 
+                              descricaoCustomizada: null,
+                              descricaoEditada: ""
+                            }))}
+                            className="text-muted-foreground hover:text-foreground"
+                          >
+                            <RotateCcw className="w-3 h-3 mr-1" />
+                            Restaurar Automática
+                          </Button>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
 
