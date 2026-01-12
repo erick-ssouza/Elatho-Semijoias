@@ -22,6 +22,7 @@ interface Produto {
   id: string;
   nome: string;
   descricao: string | null;
+  descricao_customizada: string | null;
   preco: number;
   preco_promocional: number | null;
   imagem_url: string | null;
@@ -72,6 +73,7 @@ export default function ProdutoPage() {
           faixa_tamanho: data.faixa_tamanho || null,
           tamanhos_disponiveis: tamanhosDisponiveis,
           tipo_material: data.tipo_material || null,
+          descricao_customizada: data.descricao_customizada || null,
         });
         
         // Auto-select first available size for rings with P/M/G or numeração
@@ -194,16 +196,23 @@ export default function ProdutoPage() {
     pulseiras: 'Pulseiras',
   }[produto.categoria] || produto.categoria;
 
-  // Gerar descrição dinamicamente baseada no tipo_material
-  // Se não tiver tipo_material, usa a descrição salva no banco (produtos legados)
-  const descricaoGerada = produto.tipo_material 
-    ? gerarDescricaoAutomatica(produto.categoria, produto.tipo_material)
-    : null;
+  // Prioridade da descrição:
+  // 1. Se tem descricao_customizada, usa ela diretamente
+  // 2. Se não, gera automaticamente baseada no tipo_material
+  // 3. Se não tiver tipo_material, usa descrição salva no banco (produtos legados)
+  let descricaoFinal: string | null = null;
   
-  // Combinar com descrição adicional (que está salva no campo descricao)
-  const descricaoFinal = descricaoGerada 
-    ? combinarDescricoes(descricaoGerada, produto.descricao)
-    : produto.descricao;
+  if (produto.descricao_customizada) {
+    // Usa descrição customizada diretamente
+    descricaoFinal = produto.descricao_customizada;
+  } else if (produto.tipo_material) {
+    // Gera automaticamente e combina com descrição adicional
+    const descricaoGerada = gerarDescricaoAutomatica(produto.categoria, produto.tipo_material);
+    descricaoFinal = combinarDescricoes(descricaoGerada, produto.descricao);
+  } else {
+    // Fallback para descrição do banco
+    descricaoFinal = produto.descricao;
+  }
 
   // Schema JSON-LD para SEO
   const productSchema = {

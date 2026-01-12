@@ -373,6 +373,7 @@ export type Database = {
           categoria: string
           created_at: string
           descricao: string | null
+          descricao_customizada: string | null
           destaque: boolean | null
           estoque: number | null
           faixa_tamanho: string | null
@@ -391,6 +392,7 @@ export type Database = {
           categoria: string
           created_at?: string
           descricao?: string | null
+          descricao_customizada?: string | null
           destaque?: boolean | null
           estoque?: number | null
           faixa_tamanho?: string | null
@@ -409,6 +411,7 @@ export type Database = {
           categoria?: string
           created_at?: string
           descricao?: string | null
+          descricao_customizada?: string | null
           destaque?: boolean | null
           estoque?: number | null
           faixa_tamanho?: string | null
