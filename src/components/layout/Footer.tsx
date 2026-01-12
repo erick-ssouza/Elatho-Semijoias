@@ -37,7 +37,6 @@ export default function Footer() {
     { label: 'Brincos', categoria: 'brincos' },
     { label: 'Colares', categoria: 'colares' },
     { label: 'Pulseiras', categoria: 'pulseiras' },
-    { label: 'Conjuntos', categoria: 'conjuntos' },
   ];
 
   return (
@@ -356,7 +355,7 @@ export default function Footer() {
           style={{ backgroundColor: '#333333' }}
         />
 
-        {/* Legal info - Required by Decreto 7.962/2013 */}
+        {/* Legal info */}
         <div 
           className="text-center mb-6"
           style={{
@@ -370,12 +369,6 @@ export default function Footer() {
             style={{ color: '#999999' }}
           >
             Elatho Semijoias
-          </p>
-          <p 
-            className="text-[10px]"
-            style={{ color: '#666666' }}
-          >
-            Erica Cristina Marques Bortolin · CPF: 337.645.358-65
           </p>
           <p 
             className="text-[10px]"

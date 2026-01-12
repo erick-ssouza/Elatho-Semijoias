@@ -117,7 +117,7 @@ export default function ProductGrid({ selectedCategory }: ProductGridProps) {
             }}
           >
             <h2 className="font-display text-3xl md:text-4xl font-normal text-foreground">
-              Coleção
+              Nossos Produtos
             </h2>
             <p 
               className="text-sm text-muted-foreground mt-2"

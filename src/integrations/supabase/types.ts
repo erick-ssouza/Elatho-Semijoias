@@ -201,6 +201,30 @@ export type Database = {
           },
         ]
       }
+      lista_espera: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          notificado: boolean | null
+          produto_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          notificado?: boolean | null
+          produto_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          notificado?: boolean | null
+          produto_id?: string
+        }
+        Relationships: []
+      }
       mensagens: {
         Row: {
           assunto: string

@@ -153,7 +153,6 @@ const Loja = () => {
     { id: 'brincos', label: 'Brincos' },
     { id: 'aneis', label: 'Anéis' },
     { id: 'pulseiras', label: 'Pulseiras' },
-    { id: 'conjuntos', label: 'Conjuntos' },
   ];
 
   const hasActiveFilters = filters.priceRanges.length > 0 || filters.colors.length > 0 || selectedCategory !== 'todos';
@@ -213,7 +212,7 @@ const Loja = () => {
               <div className="max-w-2xl mx-auto text-center">
                 {/* Subtitle with letter-spacing animation */}
                 <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 animate-letter-spacing">
-                  Coleção Exclusiva 2025
+                  Coleção Exclusiva
                 </p>
 
                 {/* Title with staggered reveal */}
