@@ -1,7 +1,7 @@
 import { motion, Variants, Easing } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { ShoppingBag, MessageCircle, Instagram, Music } from 'lucide-react';
-import logo from '@/assets/logo-elatho.png';
+import logo from '@/assets/logo-elatho-horizontal.png';
 import { trackEvent } from '@/components/seo/GoogleAnalytics';
 
 const links = [
@@ -25,7 +25,7 @@ const links = [
   },
   {
     name: 'TikTok',
-    url: 'https://tiktok.com/@elathosemijoias',
+    url: 'https://tiktok.com/@elatho',
     icon: Music,
     emoji: '🎵',
   },
@@ -89,7 +89,7 @@ export default function Links() {
           <motion.img
             src={logo}
             alt="Elatho Semijoias"
-            className="w-20 h-20 object-contain mb-4"
+            className="w-48 h-auto object-contain mb-4"
             variants={itemVariants}
           />
 
