@@ -22,6 +22,7 @@ import RedefinirSenha from '@/pages/RedefinirSenha';
 import AdminLogin from '@/pages/admin/AdminLogin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
 import ResetPassword from '@/pages/admin/ResetPassword';
+import Links from '@/pages/Links';
 import NotFound from '@/pages/NotFound';
 
 export function AnimatedRoutes() {
@@ -50,6 +51,7 @@ export function AnimatedRoutes() {
         <Route path="/painel-elatho-2025" element={<PageTransition><AdminLogin /></PageTransition>} />
         <Route path="/painel-elatho-2025/dashboard" element={<PageTransition><AdminDashboard /></PageTransition>} />
         <Route path="/painel-elatho-2025/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
+        <Route path="/links" element={<PageTransition><Links /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
