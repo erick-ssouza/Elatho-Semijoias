@@ -14,6 +14,7 @@ import { ShareButtons } from '@/components/product/ShareButtons';
 import { RelatedProducts } from '@/components/product/RelatedProducts';
 import { RecentlyViewed } from '@/components/product/RecentlyViewed';
 import { RingSizeSelector } from '@/components/product/RingSizeSelector';
+import { WaitlistForm } from '@/components/product/WaitlistForm';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { gerarDescricaoAutomatica, combinarDescricoes } from '@/lib/productDescriptions';
 
@@ -403,11 +404,9 @@ export default function ProdutoPage() {
                 </div>
               )}
 
-              {/* Add to Cart */}
+              {/* Add to Cart or Waitlist */}
               {isOutOfStock ? (
-                <div className="w-full py-4 text-center border border-border bg-muted text-muted-foreground cursor-not-allowed">
-                  <span className="text-sm uppercase tracking-[0.15em]">Produto Esgotado</span>
-                </div>
+                <WaitlistForm produtoId={produto.id} produtoNome={produto.nome} />
               ) : (
                 <button 
                   onClick={handleAddToCart}

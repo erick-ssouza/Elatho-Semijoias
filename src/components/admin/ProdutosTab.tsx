@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +43,6 @@ const categorias = [
   { value: "brincos", label: "Brincos" },
   { value: "colares", label: "Colares" },
   { value: "pulseiras", label: "Pulseiras" },
-  { value: "conjuntos", label: "Conjuntos" },
 ];
 
 // All ring sizes from 12 to 30
@@ -60,6 +59,7 @@ const ProdutosTab = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Produto | null>(null);
   const [saving, setSaving] = useState(false);
+  const [categoriaFilter, setCategoriaFilter] = useState<string>("todas");
   const { toast } = useToast();
 
   const [form, setForm] = useState({
@@ -576,6 +576,28 @@ const ProdutosTab = () => {
         </Dialog>
       </CardHeader>
       <CardContent>
+        {/* Category Filter */}
+        <div className="flex items-center gap-4 mb-6">
+          <Select value={categoriaFilter} onValueChange={setCategoriaFilter}>
+            <SelectTrigger className="w-64">
+              <SelectValue placeholder="Filtrar por categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">
+                Todas as categorias ({produtos.length})
+              </SelectItem>
+              {categorias.map((cat) => {
+                const count = produtos.filter(p => p.categoria === cat.value).length;
+                return (
+                  <SelectItem key={cat.value} value={cat.value}>
+                    {cat.label} ({count})
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -590,14 +612,22 @@ const ProdutosTab = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {produtos.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
-                    Nenhum produto encontrado
-                  </TableCell>
-                </TableRow>
-              ) : (
-                produtos.map((produto) => (
+              {(() => {
+                const filteredProdutos = categoriaFilter === "todas" 
+                  ? produtos 
+                  : produtos.filter(p => p.categoria === categoriaFilter);
+                
+                if (filteredProdutos.length === 0) {
+                  return (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center text-muted-foreground py-8">
+                        Nenhum produto encontrado
+                      </TableCell>
+                    </TableRow>
+                  );
+                }
+                
+                return filteredProdutos.map((produto) => (
                   <TableRow key={produto.id}>
                     <TableCell>
                       <img
@@ -668,8 +698,8 @@ const ProdutosTab = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))
-              )}
+                ));
+              })()}
             </TableBody>
           </Table>
         </div>

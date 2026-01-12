@@ -11,7 +11,6 @@ const categories = [
   { id: 'brincos', name: 'Brincos' },
   { id: 'colares', name: 'Colares' },
   { id: 'pulseiras', name: 'Pulseiras' },
-  { id: 'conjuntos', name: 'Conjuntos' },
 ];
 
 export default function Categories({ selectedCategory, onSelectCategory }: CategoriesProps) {
