@@ -10,14 +10,19 @@ const corsHeaders = {
 const SITE_URL = 'https://elathosemijoias.com.br'
 
 const staticPages = [
-  { url: '/', priority: '1.0', changefreq: 'daily' },
-  { url: '/sobre', priority: '0.8', changefreq: 'monthly' },
-  { url: '/faq', priority: '0.7', changefreq: 'monthly' },
-  { url: '/contato', priority: '0.7', changefreq: 'monthly' },
-  { url: '/cuidados', priority: '0.6', changefreq: 'monthly' },
-  { url: '/trocas', priority: '0.6', changefreq: 'monthly' },
-  { url: '/privacidade', priority: '0.5', changefreq: 'yearly' },
-  { url: '/rastreio', priority: '0.5', changefreq: 'monthly' },
+  { url: '/', priority: '1.0', changefreq: 'weekly' },
+  { url: '/loja', priority: '0.9', changefreq: 'weekly' },
+  { url: '/loja?categoria=aneis', priority: '0.8', changefreq: 'weekly' },
+  { url: '/loja?categoria=brincos', priority: '0.8', changefreq: 'weekly' },
+  { url: '/loja?categoria=colares', priority: '0.8', changefreq: 'weekly' },
+  { url: '/loja?categoria=pulseiras', priority: '0.8', changefreq: 'weekly' },
+  { url: '/sobre', priority: '0.6', changefreq: 'monthly' },
+  { url: '/faq', priority: '0.6', changefreq: 'monthly' },
+  { url: '/contato', priority: '0.6', changefreq: 'monthly' },
+  { url: '/cuidados', priority: '0.5', changefreq: 'monthly' },
+  { url: '/trocas', priority: '0.5', changefreq: 'monthly' },
+  { url: '/privacidade', priority: '0.3', changefreq: 'yearly' },
+  { url: '/rastreio', priority: '0.6', changefreq: 'weekly' },
 ]
 
 Deno.serve(async (req) => {

@@ -10,6 +10,7 @@ import CollectionCTA from '@/components/home/CollectionCTA';
 import Testimonials from '@/components/home/Testimonials';
 import Features from '@/components/home/Features';
 import NewsletterPopup from '@/components/home/NewsletterPopup';
+import BenefitsBar from '@/components/layout/BenefitsBar';
 
 const Index = () => {
   const [searchParams] = useSearchParams();
@@ -25,23 +26,26 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Elatho Semijoias | Elegância que você merece</title>
-        <meta name="description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras. Frete grátis acima de R$299. Garantia de 12 meses." />
+        <title>Elatho Semijoias | Joias Banhadas a Ouro com Garantia</title>
+        <meta name="description" content="Semijoias diferenciadas para momentos inesquecíveis. Tecnologia antialérgica, banhada a ouro 18k. Entrega para todo Brasil. 5% OFF no PIX." />
+        <meta name="keywords" content="semijoias, joias banhadas a ouro, brincos, anéis, colares, pulseiras, antialérgico, ouro 18k, ródio" />
+        <meta name="robots" content="index, follow" />
         <link rel="canonical" href="https://elathosemijoias.com.br" />
-        <meta property="og:title" content="Elatho Semijoias | Elegância que você merece" />
-        <meta property="og:description" content="Semijoias femininas com acabamento em ouro 18k. Anéis, brincos, colares e pulseiras. Frete grátis acima de R$299." />
+        <meta property="og:title" content="Elatho Semijoias | Joias Banhadas a Ouro" />
+        <meta property="og:description" content="Semijoias diferenciadas para momentos inesquecíveis. Tecnologia antialérgica e banhada a ouro." />
         <meta property="og:url" content="https://elathosemijoias.com.br" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://elathosemijoias.com.br/og-image.jpg" />
         <meta property="og:site_name" content="Elatho Semijoias" />
         <meta property="og:locale" content="pt_BR" />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content="Elatho Semijoias | Elegância que você merece" />
-        <meta name="twitter:description" content="Semijoias femininas com acabamento em ouro 18k. Frete grátis acima de R$299." />
+        <meta name="twitter:title" content="Elatho Semijoias" />
+        <meta name="twitter:description" content="Semijoias diferenciadas para momentos inesquecíveis." />
         <meta name="twitter:image" content="https://elathosemijoias.com.br/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
+        <BenefitsBar />
         <Navbar />
         <main className="pt-16 md:pt-20">
           <Hero />
