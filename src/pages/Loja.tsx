@@ -9,6 +9,8 @@ import { useAllProducts } from '@/hooks/useProductQueries';
 import { SkeletonCard } from '@/components/ui/skeleton-card';
 import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
+import heroColar from '@/assets/hero-colar.jpg';
+import BenefitsBar from '@/components/layout/BenefitsBar';
 
 interface FilterState {
   priceRanges: string[];
@@ -160,26 +162,27 @@ const Loja = () => {
   return (
     <>
       <Helmet>
-        <title>Coleção Completa | Elatho Semijoias</title>
-        <meta name="description" content="Explore nossa coleção completa de semijoias femininas. Anéis, brincos, colares e pulseiras com acabamento em ouro 18k. Frete grátis acima de R$299." />
-        <link rel="canonical" href="https://elathosemijoias.com.br/colecao" />
-        <meta property="og:title" content="Coleção Completa | Elatho Semijoias" />
-        <meta property="og:description" content="Explore nossa coleção completa de semijoias femininas com acabamento em ouro 18k." />
-        <meta property="og:url" content="https://elathosemijoias.com.br/colecao" />
+        <title>Todos os Produtos | Elatho Semijoias</title>
+        <meta name="description" content="Explore nossa coleção completa de semijoias femininas. Anéis, brincos, colares e pulseiras banhados a ouro 18k. Tecnologia antialérgica. Frete grátis acima de R$299." />
+        <link rel="canonical" href="https://elathosemijoias.com.br/loja" />
+        <meta property="og:title" content="Todos os Produtos | Elatho Semijoias" />
+        <meta property="og:description" content="Explore nossa coleção completa de semijoias femininas banhadas a ouro 18k. Tecnologia antialérgica." />
+        <meta property="og:url" content="https://elathosemijoias.com.br/loja" />
         <meta property="og:type" content="website" />
         <meta property="og:image" content="https://elathosemijoias.com.br/og-image.jpg" />
       </Helmet>
 
       <div className="min-h-screen bg-background">
+        <BenefitsBar />
         <Navbar />
         <main className="pt-16 md:pt-20">
-          {/* Hero Banner - Matching Home's luxurious parallax style */}
-          <section ref={heroRef} className="relative h-[50vh] md:h-[60vh] flex items-center justify-center overflow-hidden">
+          {/* Hero Banner - Colar coração com vestido cinza */}
+          <section ref={heroRef} className="relative h-[45vh] md:h-[55vh] flex items-center justify-center overflow-hidden">
             {/* Background Image with Parallax and Progressive Blur */}
             <div 
               className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
               style={{
-                backgroundImage: 'url(https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?q=80&w=2070&auto=format&fit=crop)',
+                backgroundImage: `url(${heroColar})`,
                 transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
                 filter: `blur(${blurAmount}px)`,
               }}
@@ -189,7 +192,7 @@ const Loja = () => {
             <div 
               className="absolute inset-0"
               style={{
-                background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
+                background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
               }}
             />
             
@@ -197,7 +200,7 @@ const Loja = () => {
             <div 
               className="absolute inset-0 pointer-events-none"
               style={{
-                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)'
+                background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.35) 100%)'
               }}
             />
 
@@ -211,7 +214,7 @@ const Loja = () => {
             >
               <div className="max-w-2xl mx-auto text-center">
                 {/* Subtitle with letter-spacing animation */}
-                <p className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 animate-letter-spacing">
+                <p className="text-[10px] uppercase tracking-[0.3em] text-white/80 mb-6 animate-letter-spacing">
                   Coleção Exclusiva
                 </p>
 
@@ -225,7 +228,7 @@ const Loja = () => {
                       textShadow: '0 2px 10px rgba(0,0,0,0.3)'
                     }}
                   >
-                    Nossa Coleção
+                    Nossos Produtos
                   </h1>
                 </div>
                 
@@ -233,7 +236,7 @@ const Loja = () => {
                   className="text-white/80 text-lg md:text-xl max-w-xl mx-auto animate-fade-in-up"
                   style={{ animationDelay: '400ms' }}
                 >
-                  Peças exclusivas com acabamento premium em ouro 18k
+                  Peças exclusivas banhadas a ouro 18k
                 </p>
               </div>
             </div>

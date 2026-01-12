@@ -1,5 +1,6 @@
 import { ArrowDown } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
+import heroPulseira from '@/assets/hero-pulseira.jpg';
 
 export default function Hero() {
   const [scrollY, setScrollY] = useState(0);
@@ -35,12 +36,12 @@ export default function Hero() {
   const blurAmount = Math.min(10, scrollY / 50);
 
   return (
-    <section ref={sectionRef} className="relative h-[50vh] md:h-[60vh] flex items-center justify-center overflow-hidden">
-      {/* Background Image - Gold and Silver Jewelry with Parallax and Progressive Blur */}
+    <section ref={sectionRef} className="relative h-[55vh] md:h-[65vh] flex items-center justify-center overflow-hidden">
+      {/* Background Image - Pulseira com zircônias rosa */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat will-change-transform"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1611591437281-460bfbe1220a?q=80&w=2070&auto=format&fit=crop)',
+          backgroundImage: `url(${heroPulseira})`,
           transform: `translateY(${scrollY * 0.4}px) scale(1.1)`,
           filter: `blur(${blurAmount}px)`,
         }}
@@ -50,7 +51,7 @@ export default function Hero() {
       <div 
         className="absolute inset-0"
         style={{
-          background: 'linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
+          background: 'linear-gradient(to bottom, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.1) 100%)'
         }}
       />
       
@@ -58,7 +59,7 @@ export default function Hero() {
       <div 
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%)'
+          background: 'radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.35) 100%)'
         }}
       />
 
@@ -73,34 +74,34 @@ export default function Hero() {
         <div className="max-w-2xl">
           {/* Subtitle with letter-spacing animation */}
           <p 
-            className="text-[10px] uppercase tracking-[0.3em] text-white/70 mb-6 animate-letter-spacing"
+            className="text-[10px] uppercase tracking-[0.3em] text-white/80 mb-6 animate-letter-spacing"
           >
-            Coleção 2025
+            Elatho Semijoias
           </p>
 
           {/* Title with staggered reveal */}
           <div className="overflow-hidden mb-10">
             <h1 
-              className="font-display text-5xl md:text-6xl lg:text-7xl font-normal leading-[1.1] animate-reveal-text"
+              className="font-display text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] animate-reveal-text"
               style={{ 
                 animationDelay: '200ms',
                 color: '#FFFFFF',
                 textShadow: '0 2px 10px rgba(0,0,0,0.3)'
               }}
             >
-              Bem-vinda à
+              Elegância que
             </h1>
           </div>
           <div className="overflow-hidden mb-10">
             <h1 
-              className="font-display text-5xl md:text-6xl lg:text-7xl font-normal leading-[1.1] animate-reveal-text"
+              className="font-display text-4xl md:text-5xl lg:text-6xl font-normal leading-[1.1] animate-reveal-text"
               style={{ 
                 animationDelay: '400ms',
                 color: '#FFFFFF',
                 textShadow: '0 2px 10px rgba(0,0,0,0.3)'
               }}
             >
-              Elatho Semijoias
+              você merece
             </h1>
           </div>
 
@@ -110,7 +111,7 @@ export default function Hero() {
             className="text-sm text-white underline underline-offset-8 decoration-[0.5px] hover:decoration-2 transition-all duration-300 animate-fade-in-left"
             style={{ animationDelay: '700ms' }}
           >
-            Explorar
+            Ver Coleção
           </button>
         </div>
       </div>

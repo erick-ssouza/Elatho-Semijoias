@@ -16,4 +16,3 @@ Disallow: /painel-elatho-2025
 Disallow: /api/
 
 Sitemap: https://elathosemijoias.com.br/sitemap.xml
-Sitemap: https://eyvcrvqpxlldxyrfwjpn.supabase.co/functions/v1/sitemap
