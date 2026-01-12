@@ -175,7 +175,7 @@ const Loja = () => {
       <div className="min-h-screen bg-background">
         <BenefitsBar />
         <Navbar />
-        <main className="pt-16 md:pt-20">
+        <main>
           {/* Hero Banner - Colar coração com vestido cinza */}
           <section ref={heroRef} className="relative h-[45vh] md:h-[55vh] flex items-center justify-center overflow-hidden">
             {/* Background Image with Parallax and Progressive Blur */}
