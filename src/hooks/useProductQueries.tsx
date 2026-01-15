@@ -38,15 +38,14 @@ interface ProductWithRating extends ProductListItem {
 }
 
 // Fetch products with ratings (highlighted only by default, or all products)
-// Excludes out-of-stock products (estoque <= 0) from public catalog
+// Shows ALL products including out-of-stock ones (estoque = 0) in public catalog
 export function useProducts(category?: string, onlyHighlighted: boolean = true) {
   return useQuery({
     queryKey: ['products', onlyHighlighted ? 'highlighted' : 'all', category || 'todos'],
     queryFn: async () => {
       let query = supabase
         .from('produtos')
-        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque, tipo_material')
-        .gt('estoque', 0); // Only show products with stock > 0
+        .select('id, nome, preco, preco_promocional, imagem_url, categoria, variacoes, descricao, estoque, tipo_material');
 
       if (onlyHighlighted) {
         query = query.eq('destaque', true);
