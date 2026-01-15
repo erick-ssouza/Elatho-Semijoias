@@ -111,22 +111,24 @@ export default function ProductCard({
       >
         {/* Image Container - 4:5 aspect ratio with hover effects */}
         <Link to={`/produto/${id}`} className="relative aspect-[4/5] overflow-hidden bg-muted mb-3 md:mb-5 block w-full">
-          {/* Image with scale effect */}
+        {/* Image with scale effect */}
           <img
             src={imagem_url || '/placeholder.svg'}
             alt={nome}
             loading="lazy"
             decoding="async"
-            className="w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05]"
+            className={`w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-[1.05] ${
+              isOutOfStock ? 'opacity-70 grayscale-[20%]' : ''
+            }`}
           />
           
           {/* Hover overlay with gradient */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           
-          {/* Out of Stock Badge */}
+          {/* Out of Stock Badge - Top corner */}
           {isOutOfStock && (
-            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
-              <span className="bg-background text-foreground text-xs uppercase tracking-[0.15em] px-4 py-2 font-medium">
+            <div className="absolute top-3 right-3 z-20">
+              <span className="bg-muted-foreground/90 text-white text-[10px] md:text-xs uppercase tracking-[0.1em] px-3 py-1.5 font-semibold rounded">
                 Esgotado
               </span>
             </div>
@@ -144,7 +146,7 @@ export default function ProductCard({
             <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
           </button>
 
-          {/* Quick View Button */}
+          {/* Quick View Button - hidden when out of stock */}
           {!isOutOfStock && (
             <button
               onClick={handleQuickView}
