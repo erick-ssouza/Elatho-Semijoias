@@ -14,11 +14,15 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle, RotateCcw, FileText } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Images, AlertCircle, RotateCcw, FileText, Sparkles } from "lucide-react";
 import MultiImageUpload from "./MultiImageUpload";
 import { 
-  TIPOS_MATERIAL, 
-  gerarDescricaoAutomatica
+  gerarDescricaoAutomatica,
+  gerarTipoMaterialString,
+  parseTipoMaterialString,
+  MATERIAIS_BASE,
+  MATERIAIS_COMPLEMENTO,
+  FRASES_DESTAQUE,
 } from "@/lib/productDescriptions";
 
 interface Produto {
@@ -38,6 +42,7 @@ interface Produto {
   faixa_tamanho: string | null;
   tamanhos_disponiveis: string[] | null;
   tipo_material: string | null;
+  frase_destaque: number | null;
 }
 
 const categorias = [
@@ -66,7 +71,9 @@ const ProdutosTab = () => {
 
   const [form, setForm] = useState({
     nome: "",
-    tipoMaterial: "",
+    // Novo sistema de materiais (checkboxes)
+    materiaisBase: [] as string[],
+    materiaisComplemento: [] as string[],
     preco: "",
     preco_promocional: "",
     categoria: "",
@@ -83,6 +90,8 @@ const ProdutosTab = () => {
     descricaoCustomizada: null as string | null,
     editandoDescricao: false,
     descricaoEditada: "",
+    // Frase destaque (1-10 ou 0 para aleatório)
+    fraseDestaque: 0,
   });
 
   useEffect(() => {
@@ -101,7 +110,8 @@ const ProdutosTab = () => {
       // Cast imagens to string array
       const produtosFormatted = (data || []).map(p => ({
         ...p,
-        imagens: Array.isArray(p.imagens) ? p.imagens as string[] : null
+        imagens: Array.isArray(p.imagens) ? p.imagens as string[] : null,
+        frase_destaque: p.frase_destaque as number | null,
       })) as Produto[];
       
       setProdutos(produtosFormatted);
@@ -115,7 +125,8 @@ const ProdutosTab = () => {
   const resetForm = () => {
     setForm({
       nome: "",
-      tipoMaterial: "",
+      materiaisBase: [],
+      materiaisComplemento: [],
       preco: "",
       preco_promocional: "",
       categoria: "",
@@ -130,16 +141,15 @@ const ProdutosTab = () => {
       descricaoCustomizada: null,
       editandoDescricao: false,
       descricaoEditada: "",
+      fraseDestaque: 0,
     });
     setEditingProduto(null);
   };
 
-  const handleMaterialChange = (value: string) => {
-    setForm(prev => ({
-      ...prev,
-      tipoMaterial: value,
-    }));
-  };
+  // Gera a string do tipo de material com base nos checkboxes
+  const tipoMaterialGerado = useMemo(() => {
+    return gerarTipoMaterialString(form.materiaisBase, form.materiaisComplemento);
+  }, [form.materiaisBase, form.materiaisComplemento]);
 
   const handleCategoriaChange = (categoria: string) => {
     setForm(prev => ({
@@ -153,11 +163,29 @@ const ProdutosTab = () => {
     }));
   };
 
+  const toggleMaterialBase = (materialId: string, checked: boolean) => {
+    setForm(prev => ({
+      ...prev,
+      materiaisBase: checked 
+        ? [...prev.materiaisBase, materialId]
+        : prev.materiaisBase.filter(m => m !== materialId),
+    }));
+  };
+
+  const toggleMaterialComplemento = (materialId: string, checked: boolean) => {
+    setForm(prev => ({
+      ...prev,
+      materiaisComplemento: checked 
+        ? [...prev.materiaisComplemento, materialId]
+        : prev.materiaisComplemento.filter(m => m !== materialId),
+    }));
+  };
+
   const openEdit = (produto: Produto) => {
     setEditingProduto(produto);
     
-    // Usar tipo_material salvo no banco (se existir)
-    const tipoMaterial = produto.tipo_material || "";
+    // Parsear o tipo_material para os checkboxes
+    const { materiaisBase, materiaisComplemento } = parseTipoMaterialString(produto.tipo_material);
     
     // Detectar tipo de tamanho para produtos antigos
     let tipoTamanho: "" | "unico" | "regulavel" | "numeracao" | "pmg" = "";
@@ -183,7 +211,8 @@ const ProdutosTab = () => {
     
     setForm({
       nome: produto.nome,
-      tipoMaterial,
+      materiaisBase,
+      materiaisComplemento,
       preco: String(produto.preco),
       preco_promocional: produto.preco_promocional ? String(produto.preco_promocional) : "",
       categoria: produto.categoria,
@@ -198,6 +227,7 @@ const ProdutosTab = () => {
       descricaoCustomizada,
       editandoDescricao: false,
       descricaoEditada: descricaoCustomizada || "",
+      fraseDestaque: produto.frase_destaque || 0,
     });
     setDialogOpen(true);
   };
@@ -218,11 +248,14 @@ const ProdutosTab = () => {
       faixaTamanho = `${form.faixaTamanhoMin} ao ${form.faixaTamanhoMax}`;
     }
 
+    // Gerar tipo_material a partir dos checkboxes
+    const tipoMaterial = gerarTipoMaterialString(form.materiaisBase, form.materiaisComplemento);
+
     const produtoData = {
       nome: form.nome,
       descricao: null, // Descrição é gerada dinamicamente no site
       descricao_customizada: form.descricaoCustomizada,
-      tipo_material: form.tipoMaterial || null,
+      tipo_material: tipoMaterial || null,
       preco: parseFloat(form.preco),
       preco_promocional: form.preco_promocional ? parseFloat(form.preco_promocional) : null,
       categoria: categoriaValue,
@@ -236,6 +269,7 @@ const ProdutosTab = () => {
       tamanhos_disponiveis: isAnel && (form.tipoTamanho === 'pmg' || form.tipoTamanho === 'numeracao') && form.tamanhosDisponiveis.length > 0 
         ? form.tamanhosDisponiveis 
         : null,
+      frase_destaque: form.fraseDestaque || null,
     };
 
     try {
@@ -337,22 +371,101 @@ const ProdutosTab = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="tipoMaterial">Tipo de Material</Label>
-                <Select value={form.tipoMaterial} onValueChange={handleMaterialChange}>
+              {/* Novo sistema de seleção de materiais com checkboxes */}
+              <div className="space-y-4 p-4 border border-border rounded-lg bg-muted/30">
+                <Label className="text-sm font-medium">Tipo de Material</Label>
+                
+                {/* Materiais Base - Grid 2x2 */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Materiais Base (selecione um ou mais):</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {MATERIAIS_BASE.map((material) => (
+                      <div key={material.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`material-${material.id}`}
+                          checked={form.materiaisBase.includes(material.id)}
+                          onCheckedChange={(checked) => toggleMaterialBase(material.id, !!checked)}
+                        />
+                        <Label 
+                          htmlFor={`material-${material.id}`} 
+                          className="font-normal cursor-pointer text-sm"
+                        >
+                          {material.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Materiais Complemento */}
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">Complementos (opcional):</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {MATERIAIS_COMPLEMENTO.map((material) => (
+                      <div key={material.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`complemento-${material.id}`}
+                          checked={form.materiaisComplemento.includes(material.id)}
+                          onCheckedChange={(checked) => toggleMaterialComplemento(material.id, !!checked)}
+                        />
+                        <Label 
+                          htmlFor={`complemento-${material.id}`} 
+                          className="font-normal cursor-pointer text-sm"
+                        >
+                          {material.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Preview do material gerado */}
+                {tipoMaterialGerado && (
+                  <div className="p-3 bg-background rounded-lg border">
+                    <p className="text-xs text-muted-foreground mb-1">Material gerado:</p>
+                    <p className="text-sm font-medium">{tipoMaterialGerado}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Frase Destaque */}
+              <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <Label className="text-sm font-medium">Frase Destaque</Label>
+                </div>
+                
+                <Select 
+                  value={String(form.fraseDestaque)} 
+                  onValueChange={(val) => setForm(prev => ({ ...prev, fraseDestaque: parseInt(val) }))}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo de material" />
+                    <SelectValue placeholder="Selecione uma frase" />
                   </SelectTrigger>
                   <SelectContent>
-                    {TIPOS_MATERIAL.map((tipo) => (
-                      <SelectItem key={tipo.value} value={tipo.value}>{tipo.label}</SelectItem>
+                    <SelectItem value="0">🎲 Aleatório (sorteia ao exibir)</SelectItem>
+                    {FRASES_DESTAQUE.map((_, index) => (
+                      <SelectItem key={index + 1} value={String(index + 1)}>
+                        Frase {index + 1}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+
+                {/* Preview da frase */}
+                <div className="p-3 bg-background rounded-lg border">
+                  <p className="text-xs text-muted-foreground mb-1">Preview:</p>
+                  <p className="text-sm italic text-foreground/80">
+                    {form.fraseDestaque === 0 
+                      ? "Uma frase será sorteada aleatoriamente ao exibir o produto."
+                      : `"${FRASES_DESTAQUE[form.fraseDestaque - 1]}"`
+                    }
+                  </p>
+                </div>
               </div>
 
               {/* Descrição do produto */}
-              {form.tipoMaterial && form.categoria && (
+              {tipoMaterialGerado && form.categoria && (
                 <div className="space-y-3 p-4 border border-border rounded-lg bg-muted/30">
                   <div className="flex items-center justify-between">
                     <Label className="flex items-center gap-2">
@@ -407,7 +520,7 @@ const ProdutosTab = () => {
                   ) : (
                     <>
                       <div className="p-3 bg-background rounded-lg text-sm whitespace-pre-wrap max-h-32 overflow-y-auto border">
-                        {form.descricaoCustomizada || gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)}
+                        {form.descricaoCustomizada || gerarDescricaoAutomatica(form.categoria, tipoMaterialGerado)}
                       </div>
                       <div className="flex gap-2">
                         <Button
@@ -417,7 +530,7 @@ const ProdutosTab = () => {
                           onClick={() => setForm(prev => ({ 
                             ...prev, 
                             editandoDescricao: true,
-                            descricaoEditada: prev.descricaoCustomizada || gerarDescricaoAutomatica(form.categoria, form.tipoMaterial)
+                            descricaoEditada: prev.descricaoCustomizada || gerarDescricaoAutomatica(form.categoria, tipoMaterialGerado)
                           }))}
                         >
                           <Pencil className="w-3 h-3 mr-1" />

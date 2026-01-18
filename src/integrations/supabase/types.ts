@@ -377,6 +377,7 @@ export type Database = {
           destaque: boolean | null
           estoque: number | null
           faixa_tamanho: string | null
+          frase_destaque: number | null
           id: string
           imagem_url: string | null
           imagens: Json | null
@@ -396,6 +397,7 @@ export type Database = {
           destaque?: boolean | null
           estoque?: number | null
           faixa_tamanho?: string | null
+          frase_destaque?: number | null
           id?: string
           imagem_url?: string | null
           imagens?: Json | null
@@ -415,6 +417,7 @@ export type Database = {
           destaque?: boolean | null
           estoque?: number | null
           faixa_tamanho?: string | null
+          frase_destaque?: number | null
           id?: string
           imagem_url?: string | null
           imagens?: Json | null
