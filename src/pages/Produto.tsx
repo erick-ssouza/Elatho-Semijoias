@@ -17,7 +17,7 @@ import { RingSizeSelector } from '@/components/product/RingSizeSelector';
 import { WaitlistForm } from '@/components/product/WaitlistForm';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useProductReviews } from '@/hooks/useProductQueries';
-import { gerarDescricaoAutomatica, combinarDescricoes } from '@/lib/productDescriptions';
+import { gerarDescricaoAutomatica, combinarDescricoes, getFraseDestaque } from '@/lib/productDescriptions';
 
 interface Produto {
   id: string;
@@ -34,6 +34,7 @@ interface Produto {
   faixa_tamanho: string | null;
   tamanhos_disponiveis: string[] | null;
   tipo_material: string | null;
+  frase_destaque: number | null;
 }
 
 export default function ProdutoPage() {
@@ -78,6 +79,7 @@ export default function ProdutoPage() {
           tamanhos_disponiveis: tamanhosDisponiveis,
           tipo_material: data.tipo_material || null,
           descricao_customizada: data.descricao_customizada || null,
+          frase_destaque: data.frase_destaque as number | null,
         });
         
         // Auto-select first available size for rings with P/M/G or numeração
@@ -412,6 +414,11 @@ export default function ProdutoPage() {
                     </span>
                   )}
                 </div>
+                
+                {/* Frase Destaque */}
+                <p className="text-sm text-muted-foreground italic leading-relaxed">
+                  "{getFraseDestaque(produto.frase_destaque)}"
+                </p>
               </div>
 
 

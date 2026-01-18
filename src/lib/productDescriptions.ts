@@ -19,6 +19,149 @@ export const MILESIMOS: Record<string, number> = {
   conjuntos: 10,
 };
 
+// Frases destaque para produtos (selecionável no admin)
+export const FRASES_DESTAQUE: string[] = [
+  "Qualidade premium que cabe no seu bolso, com acabamento refinado e brilho que acompanha você por muito mais tempo.",
+  "Mais brilho, mais cuidado no acabamento e mais valor real para quem escolhe bem o que usa.",
+  "Feita para durar, pensada em cada detalhe para encantar desde o primeiro olhar até o uso no dia a dia.",
+  "Um investimento inteligente em beleza, estilo e qualidade — sem exageros no preço.",
+  "Você paga um valor justo e recebe uma peça que supera expectativas em acabamento, brilho e conforto.",
+  "Acabamento refinado e cuidadoso para mulheres que não abrem mão de qualidade e elegância.",
+  "Uma peça versátil e sofisticada, feita para acompanhar você em todos os momentos da sua rotina.",
+  "Perfeita para presentear — uma semijoia que transmite cuidado, bom gosto e atenção aos detalhes.",
+  "Pequenos detalhes de acabamento e design que elevam qualquer look instantaneamente.",
+  "Semijoia de alto padrão para quem valoriza design, qualidade e bom gosto em cada escolha.",
+];
+
+/**
+ * Obtém frase destaque por ID (1-10) ou sorteia uma aleatória se null/0
+ */
+export function getFraseDestaque(id: number | null | undefined): string {
+  if (!id || id <= 0 || id > FRASES_DESTAQUE.length) {
+    // Sorteia uma frase aleatória
+    const index = Math.floor(Math.random() * FRASES_DESTAQUE.length);
+    return FRASES_DESTAQUE[index];
+  }
+  return FRASES_DESTAQUE[id - 1];
+}
+
+// Definição dos materiais base e complementos para checkboxes
+export interface MaterialBase {
+  id: string;
+  label: string;
+  descricaoMaterial: string;
+}
+
+export interface MaterialComplemento {
+  id: string;
+  label: string;
+  descricaoComplemento: string;
+}
+
+export const MATERIAIS_BASE: MaterialBase[] = [
+  { id: "ouro", label: "Ouro (Dourado)", descricaoMaterial: "Banho de Ouro 18k" },
+  { id: "ouro_branco", label: "Ouro Branco", descricaoMaterial: "Banho de Ouro Branco" },
+  { id: "rodio", label: "Ródio", descricaoMaterial: "Banho de Ródio" },
+  { id: "rose", label: "Rosé", descricaoMaterial: "Banho de Rosé" },
+];
+
+export const MATERIAIS_COMPLEMENTO: MaterialComplemento[] = [
+  { id: "zirconia", label: "Zircônia", descricaoComplemento: "com Zircônias" },
+  { id: "perolas", label: "Pérolas", descricaoComplemento: "com Pérolas" },
+];
+
+/**
+ * Gera a string de tipo de material a partir dos checkboxes selecionados
+ * Exemplo: ["ouro", "rodio"] + ["zirconia"] = "Banho de Ouro 18k e Ródio com Zircônias"
+ */
+export function gerarTipoMaterialString(
+  materiaisBase: string[],
+  materiaisComplemento: string[]
+): string {
+  if (materiaisBase.length === 0) return "";
+
+  // Mapear os materiais base selecionados
+  const basesDescricao = materiaisBase
+    .map(id => MATERIAIS_BASE.find(m => m.id === id)?.descricaoMaterial)
+    .filter(Boolean);
+
+  if (basesDescricao.length === 0) return "";
+
+  // Construir a parte base
+  let resultado = "";
+  if (basesDescricao.length === 1) {
+    resultado = basesDescricao[0]!;
+  } else if (basesDescricao.length === 2) {
+    // Remover "Banho de" do segundo para evitar repetição
+    const primeiro = basesDescricao[0]!;
+    const segundo = basesDescricao[1]!.replace("Banho de ", "");
+    resultado = `${primeiro} e ${segundo}`;
+  } else {
+    // 3+ materiais
+    const primeiro = basesDescricao[0]!;
+    const meios = basesDescricao.slice(1, -1).map(m => m!.replace("Banho de ", ""));
+    const ultimo = basesDescricao[basesDescricao.length - 1]!.replace("Banho de ", "");
+    resultado = `${primeiro}, ${meios.join(", ")} e ${ultimo}`;
+  }
+
+  // Adicionar complementos se houver
+  if (materiaisComplemento.length > 0) {
+    const complementosDescricao = materiaisComplemento
+      .map(id => MATERIAIS_COMPLEMENTO.find(m => m.id === id)?.descricaoComplemento)
+      .filter(Boolean);
+
+    if (complementosDescricao.length === 1) {
+      resultado += ` ${complementosDescricao[0]}`;
+    } else if (complementosDescricao.length === 2) {
+      // "com Zircônias e Pérolas"
+      const primeiro = complementosDescricao[0]!;
+      const segundo = complementosDescricao[1]!.replace("com ", "");
+      resultado += ` ${primeiro} e ${segundo}`;
+    }
+  }
+
+  return resultado;
+}
+
+/**
+ * Parseia uma string de tipo de material de volta para os IDs de checkboxes
+ * Para carregar produtos existentes no editor
+ */
+export function parseTipoMaterialString(tipoMaterial: string | null): {
+  materiaisBase: string[];
+  materiaisComplemento: string[];
+} {
+  if (!tipoMaterial) return { materiaisBase: [], materiaisComplemento: [] };
+
+  const materiaisBase: string[] = [];
+  const materiaisComplemento: string[] = [];
+  const lower = tipoMaterial.toLowerCase();
+
+  // Detectar materiais base
+  if (lower.includes("ouro 18k") || (lower.includes("ouro") && !lower.includes("ouro branco"))) {
+    materiaisBase.push("ouro");
+  }
+  if (lower.includes("ouro branco")) {
+    materiaisBase.push("ouro_branco");
+  }
+  if (lower.includes("ródio") || lower.includes("rodio")) {
+    materiaisBase.push("rodio");
+  }
+  if (lower.includes("rosé") || lower.includes("rose")) {
+    materiaisBase.push("rose");
+  }
+
+  // Detectar complementos
+  if (lower.includes("zircônia") || lower.includes("zirconia")) {
+    materiaisComplemento.push("zirconia");
+  }
+  if (lower.includes("pérola") || lower.includes("perola")) {
+    materiaisComplemento.push("perolas");
+  }
+
+  return { materiaisBase, materiaisComplemento };
+}
+
 export interface TipoMaterial {
   value: string;
   label: string;
@@ -28,6 +171,7 @@ export interface TipoMaterial {
   temPerolas: boolean;
 }
 
+// Manter compatibilidade com sistema antigo (dropdown)
 export const TIPOS_MATERIAL: TipoMaterial[] = [
   { value: "ouro18k", label: "Banho de Ouro 18k", ehOuro: true, ehRodio: false, temZirconias: false, temPerolas: false },
   { value: "rodio", label: "Banho de Ródio", ehOuro: false, ehRodio: true, temZirconias: false, temPerolas: false },
@@ -42,6 +186,26 @@ export function getTipoMaterial(value: string): TipoMaterial | undefined {
 }
 
 /**
+ * Detecta características do material a partir da string gerada
+ */
+function detectarCaracteristicasMaterial(tipoMaterial: string): {
+  ehOuro: boolean;
+  ehRodio: boolean;
+  ehRose: boolean;
+  temZirconias: boolean;
+  temPerolas: boolean;
+} {
+  const lower = tipoMaterial.toLowerCase();
+  return {
+    ehOuro: lower.includes("ouro") && !lower.includes("ouro branco"),
+    ehRodio: lower.includes("ródio") || lower.includes("rodio"),
+    ehRose: lower.includes("rosé") || lower.includes("rose"),
+    temZirconias: lower.includes("zircônia") || lower.includes("zirconia"),
+    temPerolas: lower.includes("pérola") || lower.includes("perola"),
+  };
+}
+
+/**
  * Gera descrição automática baseada na categoria e tipo de material
  * IMPORTANTE: Esta função é chamada no frontend para gerar a descrição em tempo real
  * A descrição NÃO é salva no banco de dados
@@ -51,27 +215,56 @@ export function gerarDescricaoAutomatica(categoria: string, tipoMaterialValue: s
     const categoriaKey = categoria.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
     const milesimos = MILESIMOS[categoriaKey] || 10;
     const frase = FRASES_VALORIZACAO[categoriaKey] || "";
+    
+    // Primeiro tenta o sistema antigo (dropdown com values como "ouro18k")
     const material = getTipoMaterial(tipoMaterialValue);
     
-    if (!material) return frase || "Semijoia de alta qualidade com acabamento antialérgico e camada de paládio. Garantia: 12 meses contra defeitos.";
+    let ehOuro = false;
+    let ehRodio = false;
+    let ehRose = false;
+    let temZirconias = false;
+    let temPerolas = false;
+
+    if (material) {
+      // Sistema antigo
+      ehOuro = material.ehOuro;
+      ehRodio = material.ehRodio;
+      temZirconias = material.temZirconias;
+      temPerolas = material.temPerolas;
+    } else if (tipoMaterialValue) {
+      // Sistema novo - detectar a partir da string gerada
+      const caracteristicas = detectarCaracteristicasMaterial(tipoMaterialValue);
+      ehOuro = caracteristicas.ehOuro;
+      ehRodio = caracteristicas.ehRodio;
+      ehRose = caracteristicas.ehRose;
+      temZirconias = caracteristicas.temZirconias;
+      temPerolas = caracteristicas.temPerolas;
+    } else {
+      return frase || "Semijoia de alta qualidade com acabamento antialérgico e camada de paládio. Garantia: 12 meses contra defeitos.";
+    }
     
     let descricao = `${frase}\n\n**Especificações:**\n`;
     
-    // Material
-    if (material.ehOuro) {
-      descricao += `• Material: Liga metálica com banho de ouro 18k\n`;
-    } else if (material.ehRodio) {
-      descricao += `• Material: Liga metálica com banho de ródio\n`;
+    // Material - usar a string direta se for do sistema novo
+    if (material) {
+      if (ehOuro) {
+        descricao += `• Material: Liga metálica com banho de ouro 18k\n`;
+      } else if (ehRodio) {
+        descricao += `• Material: Liga metálica com banho de ródio\n`;
+      }
+    } else {
+      // Sistema novo - usar a string completa
+      descricao += `• Material: Liga metálica com ${tipoMaterialValue.replace("Banho de ", "").toLowerCase()}\n`;
     }
     
     // Milésimos
     descricao += `• Espessura do banho: ${milesimos} milésimos\n`;
     
     // Pedras/Detalhes (se aplicável)
-    if (material.temZirconias) {
+    if (temZirconias) {
       descricao += `• Pedras: Zircônias de alta qualidade\n`;
     }
-    if (material.temPerolas) {
+    if (temPerolas) {
       descricao += `• Detalhes: Pérolas sintéticas de alto brilho\n`;
     }
     
@@ -143,5 +336,6 @@ export function formatarDescricaoParaExibicao(descricao: string | null): { frase
 export function getMaterialLabel(value: string | null | undefined): string {
   if (!value) return '';
   const material = getTipoMaterial(value);
-  return material?.label || '';
+  // Se não encontrar no sistema antigo, retorna a própria string (sistema novo)
+  return material?.label || value;
 }
